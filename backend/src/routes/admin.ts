@@ -4,7 +4,8 @@ import QRCode from 'qrcode'
 
 export default async function adminRoutes(fastify: FastifyInstance) {
   // Все маршруты требуют авторизации
-  fastify.addHook('onRequest', fastify.authenticate)
+  const authGuard = (fastify as any).authenticate
+  fastify.addHook('onRequest', authGuard)
 
   // Получить список визиток пользователя
   fastify.get('/cards', async (request, reply) => {

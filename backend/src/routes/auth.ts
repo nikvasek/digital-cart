@@ -3,6 +3,8 @@ import { db } from '../db/index.js'
 import bcrypt from 'bcrypt'
 
 export default async function authRoutes(fastify: FastifyInstance) {
+  const authGuard = (fastify as any).authenticate
+
   // Логин
   fastify.post('/login', async (request, reply) => {
     const { email, password } = request.body as {
@@ -109,7 +111,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
   // Получить текущего пользователя
   fastify.get('/me', {
-    onRequest: [fastify.authenticate]
+    onRequest: [authGuard]
   }, async (request, reply) => {
     const user = request.user as any
     
