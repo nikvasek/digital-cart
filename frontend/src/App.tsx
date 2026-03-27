@@ -3,7 +3,6 @@ import PublicCard from './pages/PublicCard'
 import AdminLogin from './pages/admin/Login'
 import AdminDashboard from './pages/admin/Dashboard'
 import AdminEditor from './pages/admin/Editor'
-import NotFound from './pages/NotFound'
 
 function App() {
   return (
@@ -19,8 +18,7 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/card/:id" element={<AdminEditor />} />
         
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/paulline-ferreira" replace />} />
       </Routes>
     </Router>
   )
