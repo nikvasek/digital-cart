@@ -23,11 +23,10 @@ code {
   aspect-ratio: 383 / 981;
 }
 
-/* Smooth SVG rendering — no excessive sharpness */
+/* Sharp rendering on high-DPI / retina screens */
 .home-card-frame img {
+  image-rendering: -webkit-optimize-contrast; /* Safari: sharper downscale */
   image-rendering: auto;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   will-change: transform;            /* GPU-layer for smooth sub-pixel scaling */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
