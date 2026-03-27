@@ -142,9 +142,14 @@ export default function PublicCard() {
     window.location.href = `mailto:${card.email}`
   }
 
-  const openWebsite = () => {
-    if (!card?.website) return
-    openExternal('website', card.website)
+  const openLocation = () => {
+    trackEvent('click', { link_type: 'location' })
+    window.open('https://maps.google.com/?q=Kalvariyskaya+42+Minsk', '_blank', 'noopener,noreferrer')
+  }
+
+  const openGallery = () => {
+    trackEvent('click', { link_type: 'gallery' })
+    // TODO: open gallery modal when media items available
   }
 
   const addToHomeHint = async () => {
@@ -178,12 +183,38 @@ export default function PublicCard() {
   }
 
   const hotspots: Hotspot[] = [
-    /* ── Contact rows (left side: icon + text) ───────────── */
-    { id: 'web-row', onClick: openWebsite, label: 'Open website' },
+    /* ── Contact / social rows (left side, top→bottom) ──── */
     { id: 'phone-row', onClick: openTel, label: 'Call phone' },
+    {
+      id: 'whatsapp',
+      onClick: () => openExternal('whatsapp', getLinkByType('whatsapp')),
+      label: 'WhatsApp'
+    },
+    {
+      id: 'telegram',
+      onClick: () => openExternal('telegram', getLinkByType('telegram')),
+      label: 'Telegram'
+    },
+    {
+      id: 'instagram',
+      onClick: () => openExternal('instagram', getLinkByType('instagram')),
+      label: 'Instagram'
+    },
+    {
+      id: 'viber',
+      onClick: () => openExternal('viber', getLinkByType('viber')),
+      label: 'Viber'
+    },
     { id: 'email-row', onClick: openEmail, label: 'Send email' },
+    {
+      id: 'tiktok',
+      onClick: () => openExternal('tiktok', getLinkByType('tiktok')),
+      label: 'TikTok'
+    },
+    { id: 'gallery', onClick: openGallery, label: 'Gallery' },
+    { id: 'web-row', onClick: openLocation, label: 'Kalvariyskaya 42' },
 
-    /* ── Action buttons (right side — matches SVG text) ──── */
+    /* ── Action buttons (right side) ──────────────────────── */
     { id: 'save-contact', onClick: handleSaveContact, label: 'Save contact' },
     { id: 'show-qr', onClick: () => setShowQR(true), label: 'Show QR' },
     {
@@ -192,34 +223,7 @@ export default function PublicCard() {
       label: 'Book now'
     },
     { id: 'add-home', onClick: addToHomeHint, label: 'Add to Home' },
-    { id: 'share', onClick: () => void handleShare(), label: 'Share' },
-
-    /* ── Social icons (left side: icon + label) ──────────── */
-    {
-      id: 'whatsapp',
-      onClick: () => openExternal('whatsapp', getLinkByType('whatsapp')),
-      label: 'WhatsApp'
-    },
-    {
-      id: 'instagram',
-      onClick: () => openExternal('instagram', getLinkByType('instagram')),
-      label: 'Instagram'
-    },
-    {
-      id: 'telegram',
-      onClick: () => openExternal('telegram', getLinkByType('telegram')),
-      label: 'Telegram'
-    },
-    {
-      id: 'tiktok',
-      onClick: () => openExternal('tiktok', getLinkByType('tiktok')),
-      label: 'TikTok'
-    },
-    {
-      id: 'viber',
-      onClick: () => openExternal('viber', getLinkByType('viber')),
-      label: 'Viber'
-    }
+    { id: 'share', onClick: () => void handleShare(), label: 'Share' }
   ]
 
   if (loading) {
@@ -243,22 +247,12 @@ export default function PublicCard() {
       <div className="mx-auto w-full max-w-[430px]">
         <div className="home-card-frame relative w-full overflow-hidden">
           <img
-            src="/figma/home-from-pdf.png"
-            srcSet="/figma/home-from-pdf.png 1x, /figma/home-2x.png 2x, /figma/home-3x.png 3x"
+            src="/figma/home-1x.png"
+            srcSet="/figma/home-1x.png 1x, /figma/home-2x.png 2x, /figma/home-3x.png 3x"
             alt="Business card"
             className="h-full w-full select-none"
             draggable={false}
             style={{ display: 'block' }}
-          />
-
-          {/* Rectangle 71 — ramka overlay */}
-          <img
-            src="/figma/ramka-1x.png"
-            srcSet="/figma/ramka-1x.png 1x, /figma/ramka-2x.png 2x, /figma/ramka-3x.png 3x"
-            alt=""
-            className="absolute pointer-events-none select-none"
-            draggable={false}
-            style={{ left: '1.04%', top: '0.10%', width: '48.83%', height: '83.49%' }}
           />
 
           <button
