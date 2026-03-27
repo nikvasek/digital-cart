@@ -18,6 +18,39 @@ const fastify = Fastify({
   logger: true
 })
 
+const ensureServicesSchema = async () => {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS card_services (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      card_id UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+      title VARCHAR(255) NOT NULL,
+      description TEXT,
+      sort_order INTEGER DEFAULT 0,
+      is_visible BOOLEAN DEFAULT true,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
+
+  await db.query(`
+    CREATE INDEX IF NOT EXISTS idx_card_services_card_id ON card_services(card_id)
+  `)
+
+  await db.query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (
+        SELECT 1 FROM pg_trigger WHERE tgname = 'update_card_services_updated_at'
+      ) THEN
+        CREATE TRIGGER update_card_services_updated_at
+        BEFORE UPDATE ON card_services
+        FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+      END IF;
+    END
+    $$;
+  `)
+}
+
 // Плагины
 await fastify.register(cors, {
   origin: true
@@ -58,6 +91,7 @@ const start = async () => {
   try {
     // Проверка подключения к БД
     await db.query('SELECT NOW()')
+    await ensureServicesSchema()
     fastify.log.info('Database connection established')
 
     await fastify.listen({ port: config.port, host: '0.0.0.0' })

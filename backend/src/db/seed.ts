@@ -66,6 +66,29 @@ async function seed() {
       )
     }
 
+    const services = [
+      {
+        title: 'Classic haircut',
+        description: 'Scissor and clipper cut with clean outline'
+      },
+      {
+        title: 'Beard styling',
+        description: 'Shape correction, contour, and grooming'
+      },
+      {
+        title: 'Haircut + Beard combo',
+        description: 'Full look update in one session'
+      }
+    ]
+
+    for (let i = 0; i < services.length; i++) {
+      await db.query(
+        `INSERT INTO card_services (card_id, title, description, sort_order, is_visible)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [cardId, services[i].title, services[i].description, i, true]
+      )
+    }
+
     console.log('✅ Seeding completed successfully')
     console.log('\nTest credentials:')
     console.log('Email: admin@example.com')

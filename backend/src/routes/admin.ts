@@ -60,10 +60,19 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         [card.id]
       )
 
+      // Получаем услуги
+      const servicesResult = await db.query(
+        `SELECT id, title, description, is_visible, sort_order FROM card_services
+         WHERE card_id = $1
+         ORDER BY sort_order`,
+        [card.id]
+      )
+
       return {
         ...card,
         links: linksResult.rows,
-        media: mediaResult.rows
+        media: mediaResult.rows,
+        services: servicesResult.rows
       }
     } catch (error) {
       fastify.log.error(error)
@@ -88,32 +97,89 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         return reply.code(404).send({ error: 'Card not found' })
       }
 
-      // Обновляем основные поля
-      const allowedFields = [
-        'slug', 'full_name', 'title', 'company_name', 
-        'phone', 'email', 'website', 'bio',
-        'avatar_url', 'logo_url', 'language_default', 'is_active'
-      ]
+      const client = await db.connect()
+      try {
+        await client.query('BEGIN')
 
-      const updateFields: string[] = []
-      const updateValues: any[] = []
-      let paramCount = 1
+        // Обновляем основные поля
+        const allowedFields = [
+          'slug', 'full_name', 'title', 'company_name',
+          'phone', 'email', 'website', 'bio',
+          'avatar_url', 'logo_url', 'language_default', 'is_active'
+        ]
 
-      for (const field of allowedFields) {
-        if (updates[field] !== undefined) {
-          updateFields.push(`${field} = $${paramCount}`)
-          updateValues.push(updates[field])
-          paramCount++
+        const updateFields: string[] = []
+        const updateValues: any[] = []
+        let paramCount = 1
+
+        for (const field of allowedFields) {
+          if (updates[field] !== undefined) {
+            updateFields.push(`${field} = $${paramCount}`)
+            updateValues.push(updates[field])
+            paramCount++
+          }
         }
-      }
 
-      if (updateFields.length > 0) {
-        updateValues.push(id)
-        await db.query(
-          `UPDATE cards SET ${updateFields.join(', ')}, updated_at = NOW() 
-           WHERE id = $${paramCount}`,
-          updateValues
-        )
+        if (updateFields.length > 0) {
+          updateValues.push(id)
+          await client.query(
+            `UPDATE cards SET ${updateFields.join(', ')}, updated_at = NOW()
+             WHERE id = $${paramCount}`,
+            updateValues
+          )
+        }
+
+        if (Array.isArray(updates.links)) {
+          await client.query(`DELETE FROM card_links WHERE card_id = $1`, [id])
+
+          for (let i = 0; i < updates.links.length; i++) {
+            const link = updates.links[i]
+            if (!link?.type || !link?.url) continue
+
+            await client.query(
+              `INSERT INTO card_links (card_id, type, url, sort_order, is_visible)
+               VALUES ($1, $2, $3, $4, $5)`,
+              [id, link.type, link.url, i, link.is_visible !== false]
+            )
+          }
+        }
+
+        if (Array.isArray(updates.media)) {
+          await client.query(`DELETE FROM card_media WHERE card_id = $1`, [id])
+
+          for (let i = 0; i < updates.media.length; i++) {
+            const media = updates.media[i]
+            if (!media?.file_url) continue
+
+            await client.query(
+              `INSERT INTO card_media (card_id, file_url, type, sort_order)
+               VALUES ($1, $2, $3, $4)`,
+              [id, media.file_url, media.type || 'image', i]
+            )
+          }
+        }
+
+        if (Array.isArray(updates.services)) {
+          await client.query(`DELETE FROM card_services WHERE card_id = $1`, [id])
+
+          for (let i = 0; i < updates.services.length; i++) {
+            const service = updates.services[i]
+            if (!service?.title) continue
+
+            await client.query(
+              `INSERT INTO card_services (card_id, title, description, sort_order, is_visible)
+               VALUES ($1, $2, $3, $4, $5)`,
+              [id, service.title, service.description || null, i, service.is_visible !== false]
+            )
+          }
+        }
+
+        await client.query('COMMIT')
+      } catch (txError) {
+        await client.query('ROLLBACK')
+        throw txError
+      } finally {
+        client.release()
       }
 
       return { success: true }

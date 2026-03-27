@@ -2,6 +2,26 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
+interface LinkItem {
+  id?: string
+  type: string
+  url: string
+  is_visible: boolean
+}
+
+interface MediaItem {
+  id?: string
+  file_url: string
+  type: string
+}
+
+interface ServiceItem {
+  id?: string
+  title: string
+  description: string
+  is_visible: boolean
+}
+
 interface CardData {
   id: string
   slug: string
@@ -16,8 +36,12 @@ interface CardData {
   logo_url: string
   language_default: string
   is_active: boolean
-  links: Array<{ type: string; url: string; is_visible: boolean }>
+  links: LinkItem[]
+  media: MediaItem[]
+  services: ServiceItem[]
 }
+
+const SOCIAL_TYPES = ['instagram', 'telegram', 'whatsapp', 'viber', 'tiktok', 'facebook', 'linkedin', 'youtube']
 
 export default function Editor() {
   const { id } = useParams<{ id: string }>()
@@ -72,6 +96,63 @@ export default function Editor() {
     window.open(`/api/admin/card/${id}/qr`, '_blank')
   }
 
+  const addLink = () => {
+    if (!card) return
+    setCard({
+      ...card,
+      links: [...card.links, { type: 'instagram', url: '', is_visible: true }]
+    })
+  }
+
+  const updateLink = (index: number, patch: Partial<LinkItem>) => {
+    if (!card) return
+    const next = [...card.links]
+    next[index] = { ...next[index], ...patch }
+    setCard({ ...card, links: next })
+  }
+
+  const removeLink = (index: number) => {
+    if (!card) return
+    setCard({ ...card, links: card.links.filter((_, i) => i !== index) })
+  }
+
+  const addService = () => {
+    if (!card) return
+    setCard({
+      ...card,
+      services: [...card.services, { title: '', description: '', is_visible: true }]
+    })
+  }
+
+  const updateService = (index: number, patch: Partial<ServiceItem>) => {
+    if (!card) return
+    const next = [...card.services]
+    next[index] = { ...next[index], ...patch }
+    setCard({ ...card, services: next })
+  }
+
+  const removeService = (index: number) => {
+    if (!card) return
+    setCard({ ...card, services: card.services.filter((_, i) => i !== index) })
+  }
+
+  const addMedia = () => {
+    if (!card) return
+    setCard({ ...card, media: [...card.media, { file_url: '', type: 'image' }] })
+  }
+
+  const updateMedia = (index: number, patch: Partial<MediaItem>) => {
+    if (!card) return
+    const next = [...card.media]
+    next[index] = { ...next[index], ...patch }
+    setCard({ ...card, media: next })
+  }
+
+  const removeMedia = (index: number) => {
+    if (!card) return
+    setCard({ ...card, media: card.media.filter((_, i) => i !== index) })
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -115,7 +196,7 @@ export default function Editor() {
         <div className="bg-white rounded-xl shadow p-6 space-y-6">
           <h2 className="text-2xl font-bold">Edit Card</h2>
 
-          {/* Основные данные */}
+          {/* Контакты и базовые данные */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -249,6 +330,168 @@ export default function Editor() {
                 <span className="text-sm font-medium text-gray-700">Active</span>
               </label>
             </div>
+          </div>
+
+          {/* Соцсети */}
+          <div className="pt-6 border-t space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Social links</h3>
+              <button
+                onClick={addLink}
+                className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                + Add link
+              </button>
+            </div>
+
+            {card.links.length === 0 && (
+              <p className="text-sm text-gray-500">No social links yet</p>
+            )}
+
+            {card.links.map((link, index) => (
+              <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-3 border rounded-lg">
+                <div className="md:col-span-3">
+                  <select
+                    value={link.type}
+                    onChange={(e) => updateLink(index, { type: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    {SOCIAL_TYPES.map((social) => (
+                      <option key={social} value={social}>{social}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="md:col-span-7">
+                  <input
+                    type="text"
+                    value={link.url}
+                    onChange={(e) => updateLink(index, { url: e.target.value })}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div className="md:col-span-1 flex justify-center">
+                  <input
+                    type="checkbox"
+                    checked={link.is_visible}
+                    onChange={(e) => updateLink(index, { is_visible: e.target.checked })}
+                  />
+                </div>
+                <div className="md:col-span-1 flex justify-end">
+                  <button
+                    onClick={() => removeLink(index)}
+                    className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Услуги */}
+          <div className="pt-6 border-t space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Services</h3>
+              <button
+                onClick={addService}
+                className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                + Add service
+              </button>
+            </div>
+
+            {card.services.length === 0 && (
+              <p className="text-sm text-gray-500">No services yet</p>
+            )}
+
+            {card.services.map((service, index) => (
+              <div key={index} className="space-y-3 p-4 border rounded-lg">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-gray-600">Service #{index + 1}</p>
+                  <button
+                    onClick={() => removeService(index)}
+                    className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                  >
+                    Remove
+                  </button>
+                </div>
+
+                <input
+                  type="text"
+                  value={service.title}
+                  onChange={(e) => updateService(index, { title: e.target.value })}
+                  placeholder="Service title"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+
+                <textarea
+                  value={service.description}
+                  onChange={(e) => updateService(index, { description: e.target.value })}
+                  rows={2}
+                  placeholder="Description"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input
+                    type="checkbox"
+                    checked={service.is_visible}
+                    onChange={(e) => updateService(index, { is_visible: e.target.checked })}
+                  />
+                  Visible
+                </label>
+              </div>
+            ))}
+          </div>
+
+          {/* Галерея */}
+          <div className="pt-6 border-t space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Gallery</h3>
+              <button
+                onClick={addMedia}
+                className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                + Add image
+              </button>
+            </div>
+
+            {card.media.length === 0 && (
+              <p className="text-sm text-gray-500">No gallery images yet</p>
+            )}
+
+            {card.media.map((item, index) => (
+              <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center p-3 border rounded-lg">
+                <div className="md:col-span-10">
+                  <input
+                    type="text"
+                    value={item.file_url}
+                    onChange={(e) => updateMedia(index, { file_url: e.target.value })}
+                    placeholder="Image URL"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <select
+                    value={item.type}
+                    onChange={(e) => updateMedia(index, { type: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  >
+                    <option value="image">image</option>
+                    <option value="video">video</option>
+                  </select>
+                </div>
+                <div className="md:col-span-1 flex justify-end">
+                  <button
+                    onClick={() => removeMedia(index)}
+                    className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* Предпросмотр */}

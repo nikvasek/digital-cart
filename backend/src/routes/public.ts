@@ -36,10 +36,19 @@ export default async function publicRoutes(fastify: FastifyInstance) {
         [card.id]
       )
 
+      // Получаем услуги
+      const servicesResult = await db.query(
+        `SELECT title, description, is_visible FROM card_services
+         WHERE card_id = $1 AND is_visible = true
+         ORDER BY sort_order`,
+        [card.id]
+      )
+
       return {
         ...card,
         links: linksResult.rows,
-        media: mediaResult.rows
+        media: mediaResult.rows,
+        services: servicesResult.rows
       }
     } catch (error) {
       fastify.log.error(error)

@@ -55,6 +55,18 @@ CREATE TABLE card_media (
   created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- 4.1 Услуги
+CREATE TABLE card_services (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  card_id UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  sort_order INTEGER DEFAULT 0,
+  is_visible BOOLEAN DEFAULT true,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- 5. Лиды (контакты от посетителей)
 CREATE TABLE leads (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -84,6 +96,7 @@ CREATE INDEX idx_cards_slug ON cards(slug);
 CREATE INDEX idx_cards_user_id ON cards(user_id);
 CREATE INDEX idx_card_links_card_id ON card_links(card_id);
 CREATE INDEX idx_card_media_card_id ON card_media(card_id);
+CREATE INDEX idx_card_services_card_id ON card_services(card_id);
 CREATE INDEX idx_leads_card_id ON leads(card_id);
 CREATE INDEX idx_events_card_id ON events(card_id);
 CREATE INDEX idx_events_type ON events(event_type);
@@ -102,4 +115,7 @@ CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_cards_updated_at BEFORE UPDATE ON cards
+FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_card_services_updated_at BEFORE UPDATE ON card_services
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
