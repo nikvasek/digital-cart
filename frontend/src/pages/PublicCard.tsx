@@ -251,6 +251,16 @@ export default function PublicCard() {
             style={{ display: 'block' }}
           />
 
+          {/* Rectangle 71 — ramka overlay */}
+          <img
+            src="/figma/ramka-1x.png"
+            srcSet="/figma/ramka-1x.png 1x, /figma/ramka-2x.png 2x, /figma/ramka-3x.png 3x"
+            alt=""
+            className="absolute pointer-events-none select-none"
+            draggable={false}
+            style={{ left: '1.04%', top: '0.10%', width: '48.83%', height: '83.49%' }}
+          />
+
           <button
             onClick={() => i18n.changeLanguage('ru')}
             className="hs hs-lang-ru"
