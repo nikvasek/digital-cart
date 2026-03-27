@@ -19,6 +19,12 @@ const fastify = Fastify({
 })
 
 const ensureServicesSchema = async () => {
+  const cardsTableCheck = await db.query(`SELECT to_regclass('public.cards') AS cards_table`)
+  if (!cardsTableCheck.rows[0]?.cards_table) {
+    fastify.log.warn('Table cards not found, skipping card_services bootstrap')
+    return
+  }
+
   await db.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto`)
 
   await db.query(`
