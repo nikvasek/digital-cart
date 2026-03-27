@@ -242,19 +242,14 @@ export default function PublicCard() {
     <div className="min-h-screen bg-[#0f0f0f] px-2 py-4 text-white">
       <div className="mx-auto w-full max-w-[383px]">
         <div className="home-card-frame relative w-full overflow-hidden">
-          <picture>
-            <source
-              srcSet="/figma/home-3x.png 3x, /figma/home-3x.png 2x"
-              type="image/png"
-            />
-            <img
-              src="/figma/home-from-pdf.png"
-              alt="Business card"
-              className="h-full w-full select-none"
-              draggable={false}
-              style={{ display: 'block' }}
-            />
-          </picture>
+          <img
+            src="/figma/home-from-pdf.png"
+            srcSet="/figma/home-from-pdf.png 1x, /figma/home-2x.png 2x, /figma/home-3x.png 3x"
+            alt="Business card"
+            className="h-full w-full select-none"
+            draggable={false}
+            style={{ display: 'block' }}
+          />
 
           <button
             onClick={() => i18n.changeLanguage('ru')}
