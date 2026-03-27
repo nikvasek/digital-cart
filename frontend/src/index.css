@@ -21,6 +21,7 @@ code {
    of that coordinate space.                                */
 .home-card-frame {
   aspect-ratio: 383 / 981;
+  width: 100%;
 }
 
 /* Sharp rendering on high-DPI / retina screens */
