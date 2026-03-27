@@ -20,12 +20,38 @@ interface CardData {
   media: Array<{ file_url: string; type: string }>
 }
 
-const socialIconMap: Record<string, string> = {
-  instagram: '/figma/instagram.png',
-  telegram: '/figma/telegram.png',
-  whatsapp: '/figma/whatsapp.png',
-  viber: '/figma/viber.png',
-  tiktok: '/figma/tiktok.png'
+const createFallbackCard = (slugParam?: string): CardData => ({
+  id: 'local-demo-card',
+  slug: slugParam || 'paulline-ferreira',
+  full_name: 'Paulline Ferreira',
+  title: "Custom men's haircuts and beard styling",
+  company_name: 'Digital Business Card',
+  phone: '+375292327382',
+  email: 'paulline@example.com',
+  website: 'kalvariyskaya42.by',
+  bio: 'Eyes are drawn to uniqueness.',
+  avatar_url: '/figma/home.svg',
+  logo_url: '',
+  language_default: 'en',
+  links: [
+    { type: 'instagram', url: 'https://instagram.com', is_visible: true },
+    { type: 'telegram', url: 'https://t.me', is_visible: true },
+    { type: 'whatsapp', url: 'https://wa.me/375292327382', is_visible: true },
+    { type: 'tiktok', url: 'https://www.tiktok.com', is_visible: true },
+    { type: 'viber', url: 'viber://chat?number=%2B375292327382', is_visible: true }
+  ],
+  media: []
+})
+
+type Hotspot = {
+  id: string
+  onClick: () => void
+  label: string
+}
+
+const toExternalUrl = (url: string) => {
+  if (!url) return url
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`
 }
 
 export default function PublicCard() {
@@ -40,38 +66,44 @@ export default function PublicCard() {
     loadCard()
   }, [slug])
 
+  const trackEvent = (event_type: string, metadata?: Record<string, unknown>) => {
+    axios
+      .post('/api/public/events', {
+        card_id: card?.id,
+        event_type,
+        metadata
+      })
+      .catch(() => undefined)
+  }
+
   const loadCard = async () => {
     try {
       const response = await axios.get(`/api/public/card/${slug}`)
       setCard(response.data)
       i18n.changeLanguage(response.data.language_default)
-      
-      // Отправка события просмотра
+
       axios.post('/api/public/events', {
         card_id: response.data.id,
         event_type: 'view'
       })
     } catch (error) {
       console.error('Failed to load card:', error)
+      const fallback = createFallbackCard(slug)
+      setCard(fallback)
+      i18n.changeLanguage(fallback.language_default)
     } finally {
       setLoading(false)
     }
   }
 
   const handleSaveContact = () => {
-    // Прямой переход на endpoint для скачивания vCard
     window.location.href = `/api/public/card/${slug}/vcard`
-    
-    // Отправка события
-    axios.post('/api/public/events', {
-      card_id: card?.id,
-      event_type: 'save_vcard'
-    })
+    trackEvent('save_vcard')
   }
 
   const handleShare = async () => {
     const url = window.location.href
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -83,24 +115,43 @@ export default function PublicCard() {
         console.log('Share cancelled')
       }
     } else {
-      // Fallback: копирование в буфер
-      navigator.clipboard.writeText(url)
-      alert('Link copied to clipboard!')
+      await navigator.clipboard.writeText(url)
+      alert('Link copied to clipboard')
     }
-    
-    axios.post('/api/public/events', {
-      card_id: card?.id,
-      event_type: 'share'
-    })
+
+    trackEvent('share')
   }
 
-  const handleLinkClick = (type: string, url: string) => {
-    axios.post('/api/public/events', {
-      card_id: card?.id,
-      event_type: 'click',
-      metadata: { link_type: type }
-    })
-    window.open(url, '_blank')
+  const openExternal = (type: string, url?: string) => {
+    if (!url) return
+    trackEvent('click', { link_type: type })
+    window.open(toExternalUrl(url), '_blank', 'noopener,noreferrer')
+  }
+
+  const openTel = () => {
+    if (!card?.phone) return
+    trackEvent('click', { link_type: 'phone' })
+    window.location.href = `tel:${card.phone}`
+  }
+
+  const openEmail = () => {
+    if (!card?.email) return
+    trackEvent('click', { link_type: 'email' })
+    window.location.href = `mailto:${card.email}`
+  }
+
+  const openWebsite = () => {
+    if (!card?.website) return
+    openExternal('website', card.website)
+  }
+
+  const addToHomeHint = async () => {
+    await navigator.clipboard.writeText(window.location.href)
+    alert('Open browser menu and tap “Add to Home Screen”. Link copied.')
+  }
+
+  const getLinkByType = (type: string) => {
+    return card?.links?.find((link) => link.is_visible && link.type.toLowerCase() === type.toLowerCase())?.url
   }
 
   const submitLead = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -124,6 +175,46 @@ export default function PublicCard() {
     }
   }
 
+  const hotspots: Hotspot[] = [
+    { id: 'phone-row', onClick: openTel, label: 'Call phone' },
+    { id: 'email-row', onClick: openEmail, label: 'Send email' },
+    { id: 'web-row', onClick: openWebsite, label: 'Open website' },
+    { id: 'add-home', onClick: addToHomeHint, label: 'Add to Home' },
+    { id: 'share', onClick: () => void handleShare(), label: 'Share' },
+    { id: 'save-contact', onClick: handleSaveContact, label: 'Save contact' },
+    { id: 'show-qr', onClick: () => setShowQR(true), label: 'Show QR' },
+    {
+      id: 'book-now',
+      onClick: () => setShowLeadForm((prev) => !prev),
+      label: 'Book now'
+    },
+    {
+      id: 'instagram',
+      onClick: () => openExternal('instagram', getLinkByType('instagram')),
+      label: 'Instagram'
+    },
+    {
+      id: 'telegram',
+      onClick: () => openExternal('telegram', getLinkByType('telegram')),
+      label: 'Telegram'
+    },
+    {
+      id: 'whatsapp',
+      onClick: () => openExternal('whatsapp', getLinkByType('whatsapp')),
+      label: 'WhatsApp'
+    },
+    {
+      id: 'tiktok',
+      onClick: () => openExternal('tiktok', getLinkByType('tiktok')),
+      label: 'TikTok'
+    },
+    {
+      id: 'viber',
+      onClick: () => openExternal('viber', getLinkByType('viber')),
+      label: 'Viber'
+    }
+  ]
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -140,157 +231,32 @@ export default function PublicCard() {
     )
   }
 
-  const galleryItems = card.media && card.media.length > 0
-    ? card.media
-    : [
-        { file_url: '/figma/gallery-1.png', type: 'image' },
-        { file_url: '/figma/gallery-2.png', type: 'image' },
-        { file_url: '/figma/gallery-3.png', type: 'image' }
-      ]
-
   return (
-    <div className="min-h-screen bg-[#111111] text-white">
-      <div className="mx-auto max-w-md px-4 py-6">
-        <div className="mb-5 flex justify-end gap-2">
-          <button
-            onClick={() => i18n.changeLanguage('en')}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-              i18n.language === 'en' ? 'bg-white text-black' : 'bg-[#2a2a2a] text-white'
-            }`}
-          >
-            EN
-          </button>
+    <div className="min-h-screen bg-[#0f0f0f] px-2 py-4 text-white">
+      <div className="mx-auto w-full max-w-[383px]">
+        <div className="home-card-frame relative w-full">
+          <img src="/figma/home.svg" alt="Business card" className="h-full w-full select-none object-contain" draggable={false} />
+
           <button
             onClick={() => i18n.changeLanguage('ru')}
-            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
-              i18n.language === 'ru' ? 'bg-white text-black' : 'bg-[#2a2a2a] text-white'
-            }`}
-          >
-            RU
-          </button>
-        </div>
+            className="hs hs-lang-ru"
+            aria-label="Russian"
+          />
+          <button
+            onClick={() => i18n.changeLanguage('en')}
+            className="hs hs-lang-en"
+            aria-label="English"
+          />
 
-        <section className="rounded-3xl border border-white/10 bg-[#1a1a1a] p-5 shadow-2xl">
-          <div className="text-center">
-            <img
-              src={card.avatar_url || '/figma/gallery-1.png'}
-              alt={card.full_name}
-              className="mx-auto mb-4 h-28 w-28 rounded-full object-cover"
+          {hotspots.map((spot) => (
+            <button
+              key={spot.id}
+              onClick={spot.onClick}
+              className={`hs hs-${spot.id}`}
+              aria-label={spot.label}
             />
-            <h1 className="text-2xl font-semibold">{card.full_name}</h1>
-            <p className="mt-1 text-sm text-gray-300">{card.title}</p>
-            {card.company_name && <p className="text-xs text-gray-400">{card.company_name}</p>}
-          </div>
-
-          <div className="mt-5 grid grid-cols-2 gap-2">
-            <button
-              onClick={handleSaveContact}
-              className="rounded-full bg-white px-3 py-2 text-sm font-semibold text-black"
-            >
-              {t('saveContact')}
-            </button>
-            <button
-              onClick={handleShare}
-              className="rounded-full border border-white/30 px-3 py-2 text-sm font-semibold"
-            >
-              {t('share')}
-            </button>
-            <button
-              onClick={() => setShowQR(!showQR)}
-              className="rounded-full border border-white/30 px-3 py-2 text-sm font-semibold"
-            >
-              {t('showQR')}
-            </button>
-            <button
-              onClick={() => setShowLeadForm(!showLeadForm)}
-              className="rounded-full bg-[#2e2e2e] px-3 py-2 text-sm font-semibold"
-            >
-              {t('bookNow')}
-            </button>
-          </div>
-
-          {showQR && (
-            <div className="mt-4 rounded-2xl bg-white p-4 text-center">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${window.location.href}`}
-                alt="QR Code"
-                className="mx-auto"
-              />
-            </div>
-          )}
-
-          <div className="mt-5 space-y-2 text-sm">
-            {card.phone && (
-              <a href={`tel:${card.phone}`} className="flex items-center gap-3 rounded-xl bg-[#222] px-3 py-3">
-                <img src="/figma/call.png" alt="phone" className="h-4 w-4" />
-                <span>{card.phone}</span>
-              </a>
-            )}
-            {card.email && (
-              <a href={`mailto:${card.email}`} className="flex items-center gap-3 rounded-xl bg-[#222] px-3 py-3">
-                <img src="/figma/email.png" alt="email" className="h-4 w-4" />
-                <span>{card.email}</span>
-              </a>
-            )}
-            {card.website && (
-              <a
-                href={card.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-xl bg-[#222] px-3 py-3"
-              >
-                <img src="/figma/location.png" alt="website" className="h-4 w-4" />
-                <span className="truncate">{card.website}</span>
-              </a>
-            )}
-          </div>
-
-          {card.links && card.links.length > 0 && (
-            <div className="mt-5 flex flex-wrap justify-center gap-3">
-              {card.links
-                .filter((link) => link.is_visible)
-                .map((link, index) => {
-                  const key = link.type.toLowerCase()
-                  const icon = socialIconMap[key]
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handleLinkClick(link.type, link.url)}
-                      className="flex h-11 w-11 items-center justify-center rounded-full bg-white"
-                      aria-label={link.type}
-                    >
-                      {icon ? (
-                        <img src={icon} alt={link.type} className="h-5 w-5" />
-                      ) : (
-                        <span className="text-xs font-semibold text-black uppercase">{link.type.slice(0, 2)}</span>
-                      )}
-                    </button>
-                  )
-                })}
-            </div>
-          )}
-        </section>
-
-        {card.bio && (
-          <section className="mt-4 rounded-3xl border border-white/10 bg-[#1a1a1a] p-5">
-            <h2 className="mb-2 text-lg font-semibold">{t('aboutMe')}</h2>
-            <p className="whitespace-pre-wrap text-sm text-gray-300">{card.bio}</p>
-          </section>
-        )}
-
-        <section className="mt-4 rounded-3xl border border-white/10 bg-[#1a1a1a] p-5">
-          <h2 className="mb-3 text-lg font-semibold">{t('gallery')}</h2>
-          <div className="grid grid-cols-2 gap-2">
-            {galleryItems.slice(0, 8).map((item, index) => (
-              <img
-                key={index}
-                src={item.file_url}
-                alt={`Gallery ${index + 1}`}
-                className="h-32 w-full rounded-xl object-cover"
-              />
-            ))}
-          </div>
-        </section>
+          ))}
+        </div>
 
         {showLeadForm && (
           <section className="mt-4 rounded-3xl border border-white/10 bg-[#1a1a1a] p-5">
@@ -327,6 +293,24 @@ export default function PublicCard() {
           </section>
         )}
       </div>
+
+      {showQR && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowQR(false)}>
+          <div className="w-full max-w-sm rounded-2xl bg-white p-4" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(window.location.href)}`}
+              alt="QR Code"
+              className="mx-auto"
+            />
+            <button
+              className="mt-4 w-full rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
+              onClick={() => setShowQR(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

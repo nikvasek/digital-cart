@@ -15,3 +15,33 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.home-card-frame {
+  aspect-ratio: 383 / 981;
+}
+
+.hs {
+  position: absolute;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.hs-lang-ru { left: 77.5457%; top: 2.8532%; width: 14%; height: 4.8%; }
+.hs-lang-en { left: 86.9452%; top: 2.8532%; width: 12%; height: 4.8%; }
+
+.hs-phone-row { left: 6.2663%; top: 24.0571%; width: 88.2507%; height: 4.2813%; }
+.hs-email-row { left: 6.2663%; top: 28.2365%; width: 88.2507%; height: 4.2813%; }
+.hs-web-row { left: 6.2663%; top: 32.4159%; width: 88.2507%; height: 4.2813%; }
+
+.hs-add-home { left: 59.2691%; top: 29.2559%; width: 34.7258%; height: 2.5484%; }
+.hs-share { left: 59.0078%; top: 34.4546%; width: 34.7258%; height: 2.5484%; }
+.hs-save-contact { left: 59.2691%; top: 39.8573%; width: 34.7258%; height: 2.5484%; }
+.hs-show-qr { left: 59.2691%; top: 44.9541%; width: 34.7258%; height: 2.5484%; }
+.hs-book-now { left: 59.2691%; top: 50.0510%; width: 34.7258%; height: 2.5484%; }
+
+.hs-instagram { left: 7.8329%; top: 41.7941%; width: 7.3107%; height: 2.8532%; }
+.hs-telegram { left: 7.8329%; top: 45.8716%; width: 7.3107%; height: 2.8532%; }
+.hs-whatsapp { left: 7.8329%; top: 50.0510%; width: 7.3107%; height: 2.8532%; }
+.hs-tiktok { left: 7.8329%; top: 54.2304%; width: 7.3107%; height: 2.8532%; }
+.hs-viber { left: 7.8329%; top: 58.4098%; width: 7.3107%; height: 2.8532%; }
