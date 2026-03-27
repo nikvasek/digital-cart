@@ -19,9 +19,11 @@ const fastify = Fastify({
 })
 
 const ensureServicesSchema = async () => {
+  await db.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto`)
+
   await db.query(`
     CREATE TABLE IF NOT EXISTS card_services (
-      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       card_id UUID NOT NULL REFERENCES cards(id) ON DELETE CASCADE,
       title VARCHAR(255) NOT NULL,
       description TEXT,
