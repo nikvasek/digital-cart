@@ -33,7 +33,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         id: user.id,
         email: user.email,
         role: user.role
-      })
+      }, { expiresIn: '7d' })
 
       return {
         token,
@@ -81,8 +81,12 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
       const user = userResult.rows[0]
 
-      // Создаем базовую визитку
-      const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+      // Создаем базовую визитку (slug уникален — добавляем суффикс при коллизии)
+      let slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+      const slugCheck = await db.query('SELECT id FROM cards WHERE slug = $1', [slug])
+      if (slugCheck.rows.length > 0) {
+        slug = `${slug}-${Date.now().toString(36)}`
+      }
       await db.query(
         `INSERT INTO cards (user_id, slug, full_name, email, language_default)
          VALUES ($1, $2, $3, $4, $5)`,
@@ -93,7 +97,7 @@ export default async function authRoutes(fastify: FastifyInstance) {
         id: user.id,
         email: user.email,
         role: user.role
-      })
+      }, { expiresIn: '7d' })
 
       return {
         token,

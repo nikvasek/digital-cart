@@ -26,7 +26,7 @@ export default function Login() {
       // Перенаправление в дашборд
       navigate('/admin/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Login failed')
+      setError(err.response?.data?.error || 'Login failed')
     } finally {
       setLoading(false)
     }

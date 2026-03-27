@@ -205,7 +205,11 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       }
 
       const card = result.rows[0]
-      const url = `${request.protocol}://${request.hostname}/${card.slug}`
+      // Используем frontend URL из окружения, или Origin заголовок, или фоллбэк
+      const frontendUrl = process.env.FRONTEND_URL
+        || request.headers.origin
+        || `${request.protocol}://${request.hostname}`
+      const url = `${frontendUrl}/${card.slug}`
 
       // Генерируем QR-код
       const qrCode = await QRCode.toBuffer(url, {

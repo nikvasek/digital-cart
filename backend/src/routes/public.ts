@@ -8,9 +8,11 @@ export default async function publicRoutes(fastify: FastifyInstance) {
     const { slug } = request.params as { slug: string }
 
     try {
-      // Получаем данные визитки
+      // Получаем данные визитки (только публичные поля)
       const cardResult = await db.query(
-        `SELECT * FROM cards WHERE slug = $1 AND is_active = true`,
+        `SELECT id, slug, full_name, title, company_name, phone, email,
+                website, bio, avatar_url, logo_url, language_default, is_active
+         FROM cards WHERE slug = $1 AND is_active = true`,
         [slug]
       )
 
@@ -73,17 +75,17 @@ export default async function publicRoutes(fastify: FastifyInstance) {
       const card = cardResult.rows[0]
       const vcardContent = generateVCard(card)
 
-      reply
+      // Логируем событие сохранения ДО отправки ответа
+      await db.query(
+        `INSERT INTO events (card_id, event_type) VALUES ($1, $2)`,
+        [card.id, 'save_vcard']
+      ).catch(err => fastify.log.error('Failed to log save_vcard event:', err))
+
+      return reply
         .header('Content-Type', 'text/vcard; charset=utf-8')
         .header('Content-Disposition', `attachment; filename="${slug}.vcf"`)
         .header('Cache-Control', 'no-store')
         .send(vcardContent)
-
-      // Логируем событие сохранения
-      await db.query(
-        `INSERT INTO events (card_id, event_type) VALUES ($1, $2)`,
-        [card.id, 'save_vcard']
-      )
     } catch (error) {
       fastify.log.error(error)
       return reply.code(500).send({ error: 'Internal server error' })
@@ -142,7 +144,23 @@ export default async function publicRoutes(fastify: FastifyInstance) {
       metadata?: any
     }
 
+    // Валидация типа события
+    const allowedEvents = ['view', 'click', 'share', 'save_vcard', 'lead_submit']
+    if (!event_type || !allowedEvents.includes(event_type)) {
+      return reply.code(400).send({ error: 'Invalid event_type' })
+    }
+
+    if (!card_id) {
+      return reply.code(400).send({ error: 'card_id is required' })
+    }
+
     try {
+      // Проверяем что карточка существует
+      const cardCheck = await db.query('SELECT id FROM cards WHERE id = $1', [card_id])
+      if (cardCheck.rows.length === 0) {
+        return reply.code(404).send({ error: 'Card not found' })
+      }
+
       await db.query(
         `INSERT INTO events (card_id, event_type, referrer, metadata)
          VALUES ($1, $2, $3, $4)`,

@@ -16,32 +16,67 @@ code {
     monospace;
 }
 
+/* ── Card frame ────────────────────────────────────────────
+   viewBox 383 × 981  —  all hotspot values are exact %
+   of that coordinate space.                                */
 .home-card-frame {
   aspect-ratio: 383 / 981;
 }
 
+/* Smooth SVG rendering — no excessive sharpness */
+.home-card-frame img {
+  image-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  will-change: transform;            /* GPU-layer for smooth sub-pixel scaling */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ── Hotspot base ──────────────────────────────────────── */
 .hs {
   position: absolute;
   background: transparent;
   border: 0;
+  padding: 0;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.hs-lang-ru { left: 77.5457%; top: 2.8532%; width: 14%; height: 4.8%; }
-.hs-lang-en { left: 86.9452%; top: 2.8532%; width: 12%; height: 4.8%; }
+/* ── Language switcher (top-right) ─────────────────────── */
+/*  RU  text ≈ x 293-312, y 43-59                          */
+/*  ENG text ≈ x 323-352, y 43-59                          */
+.hs-lang-ru { left: 74.93%; top: 3.98%;  width: 8.36%;  height: 2.45%; }
+.hs-lang-en { left: 83.03%; top: 3.98%;  width: 10.44%; height: 2.45%; }
 
-.hs-phone-row { left: 6.2663%; top: 24.0571%; width: 88.2507%; height: 4.2813%; }
-.hs-email-row { left: 6.2663%; top: 28.2365%; width: 88.2507%; height: 4.2813%; }
-.hs-web-row { left: 6.2663%; top: 32.4159%; width: 88.2507%; height: 4.2813%; }
+/* ── Contact rows (left side: icon + text) ─────────────── */
+/*  Location icon (33,250) → Kalvariyskaya 42               */
+/*  Phone    icon (29,290) → +375 29 232 73 82              */
+/*  Email    icon (33,331) → email                           */
+.hs-web-row   { left: 6.27%; top: 24.87%; width: 51.17%; height: 3.47%; }
+.hs-phone-row { left: 6.27%; top: 28.95%; width: 51.17%; height: 3.47%; }
+.hs-email-row { left: 6.27%; top: 33.13%; width: 51.17%; height: 3.47%; }
 
-.hs-add-home { left: 59.2691%; top: 29.2559%; width: 34.7258%; height: 2.5484%; }
-.hs-share { left: 59.0078%; top: 34.4546%; width: 34.7258%; height: 2.5484%; }
-.hs-save-contact { left: 59.2691%; top: 39.8573%; width: 34.7258%; height: 2.5484%; }
-.hs-show-qr { left: 59.2691%; top: 44.9541%; width: 34.7258%; height: 2.5484%; }
-.hs-book-now { left: 59.2691%; top: 50.0510%; width: 34.7258%; height: 2.5484%; }
+/* ── Action buttons (right side, x 227, w 133, h 25) ──── */
+/*  y=287  "Save contact"  outline #AB5A40                  */
+/*  y=338  "Show QR"       outline #AB5A40                  */
+/*  y=391  "BOOK NOW"      gradient fill                    */
+/*  y=441  "Add to Home"   outline #AB5A40                  */
+/*  y=491  "SHARE"         outline #AB5A40                  */
+.hs-save-contact { left: 59.27%; top: 29.26%; width: 34.73%; height: 2.55%; }
+.hs-show-qr      { left: 58.99%; top: 34.45%; width: 34.73%; height: 2.55%; }
+.hs-book-now     { left: 59.27%; top: 39.86%; width: 34.73%; height: 2.55%; }
+.hs-add-home     { left: 59.27%; top: 44.95%; width: 34.73%; height: 2.55%; }
+.hs-share        { left: 59.27%; top: 50.05%; width: 34.73%; height: 2.55%; }
 
-.hs-instagram { left: 7.8329%; top: 41.7941%; width: 7.3107%; height: 2.8532%; }
-.hs-telegram { left: 7.8329%; top: 45.8716%; width: 7.3107%; height: 2.8532%; }
-.hs-whatsapp { left: 7.8329%; top: 50.0510%; width: 7.3107%; height: 2.8532%; }
-.hs-tiktok { left: 7.8329%; top: 54.2304%; width: 7.3107%; height: 2.8532%; }
-.hs-viber { left: 7.8329%; top: 58.4098%; width: 7.3107%; height: 2.8532%; }
+/* ── Social icons (left side: icon 22×22 + label text) ─── */
+/*  y=372  WhatsApp     icon+label                           */
+/*  y=413  Instagram    icon+label                           */
+/*  y=454  Telegram     icon+label                           */
+/*  y=495  TikTok       icon+label                           */
+/*  y=536  Viber        icon+label                           */
+.hs-whatsapp  { left: 6.27%; top: 37.31%; width: 46.99%; height: 3.47%; }
+.hs-instagram { left: 6.27%; top: 41.49%; width: 46.99%; height: 3.47%; }
+.hs-telegram  { left: 6.27%; top: 45.67%; width: 46.99%; height: 3.47%; }
+.hs-tiktok    { left: 6.27%; top: 49.85%; width: 46.99%; height: 3.47%; }
+.hs-viber     { left: 6.27%; top: 54.03%; width: 46.99%; height: 3.47%; }

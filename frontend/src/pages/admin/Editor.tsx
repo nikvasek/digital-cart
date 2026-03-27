@@ -92,8 +92,24 @@ export default function Editor() {
     }
   }
 
-  const handleDownloadQR = () => {
-    window.open(`/api/admin/card/${id}/qr`, '_blank')
+  const handleDownloadQR = async () => {
+    try {
+      const token = localStorage.getItem('token')
+      const response = await axios.get(`/api/admin/card/${id}/qr`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      })
+      const url = URL.createObjectURL(response.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `card-${id}-qr.png`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      alert('Failed to download QR code')
+    }
   }
 
   const addLink = () => {

@@ -206,7 +206,9 @@ const ensureCoreSchema = async () => {
 
 // Плагины
 await fastify.register(cors, {
-  origin: true
+  origin: config.nodeEnv === 'production'
+    ? (process.env.FRONTEND_URL || true)
+    : true
 })
 
 await fastify.register(jwt, {

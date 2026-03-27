@@ -18,6 +18,7 @@ interface CardData {
   language_default: string
   links: Array<{ type: string; url: string; is_visible: boolean }>
   media: Array<{ file_url: string; type: string }>
+  services: Array<{ title: string; description: string; is_visible: boolean }>
 }
 
 const createFallbackCard = (slugParam?: string): CardData => ({
@@ -40,7 +41,8 @@ const createFallbackCard = (slugParam?: string): CardData => ({
     { type: 'tiktok', url: 'https://www.tiktok.com', is_visible: true },
     { type: 'viber', url: 'viber://chat?number=%2B375292327382', is_visible: true }
   ],
-  media: []
+  media: [],
+  services: []
 })
 
 type Hotspot = {
@@ -176,17 +178,27 @@ export default function PublicCard() {
   }
 
   const hotspots: Hotspot[] = [
+    /* ── Contact rows (left side: icon + text) ───────────── */
+    { id: 'web-row', onClick: openWebsite, label: 'Open website' },
     { id: 'phone-row', onClick: openTel, label: 'Call phone' },
     { id: 'email-row', onClick: openEmail, label: 'Send email' },
-    { id: 'web-row', onClick: openWebsite, label: 'Open website' },
-    { id: 'add-home', onClick: addToHomeHint, label: 'Add to Home' },
-    { id: 'share', onClick: () => void handleShare(), label: 'Share' },
+
+    /* ── Action buttons (right side — matches SVG text) ──── */
     { id: 'save-contact', onClick: handleSaveContact, label: 'Save contact' },
     { id: 'show-qr', onClick: () => setShowQR(true), label: 'Show QR' },
     {
       id: 'book-now',
       onClick: () => setShowLeadForm((prev) => !prev),
       label: 'Book now'
+    },
+    { id: 'add-home', onClick: addToHomeHint, label: 'Add to Home' },
+    { id: 'share', onClick: () => void handleShare(), label: 'Share' },
+
+    /* ── Social icons (left side: icon + label) ──────────── */
+    {
+      id: 'whatsapp',
+      onClick: () => openExternal('whatsapp', getLinkByType('whatsapp')),
+      label: 'WhatsApp'
     },
     {
       id: 'instagram',
@@ -197,11 +209,6 @@ export default function PublicCard() {
       id: 'telegram',
       onClick: () => openExternal('telegram', getLinkByType('telegram')),
       label: 'Telegram'
-    },
-    {
-      id: 'whatsapp',
-      onClick: () => openExternal('whatsapp', getLinkByType('whatsapp')),
-      label: 'WhatsApp'
     },
     {
       id: 'tiktok',
@@ -234,8 +241,14 @@ export default function PublicCard() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] px-2 py-4 text-white">
       <div className="mx-auto w-full max-w-[383px]">
-        <div className="home-card-frame relative w-full">
-          <img src="/figma/home.svg" alt="Business card" className="h-full w-full select-none object-contain" draggable={false} />
+        <div className="home-card-frame relative w-full overflow-hidden">
+          <img
+            src="/figma/home.svg"
+            alt="Business card"
+            className="h-full w-full select-none"
+            draggable={false}
+            style={{ display: 'block', imageRendering: 'auto' }}
+          />
 
           <button
             onClick={() => i18n.changeLanguage('ru')}

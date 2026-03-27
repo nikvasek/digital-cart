@@ -48,9 +48,12 @@ export default function Dashboard() {
 
       setCards(cardsResponse.data)
       setAnalytics(analyticsResponse.data)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to load data:', error)
-      navigate('/admin/login')
+      // Перенаправляем в логин только при 401 (неавторизован)
+      if (error.response?.status === 401) {
+        navigate('/admin/login')
+      }
     } finally {
       setLoading(false)
     }
