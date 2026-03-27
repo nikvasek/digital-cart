@@ -20,6 +20,14 @@ interface CardData {
   media: Array<{ file_url: string; type: string }>
 }
 
+const socialIconMap: Record<string, string> = {
+  instagram: '/figma/instagram.png',
+  telegram: '/figma/telegram.png',
+  whatsapp: '/figma/whatsapp.png',
+  viber: '/figma/viber.png',
+  tiktok: '/figma/tiktok.png'
+}
+
 export default function PublicCard() {
   const { slug } = useParams<{ slug: string }>()
   const { t, i18n } = useTranslation()
@@ -132,102 +140,95 @@ export default function PublicCard() {
     )
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Языковой переключатель */}
-      <div className="fixed top-4 right-4 flex gap-2 z-10">
-        <button
-          onClick={() => i18n.changeLanguage('en')}
-          className={`px-3 py-1 rounded ${
-            i18n.language === 'en' ? 'bg-black text-white' : 'bg-white text-black'
-          }`}
-        >
-          EN
-        </button>
-        <button
-          onClick={() => i18n.changeLanguage('ru')}
-          className={`px-3 py-1 rounded ${
-            i18n.language === 'ru' ? 'bg-black text-white' : 'bg-white text-black'
-          }`}
-        >
-          RU
-        </button>
-      </div>
+  const galleryItems = card.media && card.media.length > 0
+    ? card.media
+    : [
+        { file_url: '/figma/gallery-1.png', type: 'image' },
+        { file_url: '/figma/gallery-2.png', type: 'image' },
+        { file_url: '/figma/gallery-3.png', type: 'image' }
+      ]
 
-      <div className="max-w-lg mx-auto px-4 py-8">
-        {/* Профиль */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+  return (
+    <div className="min-h-screen bg-[#111111] text-white">
+      <div className="mx-auto max-w-md px-4 py-6">
+        <div className="mb-5 flex justify-end gap-2">
+          <button
+            onClick={() => i18n.changeLanguage('en')}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+              i18n.language === 'en' ? 'bg-white text-black' : 'bg-[#2a2a2a] text-white'
+            }`}
+          >
+            EN
+          </button>
+          <button
+            onClick={() => i18n.changeLanguage('ru')}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition ${
+              i18n.language === 'ru' ? 'bg-white text-black' : 'bg-[#2a2a2a] text-white'
+            }`}
+          >
+            RU
+          </button>
+        </div>
+
+        <section className="rounded-3xl border border-white/10 bg-[#1a1a1a] p-5 shadow-2xl">
           <div className="text-center">
-            {card.avatar_url && (
-              <img
-                src={card.avatar_url}
-                alt={card.full_name}
-                className="w-32 h-32 rounded-full mx-auto mb-4 object-cover border-4 border-gray-100"
-              />
-            )}
-            <h1 className="text-3xl font-bold mb-2">{card.full_name}</h1>
-            <p className="text-lg text-gray-600 mb-1">{card.title}</p>
-            {card.company_name && (
-              <p className="text-md text-gray-500 mb-4">{card.company_name}</p>
-            )}
+            <img
+              src={card.avatar_url || '/figma/gallery-1.png'}
+              alt={card.full_name}
+              className="mx-auto mb-4 h-28 w-28 rounded-full object-cover"
+            />
+            <h1 className="text-2xl font-semibold">{card.full_name}</h1>
+            <p className="mt-1 text-sm text-gray-300">{card.title}</p>
+            {card.company_name && <p className="text-xs text-gray-400">{card.company_name}</p>}
           </div>
 
-          {/* Основные кнопки действий */}
-          <div className="grid grid-cols-2 gap-3 mt-6">
+          <div className="mt-5 grid grid-cols-2 gap-2">
             <button
               onClick={handleSaveContact}
-              className="bg-black text-white py-3 px-4 rounded-xl font-semibold hover:bg-gray-800 transition"
+              className="rounded-full bg-white px-3 py-2 text-sm font-semibold text-black"
             >
               {t('saveContact')}
             </button>
             <button
               onClick={handleShare}
-              className="bg-gray-200 text-black py-3 px-4 rounded-xl font-semibold hover:bg-gray-300 transition"
+              className="rounded-full border border-white/30 px-3 py-2 text-sm font-semibold"
             >
               {t('share')}
             </button>
             <button
               onClick={() => setShowQR(!showQR)}
-              className="bg-gray-200 text-black py-3 px-4 rounded-xl font-semibold hover:bg-gray-300 transition"
+              className="rounded-full border border-white/30 px-3 py-2 text-sm font-semibold"
             >
               {t('showQR')}
             </button>
             <button
               onClick={() => setShowLeadForm(!showLeadForm)}
-              className="bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 transition"
+              className="rounded-full bg-[#2e2e2e] px-3 py-2 text-sm font-semibold"
             >
               {t('bookNow')}
             </button>
           </div>
 
-          {/* QR код */}
           {showQR && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center">
+            <div className="mt-4 rounded-2xl bg-white p-4 text-center">
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${window.location.href}`}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${window.location.href}`}
                 alt="QR Code"
                 className="mx-auto"
               />
             </div>
           )}
 
-          {/* Контактная информация */}
-          <div className="mt-6 space-y-3">
+          <div className="mt-5 space-y-2 text-sm">
             {card.phone && (
-              <a
-                href={`tel:${card.phone}`}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
-              >
-                <span className="text-2xl">📞</span>
+              <a href={`tel:${card.phone}`} className="flex items-center gap-3 rounded-xl bg-[#222] px-3 py-3">
+                <img src="/figma/call.png" alt="phone" className="h-4 w-4" />
                 <span>{card.phone}</span>
               </a>
             )}
             {card.email && (
-              <a
-                href={`mailto:${card.email}`}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
-              >
-                <span className="text-2xl">✉️</span>
+              <a href={`mailto:${card.email}`} className="flex items-center gap-3 rounded-xl bg-[#222] px-3 py-3">
+                <img src="/figma/email.png" alt="email" className="h-4 w-4" />
                 <span>{card.email}</span>
               </a>
             )}
@@ -236,96 +237,94 @@ export default function PublicCard() {
                 href={card.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                className="flex items-center gap-3 rounded-xl bg-[#222] px-3 py-3"
               >
-                <span className="text-2xl">🌐</span>
-                <span>{card.website}</span>
+                <img src="/figma/location.png" alt="website" className="h-4 w-4" />
+                <span className="truncate">{card.website}</span>
               </a>
             )}
           </div>
 
-          {/* Ссылки на соцсети */}
           {card.links && card.links.length > 0 && (
-            <div className="mt-6">
-              <div className="flex flex-wrap gap-3 justify-center">
-                {card.links
-                  .filter((link) => link.is_visible)
-                  .map((link, index) => (
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              {card.links
+                .filter((link) => link.is_visible)
+                .map((link, index) => {
+                  const key = link.type.toLowerCase()
+                  const icon = socialIconMap[key]
+                  return (
                     <button
                       key={index}
                       onClick={() => handleLinkClick(link.type, link.url)}
-                      className="px-4 py-2 bg-gray-100 rounded-full hover:bg-gray-200 transition capitalize"
+                      className="flex h-11 w-11 items-center justify-center rounded-full bg-white"
+                      aria-label={link.type}
                     >
-                      {link.type}
+                      {icon ? (
+                        <img src={icon} alt={link.type} className="h-5 w-5" />
+                      ) : (
+                        <span className="text-xs font-semibold text-black uppercase">{link.type.slice(0, 2)}</span>
+                      )}
                     </button>
-                  ))}
-              </div>
+                  )
+                })}
             </div>
           )}
-        </div>
+        </section>
 
-        {/* О себе */}
         {card.bio && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-            <h2 className="text-xl font-bold mb-3">{t('aboutMe')}</h2>
-            <p className="text-gray-700 whitespace-pre-wrap">{card.bio}</p>
-          </div>
+          <section className="mt-4 rounded-3xl border border-white/10 bg-[#1a1a1a] p-5">
+            <h2 className="mb-2 text-lg font-semibold">{t('aboutMe')}</h2>
+            <p className="whitespace-pre-wrap text-sm text-gray-300">{card.bio}</p>
+          </section>
         )}
 
-        {/* Галерея */}
-        {card.media && card.media.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-            <h2 className="text-xl font-bold mb-4">{t('gallery')}</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {card.media.map((item, index) => (
-                <img
-                  key={index}
-                  src={item.file_url}
-                  alt={`Gallery ${index + 1}`}
-                  className="w-full h-40 object-cover rounded-lg"
-                />
-              ))}
-            </div>
+        <section className="mt-4 rounded-3xl border border-white/10 bg-[#1a1a1a] p-5">
+          <h2 className="mb-3 text-lg font-semibold">{t('gallery')}</h2>
+          <div className="grid grid-cols-2 gap-2">
+            {galleryItems.slice(0, 8).map((item, index) => (
+              <img
+                key={index}
+                src={item.file_url}
+                alt={`Gallery ${index + 1}`}
+                className="h-32 w-full rounded-xl object-cover"
+              />
+            ))}
           </div>
-        )}
+        </section>
 
-        {/* Форма лидогенерации */}
         {showLeadForm && (
-          <div className="bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-bold mb-4">{t('leaveContact')}</h2>
-            <form onSubmit={submitLead} className="space-y-4">
+          <section className="mt-4 rounded-3xl border border-white/10 bg-[#1a1a1a] p-5">
+            <h2 className="mb-4 text-lg font-semibold">{t('leaveContact')}</h2>
+            <form onSubmit={submitLead} className="space-y-3">
               <input
                 type="text"
                 name="name"
                 placeholder={t('name')}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full rounded-xl border border-white/20 bg-[#222] px-4 py-3 text-sm text-white outline-none"
               />
               <input
                 type="tel"
                 name="phone"
                 placeholder={t('phone')}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full rounded-xl border border-white/20 bg-[#222] px-4 py-3 text-sm text-white outline-none"
               />
               <input
                 type="email"
                 name="email"
                 placeholder={t('email')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full rounded-xl border border-white/20 bg-[#222] px-4 py-3 text-sm text-white outline-none"
               />
-              <label className="flex items-start gap-2">
-                <input type="checkbox" name="consent" required className="mt-1" />
-                <span className="text-sm text-gray-600">{t('consent')}</span>
+              <label className="flex items-start gap-2 text-xs text-gray-300">
+                <input type="checkbox" name="consent" required className="mt-0.5" />
+                <span>{t('consent')}</span>
               </label>
-              <button
-                type="submit"
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition"
-              >
+              <button type="submit" className="w-full rounded-full bg-white px-4 py-3 text-sm font-semibold text-black">
                 {t('submit')}
               </button>
             </form>
-          </div>
+          </section>
         )}
       </div>
     </div>
