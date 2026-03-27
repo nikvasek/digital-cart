@@ -1,0 +1,132 @@
+import { FastifyInstance } from 'fastify'
+import { db } from '../db/index.js'
+import bcrypt from 'bcrypt'
+
+export default async function authRoutes(fastify: FastifyInstance) {
+  // Логин
+  fastify.post('/login', async (request, reply) => {
+    const { email, password } = request.body as {
+      email: string
+      password: string
+    }
+
+    try {
+      const result = await db.query(
+        `SELECT id, email, password_hash, role FROM users WHERE email = $1`,
+        [email]
+      )
+
+      if (result.rows.length === 0) {
+        return reply.code(401).send({ error: 'Invalid credentials' })
+      }
+
+      const user = result.rows[0]
+      const isValid = await bcrypt.compare(password, user.password_hash)
+
+      if (!isValid) {
+        return reply.code(401).send({ error: 'Invalid credentials' })
+      }
+
+      const token = fastify.jwt.sign({
+        id: user.id,
+        email: user.email,
+        role: user.role
+      })
+
+      return {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role
+        }
+      }
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.code(500).send({ error: 'Internal server error' })
+    }
+  })
+
+  // Регистрация (опционально, можно добавить позже)
+  fastify.post('/register', async (request, reply) => {
+    const { email, password, full_name } = request.body as {
+      email: string
+      password: string
+      full_name: string
+    }
+
+    try {
+      // Проверяем, существует ли пользователь
+      const existingUser = await db.query(
+        `SELECT id FROM users WHERE email = $1`,
+        [email]
+      )
+
+      if (existingUser.rows.length > 0) {
+        return reply.code(400).send({ error: 'Email already registered' })
+      }
+
+      // Хешируем пароль
+      const passwordHash = await bcrypt.hash(password, 10)
+
+      // Создаем пользователя
+      const userResult = await db.query(
+        `INSERT INTO users (email, password_hash) 
+         VALUES ($1, $2) 
+         RETURNING id, email, role`,
+        [email, passwordHash]
+      )
+
+      const user = userResult.rows[0]
+
+      // Создаем базовую визитку
+      const slug = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-')
+      await db.query(
+        `INSERT INTO cards (user_id, slug, full_name, email, language_default)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [user.id, slug, full_name, email, 'en']
+      )
+
+      const token = fastify.jwt.sign({
+        id: user.id,
+        email: user.email,
+        role: user.role
+      })
+
+      return {
+        token,
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role
+        }
+      }
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.code(500).send({ error: 'Internal server error' })
+    }
+  })
+
+  // Получить текущего пользователя
+  fastify.get('/me', {
+    onRequest: [fastify.authenticate]
+  }, async (request, reply) => {
+    const user = request.user as any
+    
+    try {
+      const result = await db.query(
+        `SELECT id, email, role, created_at FROM users WHERE id = $1`,
+        [user.id]
+      )
+
+      if (result.rows.length === 0) {
+        return reply.code(404).send({ error: 'User not found' })
+      }
+
+      return result.rows[0]
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.code(500).send({ error: 'Internal server error' })
+    }
+  })
+}

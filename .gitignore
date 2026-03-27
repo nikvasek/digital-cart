@@ -1,0 +1,21 @@
+# Digital Cards Platform
+
+/node_modules
+/dist
+/.env
+/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Database
+postgres_data/
