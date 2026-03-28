@@ -102,7 +102,8 @@ export default function PublicCard() {
   }
 
   const handleSaveContact = () => {
-    window.location.href = `/api/public/card/${slug}/vcard`
+    const baseUrl = (axios.defaults.baseURL || '').toString().replace(/\/$/, '')
+    window.location.href = `${baseUrl}/api/public/card/${slug}/vcard`
     trackEvent('save_vcard')
   }
 

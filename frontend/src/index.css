@@ -41,10 +41,12 @@ code {
 .hs {
   position: absolute;
   z-index: 10;
+  display: block;
   background: transparent;
   border: 0;
   padding: 0;
   cursor: pointer;
+  pointer-events: auto;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
@@ -60,15 +62,15 @@ code {
 /*  ig=380(45.9%) viber=420(50.7%) email=463(55.9%)         */
 /*  tiktok=507(61.2%) gallery≈547(66%) kalv≈588(71%)        */
 /* tap-zone: top = center% - 2.2%, height = 4.4% (≈36px)   */
-.hs-phone-row { left: 5%; top: 29.3%; width: 48%; height: 4.4%; }
-.hs-whatsapp  { left: 5%; top: 33.9%; width: 48%; height: 4.4%; }
-.hs-telegram  { left: 5%; top: 39.1%; width: 48%; height: 4.4%; }
-.hs-instagram { left: 5%; top: 43.7%; width: 48%; height: 4.4%; }
-.hs-viber     { left: 5%; top: 48.5%; width: 48%; height: 4.4%; }
-.hs-email-row { left: 5%; top: 53.7%; width: 48%; height: 4.4%; }
-.hs-tiktok    { left: 5%; top: 59.0%; width: 48%; height: 4.4%; }
-.hs-gallery   { left: 5%; top: 63.8%; width: 48%; height: 4.4%; }
-.hs-web-row   { left: 5%; top: 68.8%; width: 48%; height: 4.4%; }
+.hs-phone-row { left: 4%; top: 29.0%; width: 50%; height: 5%; }
+.hs-whatsapp  { left: 4%; top: 33.6%; width: 50%; height: 5%; }
+.hs-telegram  { left: 4%; top: 38.8%; width: 50%; height: 5%; }
+.hs-instagram { left: 4%; top: 43.4%; width: 50%; height: 5%; }
+.hs-viber     { left: 4%; top: 48.2%; width: 50%; height: 5%; }
+.hs-email-row { left: 4%; top: 53.4%; width: 50%; height: 5%; }
+.hs-tiktok    { left: 4%; top: 58.7%; width: 50%; height: 5%; }
+.hs-gallery   { left: 4%; top: 63.5%; width: 50%; height: 5%; }
+.hs-web-row   { left: 4%; top: 68.5%; width: 50%; height: 5%; }
 
 /* ── Action buttons (right side) ───────────────────────── */
 /* Measured pixel centers (right col):                       */
