@@ -85,6 +85,12 @@ export default async function publicRoutes(fastify: FastifyInstance) {
         links: linksResult.rows
       })
 
+      const userAgent = (request.headers['user-agent'] || '').toLowerCase()
+      const isInAppBrowser = /; wv\)|webview|telegram|instagram|fb_iab|line\//i.test(userAgent)
+      const disposition = isInAppBrowser
+        ? `inline; filename="${slug}.vcf"`
+        : `attachment; filename="${slug}.vcf"`
+
       // Логируем событие сохранения ДО отправки ответа
       await db.query(
         `INSERT INTO events (card_id, event_type) VALUES ($1, $2)`,
@@ -93,7 +99,7 @@ export default async function publicRoutes(fastify: FastifyInstance) {
 
       return reply
         .header('Content-Type', 'text/vcard; charset=utf-8')
-        .header('Content-Disposition', `attachment; filename="${slug}.vcf"`)
+        .header('Content-Disposition', disposition)
         .header('Cache-Control', 'no-store')
         .send(vcardContent)
     } catch (error) {
