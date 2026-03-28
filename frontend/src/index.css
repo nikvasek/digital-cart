@@ -44,26 +44,33 @@ code {
 }
 
 /* ── Language switcher (top-right) ─────────────────────── */
-.hs-lang-ru { left: 74.93%; top: 4.71%;  width: 8.36%;  height: 2.90%; }
-.hs-lang-en { left: 83.03%; top: 4.71%;  width: 10.44%; height: 2.90%; }
+/* RU / ENG labels top-right of card                        */
+.hs-lang-ru { left: 74.93%; top: 3.50%; width: 8.36%;  height: 3.00%; }
+.hs-lang-en { left: 83.03%; top: 3.50%; width: 10.44%; height: 3.00%; }
 
-/* ── Contact / social rows (left side: icon + label) ───── */
-/*  9 rows: phone, whatsapp, telegram, instagram,           */
-/*  viber, email, tiktok, gallery, kalvariyskaya             */
-/*  Rows span ≈ y 260–590 in 828-height canvas               */
-.hs-phone-row { left: 6.27%; top: 31.40%; width: 52%;    height: 4.00%; }
-.hs-whatsapp  { left: 6.27%; top: 36.35%; width: 52%;    height: 4.00%; }
-.hs-telegram  { left: 6.27%; top: 41.30%; width: 52%;    height: 4.00%; }
-.hs-instagram { left: 6.27%; top: 46.25%; width: 52%;    height: 4.00%; }
-.hs-viber     { left: 6.27%; top: 51.21%; width: 52%;    height: 4.00%; }
-.hs-email-row { left: 6.27%; top: 56.16%; width: 52%;    height: 4.00%; }
-.hs-tiktok    { left: 6.27%; top: 61.11%; width: 52%;    height: 4.00%; }
-.hs-gallery   { left: 6.27%; top: 66.06%; width: 52%;    height: 4.00%; }
-.hs-web-row   { left: 6.27%; top: 71.01%; width: 52%;    height: 4.00%; }
+/* ── Contact / social rows (left side)  ────────────────── */
+/* Measured pixel centers (383x828 canvas):                  */
+/*  phone=261px(31.5%) whatsapp=299(36.1%) tg=342(41.3%)    */
+/*  ig=380(45.9%) viber=420(50.7%) email=463(55.9%)         */
+/*  tiktok=507(61.2%) gallery≈547(66%) kalv≈588(71%)        */
+/* tap-zone: top = center% - 2.2%, height = 4.4% (≈36px)   */
+.hs-phone-row { left: 5%; top: 29.3%; width: 48%; height: 4.4%; }
+.hs-whatsapp  { left: 5%; top: 33.9%; width: 48%; height: 4.4%; }
+.hs-telegram  { left: 5%; top: 39.1%; width: 48%; height: 4.4%; }
+.hs-instagram { left: 5%; top: 43.7%; width: 48%; height: 4.4%; }
+.hs-viber     { left: 5%; top: 48.5%; width: 48%; height: 4.4%; }
+.hs-email-row { left: 5%; top: 53.7%; width: 48%; height: 4.4%; }
+.hs-tiktok    { left: 5%; top: 59.0%; width: 48%; height: 4.4%; }
+.hs-gallery   { left: 5%; top: 63.8%; width: 48%; height: 4.4%; }
+.hs-web-row   { left: 5%; top: 68.8%; width: 48%; height: 4.4%; }
 
-/* ── Action buttons (right side, aligned with rows 2-6) ── */
-.hs-save-contact { left: 57%; top: 36.35%; width: 38%; height: 3.50%; }
-.hs-show-qr      { left: 57%; top: 41.30%; width: 38%; height: 3.50%; }
-.hs-book-now     { left: 57%; top: 46.25%; width: 38%; height: 3.50%; }
-.hs-add-home     { left: 57%; top: 51.21%; width: 38%; height: 3.50%; }
-.hs-share        { left: 57%; top: 56.16%; width: 38%; height: 3.50%; }
+/* ── Action buttons (right side) ───────────────────────── */
+/* Measured pixel centers (right col):                       */
+/*  save=299(36.1%) qr=350(42.3%) book=401(48.4%)           */
+/*  addhome=459(55.4%) share=503(60.7%)                     */
+/* tap-zone: top = center% - 2.5%, height = 5%              */
+.hs-save-contact { left: 54%; top: 33.6%; width: 43%; height: 5%; }
+.hs-show-qr      { left: 54%; top: 39.8%; width: 43%; height: 5%; }
+.hs-book-now     { left: 54%; top: 45.9%; width: 43%; height: 5%; }
+.hs-add-home     { left: 54%; top: 52.9%; width: 43%; height: 5%; }
+.hs-share        { left: 54%; top: 58.2%; width: 43%; height: 5%; }
