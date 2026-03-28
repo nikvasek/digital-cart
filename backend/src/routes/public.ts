@@ -73,7 +73,17 @@ export default async function publicRoutes(fastify: FastifyInstance) {
       }
 
       const card = cardResult.rows[0]
-      const vcardContent = generateVCard(card)
+      const linksResult = await db.query(
+        `SELECT type, url, is_visible FROM card_links
+         WHERE card_id = $1 AND is_visible = true
+         ORDER BY sort_order`,
+        [card.id]
+      )
+
+      const vcardContent = await generateVCard({
+        ...card,
+        links: linksResult.rows
+      })
 
       // Логируем событие сохранения ДО отправки ответа
       await db.query(
