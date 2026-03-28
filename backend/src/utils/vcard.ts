@@ -1,3 +1,5 @@
+import sharp from 'sharp'
+
 interface CardData {
   full_name: string
   title?: string
@@ -57,7 +59,6 @@ export async function generateVCard(card: CardData): Promise<string> {
     const normalized = normalizeUrl(link.url)
     const type = (link.type || 'other').toUpperCase()
     lines.push(`URL;TYPE=${escapeVCardValue(type)}:${escapeVCardValue(normalized)}`)
-    lines.push(`X-SOCIALPROFILE;TYPE=${escapeVCardValue(type)}:${escapeVCardValue(normalized)}`)
   }
 
   if (card.bio) {
@@ -143,17 +144,6 @@ async function buildEmbeddedPhotoLine(avatarUrl?: string): Promise<string | null
 
     if (!response.ok) return null
 
-    const contentType = (response.headers.get('content-type') || '').toLowerCase()
-    const photoType = contentType.includes('png')
-      ? 'PNG'
-      : contentType.includes('gif')
-        ? 'GIF'
-        : contentType.includes('jpeg') || contentType.includes('jpg')
-          ? 'JPEG'
-          : null
-
-    if (!photoType) return null
-
     const arrayBuffer = await response.arrayBuffer()
     const bytes = Buffer.from(arrayBuffer)
 
@@ -162,8 +152,24 @@ async function buildEmbeddedPhotoLine(avatarUrl?: string): Promise<string | null
       return null
     }
 
-    const base64 = bytes.toString('base64')
-    return `PHOTO;ENCODING=b;TYPE=${photoType}:${base64}`
+    const avatarSize = 320
+    const circleMask = Buffer.from(
+      `<svg width="${avatarSize}" height="${avatarSize}" xmlns="http://www.w3.org/2000/svg"><circle cx="${avatarSize / 2}" cy="${avatarSize / 2}" r="${avatarSize / 2}" fill="white"/></svg>`
+    )
+
+    const roundedPng = await sharp(bytes)
+      .rotate()
+      .resize(avatarSize, avatarSize, {
+        fit: 'cover',
+        position: 'centre'
+      })
+      .ensureAlpha()
+      .composite([{ input: circleMask, blend: 'dest-in' }])
+      .png()
+      .toBuffer()
+
+    const base64 = roundedPng.toString('base64')
+    return `PHOTO;ENCODING=b;TYPE=PNG:${base64}`
   } catch {
     return null
   }
