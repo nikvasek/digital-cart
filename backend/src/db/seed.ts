@@ -46,7 +46,10 @@ async function seed() {
       { type: 'telegram', url: 'https://t.me/paulline' },
       { type: 'whatsapp', url: 'https://wa.me/375292327382' },
       { type: 'viber', url: 'viber://chat?number=375292327382' },
-      { type: 'tiktok', url: 'https://tiktok.com/@paulline' }
+      { type: 'tiktok', url: 'https://tiktok.com/@paulline' },
+      { type: 'facebook', url: 'https://www.facebook.com/paulline' },
+      { type: 'linkedin', url: 'https://www.linkedin.com/in/paulline' },
+      { type: 'youtube', url: 'https://www.youtube.com/@paulline' }
     ]
 
     for (let i = 0; i < socialLinks.length; i++) {

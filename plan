@@ -11,6 +11,84 @@
 6. Продуктовые фичи: кастомный домен, QR-конструктор, мультиязычность, PWA/A2HS, приватность/согласия.
 
 
+==================================================
+1.1) УТВЕРЖДЕННАЯ КОНТЕНТ-МОДЕЛЬ (MVP)
+==================================================
+
+Обязательные блоки для карточки:
+1) HERO
+	- full_name (обязательно)
+	- title (обязательно)
+	- company_name (обязательно)
+	- avatar_url (обязательно)
+	- logo_url (опционально)
+
+2) КОНТАКТЫ
+	- phone (обязательно, минимум 1 номер)
+	- email (обязательно)
+	- website (обязательно)
+	- address_text (обязательно для кнопки локации)
+
+3) СОЦСЕТИ/МЕССЕНДЖЕРЫ
+	- минимум 2 активные ссылки из списка:
+	  instagram, telegram, whatsapp, viber, tiktok, facebook, linkedin, youtube
+	- поля: type, url, is_visible, sort_order
+
+4) УСЛУГИ
+	- минимум 1 услуга
+	- поля: title (обязательно), description (обязательно), is_visible, sort_order
+
+5) ГАЛЕРЕЯ
+	- минимум 1 изображение (рекомендовано 3+)
+	- поля: file_url, type=image, sort_order
+
+6) ОТЗЫВЫ
+	- MVP: минимум 1 отзыв (даже если как простой текстовый массив)
+	- поля: author_name, text, rating(1..5), is_visible, sort_order
+
+7) CTA (Призыв к действию)
+	- минимум 1 основной CTA (обязательно): «Сохранить контакт»
+	- дополнительно: «Позвонить», «Написать», «Оставить заявку», «Поделиться»
+
+8) SEO
+	- seo_title (обязательно)
+	- seo_description (обязательно)
+	- og_image_url (обязательно)
+	- canonical_url (опционально)
+
+
+Критерий «визитка сохраняется полноценно»:
+- Сохранение карточки в админке разрешать только если заполнены все обязательные поля HERO + КОНТАКТЫ + SEO.
+- Для публикации (is_active=true) дополнительно требовать:
+	1) минимум 2 соцссылки,
+	2) минимум 1 услугу,
+	3) минимум 1 изображение галереи,
+	4) минимум 1 CTA.
+
+
+Примеры ссылок (валидные форматы):
+- phone: +375292327382
+- tel link: tel:+375292327382
+- email: paulline@example.com
+- mailto link: mailto:paulline@example.com
+- website: https://kalvariyskaya42.by
+- instagram: https://instagram.com/paulline
+- telegram: https://t.me/paulline
+- whatsapp: https://wa.me/375292327382
+- viber: viber://chat?number=%2B375292327382
+- tiktok: https://www.tiktok.com/@paulline
+- facebook: https://www.facebook.com/paulline
+- linkedin: https://www.linkedin.com/in/paulline
+- youtube: https://www.youtube.com/@paulline
+- maps/location: https://maps.google.com/?q=Kalvariyskaya+42+Minsk
+
+
+ВАЖНО (зафиксировано для следующего этапа):
+- В админ-панели пользователь должен иметь возможность менять ВСЕ контактные данные карточки
+	(телефон, email, сайт, адрес, соцсети, мессенджеры, CTA, SEO) без участия разработчика.
+- Любое поле, отображаемое на публичной визитке, должно быть редактируемым в админке.
+
+
 
 
 

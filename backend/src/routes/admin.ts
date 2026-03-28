@@ -2,6 +2,110 @@ import { FastifyInstance } from 'fastify'
 import { db } from '../db/index.js'
 import QRCode from 'qrcode'
 
+const normalizeString = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
+
+const isValidUrl = (value: string) => {
+  if (!value) return false
+  if (/^[a-z][a-z\d+.-]*:/i.test(value)) return true
+
+  try {
+    new URL(`https://${value}`)
+    return true
+  } catch {
+    return false
+  }
+}
+
+const isValidEmail = (value: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+const getCardValidationErrors = (payload: {
+  full_name: string
+  title: string
+  company_name: string
+  phone: string
+  email: string
+  website: string
+  avatar_url: string
+  is_active: boolean
+  links: Array<{ type?: string; url?: string; is_visible?: boolean }>
+  services: Array<{ title?: string; description?: string; is_visible?: boolean }>
+  media: Array<{ file_url?: string; type?: string }>
+}) => {
+  const errors: string[] = []
+
+  if (!normalizeString(payload.full_name)) errors.push('full_name is required')
+  if (!normalizeString(payload.title)) errors.push('title is required')
+  if (!normalizeString(payload.company_name)) errors.push('company_name is required')
+  if (!normalizeString(payload.phone)) errors.push('phone is required')
+
+  const email = normalizeString(payload.email)
+  if (!email) {
+    errors.push('email is required')
+  } else if (!isValidEmail(email)) {
+    errors.push('email is invalid')
+  }
+
+  const website = normalizeString(payload.website)
+  if (!website) {
+    errors.push('website is required')
+  } else if (!isValidUrl(website)) {
+    errors.push('website is invalid')
+  }
+
+  const avatar = normalizeString(payload.avatar_url)
+  if (!avatar) {
+    errors.push('avatar_url is required')
+  } else if (!isValidUrl(avatar)) {
+    errors.push('avatar_url is invalid')
+  }
+
+  const activeLinks = payload.links.filter((link) => {
+    const type = normalizeString(link.type)
+    const url = normalizeString(link.url)
+    return link.is_visible !== false && !!type && !!url
+  })
+
+  for (const link of activeLinks) {
+    const url = normalizeString(link.url)
+    if (!isValidUrl(url)) {
+      errors.push(`link url is invalid: ${url}`)
+    }
+  }
+
+  if (payload.is_active && activeLinks.length < 2) {
+    errors.push('at least 2 visible social links are required for active cards')
+  }
+
+  const visibleServices = payload.services.filter(
+    (service) => service.is_visible !== false && normalizeString(service.title) && normalizeString(service.description)
+  )
+
+  if (payload.is_active && visibleServices.length < 1) {
+    errors.push('at least 1 visible service is required for active cards')
+  }
+
+  const imageMedia = payload.media.filter((item) => {
+    const fileUrl = normalizeString(item.file_url)
+    const type = normalizeString(item.type || 'image').toLowerCase()
+    return !!fileUrl && type === 'image'
+  })
+
+  for (const item of imageMedia) {
+    const fileUrl = normalizeString(item.file_url)
+    if (!isValidUrl(fileUrl)) {
+      errors.push(`media file_url is invalid: ${fileUrl}`)
+    }
+  }
+
+  if (payload.is_active && imageMedia.length < 1) {
+    errors.push('at least 1 gallery image is required for active cards')
+  }
+
+  return errors
+}
+
 export default async function adminRoutes(fastify: FastifyInstance) {
   // Все маршруты требуют авторизации
   const authGuard = (fastify as any).authenticate
@@ -95,6 +199,44 @@ export default async function adminRoutes(fastify: FastifyInstance) {
 
       if (ownerCheck.rows.length === 0) {
         return reply.code(404).send({ error: 'Card not found' })
+      }
+
+      const currentCardResult = await db.query(`SELECT * FROM cards WHERE id = $1`, [id])
+      const currentCard = currentCardResult.rows[0]
+
+      const currentLinksResult = await db.query(
+        `SELECT type, url, is_visible FROM card_links WHERE card_id = $1 ORDER BY sort_order`,
+        [id]
+      )
+      const currentServicesResult = await db.query(
+        `SELECT title, description, is_visible FROM card_services WHERE card_id = $1 ORDER BY sort_order`,
+        [id]
+      )
+      const currentMediaResult = await db.query(
+        `SELECT file_url, type FROM card_media WHERE card_id = $1 ORDER BY sort_order`,
+        [id]
+      )
+
+      const nextPayload = {
+        full_name: updates.full_name ?? currentCard.full_name,
+        title: updates.title ?? currentCard.title,
+        company_name: updates.company_name ?? currentCard.company_name,
+        phone: updates.phone ?? currentCard.phone,
+        email: updates.email ?? currentCard.email,
+        website: updates.website ?? currentCard.website,
+        avatar_url: updates.avatar_url ?? currentCard.avatar_url,
+        is_active: updates.is_active ?? currentCard.is_active,
+        links: Array.isArray(updates.links) ? updates.links : currentLinksResult.rows,
+        services: Array.isArray(updates.services) ? updates.services : currentServicesResult.rows,
+        media: Array.isArray(updates.media) ? updates.media : currentMediaResult.rows
+      }
+
+      const validationErrors = getCardValidationErrors(nextPayload)
+      if (validationErrors.length > 0) {
+        return reply.code(400).send({
+          error: 'Card validation failed',
+          details: validationErrors
+        })
       }
 
       const client = await db.connect()

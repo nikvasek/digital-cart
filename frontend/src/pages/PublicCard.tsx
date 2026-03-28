@@ -39,7 +39,10 @@ const createFallbackCard = (slugParam?: string): CardData => ({
     { type: 'telegram', url: 'https://t.me', is_visible: true },
     { type: 'whatsapp', url: 'https://wa.me/375292327382', is_visible: true },
     { type: 'tiktok', url: 'https://www.tiktok.com', is_visible: true },
-    { type: 'viber', url: 'viber://chat?number=%2B375292327382', is_visible: true }
+    { type: 'viber', url: 'viber://chat?number=%2B375292327382', is_visible: true },
+    { type: 'facebook', url: 'https://www.facebook.com/paulline', is_visible: true },
+    { type: 'linkedin', url: 'https://www.linkedin.com/in/paulline', is_visible: true },
+    { type: 'youtube', url: 'https://www.youtube.com/@paulline', is_visible: true }
   ],
   media: [],
   services: []

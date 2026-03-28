@@ -43,6 +43,22 @@ interface CardData {
 
 const SOCIAL_TYPES = ['instagram', 'telegram', 'whatsapp', 'viber', 'tiktok', 'facebook', 'linkedin', 'youtube']
 
+const normalizeString = (value: string) => value.trim()
+
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+
+const isValidUrl = (value: string) => {
+  if (!value) return false
+  if (/^[a-z][a-z\d+.-]*:/i.test(value)) return true
+
+  try {
+    new URL(`https://${value}`)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export default function Editor() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -76,6 +92,60 @@ export default function Editor() {
 
   const handleSave = async () => {
     if (!card) return
+
+    const validationErrors: string[] = []
+
+    if (!normalizeString(card.full_name)) validationErrors.push('Full Name is required')
+    if (!normalizeString(card.title)) validationErrors.push('Title is required')
+    if (!normalizeString(card.company_name)) validationErrors.push('Company is required')
+    if (!normalizeString(card.phone)) validationErrors.push('Phone is required')
+
+    if (!normalizeString(card.email)) {
+      validationErrors.push('Email is required')
+    } else if (!isValidEmail(normalizeString(card.email))) {
+      validationErrors.push('Email format is invalid')
+    }
+
+    if (!normalizeString(card.website)) {
+      validationErrors.push('Website is required')
+    } else if (!isValidUrl(normalizeString(card.website))) {
+      validationErrors.push('Website format is invalid')
+    }
+
+    if (!normalizeString(card.avatar_url)) {
+      validationErrors.push('Avatar URL is required')
+    } else if (!isValidUrl(normalizeString(card.avatar_url))) {
+      validationErrors.push('Avatar URL format is invalid')
+    }
+
+    const activeLinks = card.links.filter(
+      (link) => link.is_visible !== false && normalizeString(link.type) && normalizeString(link.url)
+    )
+
+    if (card.is_active && activeLinks.length < 2) {
+      validationErrors.push('For active card add at least 2 visible social links')
+    }
+
+    const visibleServices = card.services.filter(
+      (service) => service.is_visible !== false && normalizeString(service.title) && normalizeString(service.description)
+    )
+
+    if (card.is_active && visibleServices.length < 1) {
+      validationErrors.push('For active card add at least 1 visible service with title and description')
+    }
+
+    const galleryImages = card.media.filter(
+      (item) => normalizeString(item.file_url) && (item.type || 'image').toLowerCase() === 'image'
+    )
+
+    if (card.is_active && galleryImages.length < 1) {
+      validationErrors.push('For active card add at least 1 gallery image')
+    }
+
+    if (validationErrors.length > 0) {
+      alert(`Please fix before save:\n- ${validationErrors.join('\n- ')}`)
+      return
+    }
     
     setSaving(true)
     try {
@@ -85,8 +155,13 @@ export default function Editor() {
       })
       
       alert('Card updated successfully!')
-    } catch (error) {
-      alert('Failed to save card')
+    } catch (error: any) {
+      const details = error?.response?.data?.details
+      if (Array.isArray(details) && details.length > 0) {
+        alert(`Failed to save card:\n- ${details.join('\n- ')}`)
+      } else {
+        alert('Failed to save card')
+      }
     } finally {
       setSaving(false)
     }
@@ -270,6 +345,7 @@ export default function Editor() {
                 type="tel"
                 value={card.phone}
                 onChange={(e) => setCard({ ...card, phone: e.target.value })}
+                placeholder="+375292327382"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -282,6 +358,7 @@ export default function Editor() {
                 type="email"
                 value={card.email}
                 onChange={(e) => setCard({ ...card, email: e.target.value })}
+                placeholder="paulline@example.com"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -294,6 +371,7 @@ export default function Editor() {
                 type="url"
                 value={card.website}
                 onChange={(e) => setCard({ ...card, website: e.target.value })}
+                placeholder="https://kalvariyskaya42.by"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -318,6 +396,7 @@ export default function Editor() {
                 type="url"
                 value={card.avatar_url}
                 onChange={(e) => setCard({ ...card, avatar_url: e.target.value })}
+                placeholder="https://example.com/avatar.jpg"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -358,6 +437,20 @@ export default function Editor() {
               >
                 + Add link
               </button>
+            </div>
+
+            <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-600 space-y-1">
+              <p className="font-semibold text-gray-700">Examples:</p>
+              <p>instagram: https://instagram.com/paulline</p>
+              <p>telegram: https://t.me/paulline</p>
+              <p>whatsapp: https://wa.me/375292327382</p>
+              <p>viber: viber://chat?number=%2B375292327382</p>
+              <p>tiktok: https://www.tiktok.com/@paulline</p>
+              <p>facebook: https://www.facebook.com/paulline</p>
+              <p>linkedin: https://www.linkedin.com/in/paulline</p>
+              <p>youtube: https://www.youtube.com/@paulline</p>
+              <p>email: mailto:paulline@example.com</p>
+              <p>phone: tel:+375292327382</p>
             </div>
 
             {card.links.length === 0 && (
