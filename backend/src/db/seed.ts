@@ -5,23 +5,47 @@ async function seed() {
   try {
     console.log('Seeding database...')
 
-    // Создаем тестового пользователя
-    const passwordHash = await bcrypt.hash('admin123', 10)
-    const userResult = await db.query(
-      `INSERT INTO users (email, password_hash, role) 
-       VALUES ($1, $2, $3) 
-       RETURNING id`,
-      ['admin@example.com', passwordHash, 'owner']
-    )
-    const userId = userResult.rows[0].id
+    await db.query('BEGIN')
 
-    // Создаем тестовую визитку (на основе дизайна из Figma)
+    // Создаем/переиспользуем тестового пользователя
+    const existingUser = await db.query(
+      `SELECT id FROM users WHERE email = $1 LIMIT 1`,
+      ['admin@example.com']
+    )
+
+    let userId = existingUser.rows[0]?.id
+
+    if (!userId) {
+      const passwordHash = await bcrypt.hash('admin123', 10)
+      const userResult = await db.query(
+        `INSERT INTO users (email, password_hash, role) 
+         VALUES ($1, $2, $3) 
+         RETURNING id`,
+        ['admin@example.com', passwordHash, 'owner']
+      )
+      userId = userResult.rows[0].id
+    }
+
+    // Создаем/обновляем тестовую визитку (на основе дизайна из Figma)
     const cardResult = await db.query(
       `INSERT INTO cards (
         user_id, slug, full_name, title, company_name,
         phone, email, website, bio, 
         avatar_url, language_default, is_active
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      ON CONFLICT (slug) DO UPDATE SET
+        user_id = EXCLUDED.user_id,
+        full_name = EXCLUDED.full_name,
+        title = EXCLUDED.title,
+        company_name = EXCLUDED.company_name,
+        phone = EXCLUDED.phone,
+        email = EXCLUDED.email,
+        website = EXCLUDED.website,
+        bio = EXCLUDED.bio,
+        avatar_url = EXCLUDED.avatar_url,
+        language_default = EXCLUDED.language_default,
+        is_active = EXCLUDED.is_active,
+        updated_at = NOW()
       RETURNING id`,
       [
         userId,
@@ -39,6 +63,10 @@ async function seed() {
       ]
     )
     const cardId = cardResult.rows[0].id
+
+    await db.query(`DELETE FROM card_links WHERE card_id = $1`, [cardId])
+    await db.query(`DELETE FROM card_media WHERE card_id = $1`, [cardId])
+    await db.query(`DELETE FROM card_services WHERE card_id = $1`, [cardId])
 
     // Добавляем ссылки на соцсети
     const socialLinks = [
@@ -92,6 +120,8 @@ async function seed() {
       )
     }
 
+    await db.query('COMMIT')
+
     console.log('✅ Seeding completed successfully')
     console.log('\nTest credentials:')
     console.log('Email: admin@example.com')
@@ -100,6 +130,7 @@ async function seed() {
     
     process.exit(0)
   } catch (error) {
+    await db.query('ROLLBACK').catch(() => undefined)
     console.error('❌ Seeding failed:', error)
     process.exit(1)
   }
