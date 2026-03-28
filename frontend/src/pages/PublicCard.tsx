@@ -53,7 +53,7 @@ type Hotspot = {
 
 const toExternalUrl = (url: string) => {
   if (!url) return url
-  return /^https?:\/\//i.test(url) ? url : `https://${url}`
+  return /^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`
 }
 
 export default function PublicCard() {
@@ -127,13 +127,13 @@ export default function PublicCard() {
   const openExternal = (type: string, url?: string) => {
     if (!url) return
     trackEvent('click', { link_type: type })
-    window.open(toExternalUrl(url), '_blank', 'noopener,noreferrer')
+    window.location.href = toExternalUrl(url)
   }
 
   const openTel = () => {
     if (!card?.phone) return
     trackEvent('click', { link_type: 'phone' })
-    window.location.href = `tel:${card.phone}`
+    window.location.href = `tel:${card.phone.replace(/\s+/g, '')}`
   }
 
   const openEmail = () => {
@@ -144,7 +144,7 @@ export default function PublicCard() {
 
   const openLocation = () => {
     trackEvent('click', { link_type: 'location' })
-    window.open('https://maps.google.com/?q=Kalvariyskaya+42+Minsk', '_blank', 'noopener,noreferrer')
+    window.location.href = 'https://maps.google.com/?q=Kalvariyskaya+42+Minsk'
   }
 
   const openGallery = () => {

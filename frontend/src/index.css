@@ -31,15 +31,21 @@ code {
   will-change: transform;            /* GPU-layer for smooth sub-pixel scaling */
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
 /* ── Hotspot base ──────────────────────────────────────── */
 .hs {
   position: absolute;
+  z-index: 10;
   background: transparent;
   border: 0;
   padding: 0;
   cursor: pointer;
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
 
