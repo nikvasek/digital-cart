@@ -33,5 +33,5 @@ jobs:
       - name: Deploy backend
         run: railway up backend --path-as-root --service backend --project "$RAILWAY_PROJECT_ID" --ci
 
-      - name: Deploy frontend
-        run: railway up frontend --path-as-root --service frontend --project "$RAILWAY_PROJECT_ID" --ci
+      # Frontend is deployed via Railway GitHub Source Deploy (service-level).
+      # Keep backend deploy in CI to avoid monorepo CLI snapshot issues on frontend.
