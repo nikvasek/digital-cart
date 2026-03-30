@@ -11,11 +11,7 @@ export default async function publicRoutes(fastify: FastifyInstance) {
       // Получаем данные визитки (только публичные поля)
       const cardResult = await db.query(
         `SELECT id, slug, full_name, title, company_name, phone, email,
-<<<<<<< HEAD
-                website, bio, avatar_url, logo_url, language_default, is_active
-=======
           address, website, portfolio_url, bio, avatar_url, logo_url, language_default, is_active
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
          FROM cards WHERE slug = $1 AND is_active = true`,
         [slug]
       )

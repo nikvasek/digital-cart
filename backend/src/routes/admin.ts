@@ -26,13 +26,9 @@ const getCardValidationErrors = (payload: {
   company_name: string
   phone: string
   email: string
-<<<<<<< HEAD
-  website: string
-=======
   address: string
   website: string
   portfolio_url: string
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
   avatar_url: string
   is_active: boolean
   links: Array<{ type?: string; url?: string; is_visible?: boolean }>
@@ -60,14 +56,10 @@ const getCardValidationErrors = (payload: {
     errors.push('website is invalid')
   }
 
-<<<<<<< HEAD
-=======
   const portfolioUrl = normalizeString(payload.portfolio_url)
   if (portfolioUrl && !isValidUrl(portfolioUrl)) {
     errors.push('portfolio_url is invalid')
   }
-
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
   const avatar = normalizeString(payload.avatar_url)
   if (!avatar) {
     errors.push('avatar_url is required')
@@ -237,13 +229,9 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         company_name: updates.company_name ?? currentCard.company_name,
         phone: updates.phone ?? currentCard.phone,
         email: updates.email ?? currentCard.email,
-<<<<<<< HEAD
-        website: updates.website ?? currentCard.website,
-=======
         address: updates.address ?? currentCard.address,
         website: updates.website ?? currentCard.website,
         portfolio_url: updates.portfolio_url ?? currentCard.portfolio_url,
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
         avatar_url: updates.avatar_url ?? currentCard.avatar_url,
         is_active: updates.is_active ?? currentCard.is_active,
         links: Array.isArray(updates.links) ? updates.links : currentLinksResult.rows,
@@ -266,11 +254,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         // Обновляем основные поля
         const allowedFields = [
           'slug', 'full_name', 'title', 'company_name',
-<<<<<<< HEAD
-          'phone', 'email', 'website', 'bio',
-=======
           'phone', 'email', 'address', 'website', 'portfolio_url', 'bio',
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
           'avatar_url', 'logo_url', 'language_default', 'is_active'
         ]
 

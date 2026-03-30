@@ -30,15 +30,9 @@ async function seed() {
     const cardResult = await db.query(
       `INSERT INTO cards (
         user_id, slug, full_name, title, company_name,
-<<<<<<< HEAD
-        phone, email, website, bio, 
-        avatar_url, language_default, is_active
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-=======
         phone, email, address, website, portfolio_url, bio, 
         avatar_url, language_default, is_active
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
       ON CONFLICT (slug) DO UPDATE SET
         user_id = EXCLUDED.user_id,
         full_name = EXCLUDED.full_name,
@@ -46,13 +40,9 @@ async function seed() {
         company_name = EXCLUDED.company_name,
         phone = EXCLUDED.phone,
         email = EXCLUDED.email,
-<<<<<<< HEAD
-        website = EXCLUDED.website,
-=======
         address = EXCLUDED.address,
         website = EXCLUDED.website,
         portfolio_url = EXCLUDED.portfolio_url,
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
         bio = EXCLUDED.bio,
         avatar_url = EXCLUDED.avatar_url,
         language_default = EXCLUDED.language_default,
@@ -67,13 +57,9 @@ async function seed() {
         'Hair Studio',
         '+375 29 232 73 82',
         'paulline@example.com',
-<<<<<<< HEAD
-        'https://example.com',
-=======
         'Kalvariyskaya 42, Minsk',
         'https://example.com',
         'https://example.com/portfolio',
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
         'Custom men\'s haircuts and beard styling.\nEyes are drawn to uniqueness.',
         'https://via.placeholder.com/150',
         'en',

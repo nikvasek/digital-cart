@@ -42,7 +42,9 @@ const ensureCoreSchema = async () => {
       company_name VARCHAR(255),
       phone VARCHAR(50),
       email VARCHAR(255),
+      address VARCHAR(255),
       website VARCHAR(500),
+      portfolio_url VARCHAR(500),
       bio TEXT,
       avatar_url VARCHAR(500),
       logo_url VARCHAR(500),
@@ -52,6 +54,10 @@ const ensureCoreSchema = async () => {
       updated_at TIMESTAMP DEFAULT NOW()
     )
   `)
+
+  // Lightweight migrations for existing databases
+  await db.query(`ALTER TABLE cards ADD COLUMN IF NOT EXISTS address VARCHAR(255)`)
+  await db.query(`ALTER TABLE cards ADD COLUMN IF NOT EXISTS portfolio_url VARCHAR(500)`)
 
   await db.query(`
     CREATE TABLE IF NOT EXISTS card_links (
