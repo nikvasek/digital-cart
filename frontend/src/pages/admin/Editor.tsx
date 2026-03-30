@@ -30,13 +30,9 @@ interface CardData {
   company_name: string
   phone: string
   email: string
-<<<<<<< HEAD
-  website: string
-=======
   address: string
   website: string
   portfolio_url: string
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
   bio: string
   avatar_url: string
   logo_url: string
@@ -118,13 +114,10 @@ export default function Editor() {
       validationErrors.push('Website format is invalid')
     }
 
-<<<<<<< HEAD
-=======
     if (normalizeString(card.portfolio_url) && !isValidUrl(normalizeString(card.portfolio_url))) {
       validationErrors.push('Portfolio URL format is invalid')
     }
 
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
     if (!normalizeString(card.avatar_url)) {
       validationErrors.push('Avatar URL is required')
     } else if (!isValidUrl(normalizeString(card.avatar_url))) {
@@ -378,8 +371,6 @@ export default function Editor() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-<<<<<<< HEAD
-=======
                 Address
               </label>
               <input
@@ -393,7 +384,6 @@ export default function Editor() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
                 Website
               </label>
               <input
@@ -407,8 +397,6 @@ export default function Editor() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-<<<<<<< HEAD
-=======
                 Portfolio URL
               </label>
               <input
@@ -422,7 +410,6 @@ export default function Editor() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
                 Bio
               </label>
               <textarea

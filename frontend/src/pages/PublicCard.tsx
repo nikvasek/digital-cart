@@ -11,13 +11,9 @@ interface CardData {
   company_name: string
   phone: string
   email: string
-<<<<<<< HEAD
-  website: string
-=======
   address: string
   website: string
   portfolio_url: string
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
   bio: string
   avatar_url: string
   logo_url: string
@@ -35,13 +31,9 @@ const createFallbackCard = (slugParam?: string): CardData => ({
   company_name: 'Digital Business Card',
   phone: '+375292327382',
   email: 'paulline@example.com',
-<<<<<<< HEAD
-  website: 'kalvariyskaya42.by',
-=======
   address: 'Kalvariyskaya 42, Minsk',
   website: 'kalvariyskaya42.by',
   portfolio_url: 'https://example.com/portfolio',
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
   bio: 'Eyes are drawn to uniqueness.',
   avatar_url: '/figma/home-from-pdf.png',
   logo_url: '',
@@ -159,25 +151,17 @@ export default function PublicCard() {
   }
 
   const openLocation = () => {
-<<<<<<< HEAD
+    if (!card) return
     trackEvent('click', { link_type: 'location' })
-    window.location.href = 'https://maps.google.com/?q=Kalvariyskaya+42+Minsk'
-=======
-    if (!card?.address) return
-    trackEvent('click', { link_type: 'location' })
-    window.location.href = `https://maps.google.com/?q=${encodeURIComponent(card.address)}`
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
+    const query = card.address || 'Kalvariyskaya 42, Minsk'
+    window.location.href = `https://maps.google.com/?q=${encodeURIComponent(query)}`
   }
 
   const openGallery = () => {
     trackEvent('click', { link_type: 'gallery' })
-<<<<<<< HEAD
-    // TODO: open gallery modal when media items available
-=======
     if (card?.portfolio_url) {
       window.location.href = toExternalUrl(card.portfolio_url)
     }
->>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
   }
 
   const addToHomeHint = async () => {
