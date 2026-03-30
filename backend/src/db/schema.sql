@@ -24,7 +24,13 @@ CREATE TABLE cards (
   company_name VARCHAR(255),
   phone VARCHAR(50),
   email VARCHAR(255),
+<<<<<<< HEAD
   website VARCHAR(500),
+=======
+  address VARCHAR(255),
+  website VARCHAR(500),
+  portfolio_url VARCHAR(500),
+>>>>>>> 8ebb1a4 (feat: admin panel editing for contacts address and portfolio)
   bio TEXT,
   avatar_url VARCHAR(500),
   logo_url VARCHAR(500),
