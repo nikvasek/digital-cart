@@ -265,8 +265,12 @@ export default function PublicCard() {
             alt="Business card"
             className="h-full w-full select-none"
             draggable={false}
-            style={{ display: 'block' }}
           />
+
+          {/* Dynamic text overlays (name / phone / address) */}
+          <div className="ht ht-name">{card.full_name}</div>
+          <div className="ht ht-phone">{card.phone}</div>
+          <div className="ht ht-address">{card.address || ''}</div>
 
           <button
             onClick={() => i18n.changeLanguage('ru')}

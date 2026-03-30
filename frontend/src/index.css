@@ -51,6 +51,20 @@ code {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ── Text overlays (dynamic data over the static mock) ─── */
+.ht {
+  position: absolute;
+  z-index: 20;
+  color: white;
+  pointer-events: none;
+  line-height: 1.15;
+}
+
+/* Positions are % of 375 × 820 frame (same as hotspots) */
+.ht-name { left: 8%; top: 17.2%; width: 44%; font-size: 22px; font-weight: 700; }
+.ht-phone { left: 18%; top: 32.0%; width: 36%; font-size: 14px; }
+.ht-address { left: 18%; top: 70.8%; width: 38%; font-size: 14px; }
+
 /* ── Language switcher (top-right) ─────────────────────── */
 /* RU / ENG labels top-right of card                        */
 .hs-lang-ru { left: 74.93%; top: 3.50%; width: 8.36%;  height: 3.00%; }
