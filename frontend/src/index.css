@@ -24,6 +24,14 @@ code {
   width: 100%;
 }
 
+@media (max-width: 768px) {
+  .home-card-frame {
+    width: 100vw;
+    height: 100svh;
+    aspect-ratio: auto;
+  }
+}
+
 /* Sharp rendering on high-DPI / retina screens */
 .home-card-frame img {
   image-rendering: -webkit-optimize-contrast; /* Safari: sharper downscale */

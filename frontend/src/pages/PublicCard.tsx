@@ -248,7 +248,7 @@ export default function PublicCard() {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
-      <div className="mx-auto w-full max-w-[430px]">
+      <div className="mx-auto w-full md:max-w-[430px]">
         <div className="home-card-frame relative w-full overflow-hidden">
           <img
             src="/figma/home2-1x.png"
