@@ -1,65 +1,66 @@
 {
-  "frame": { "width": 375, "height": 820 },
+  "frame": {
+    "width": 375,
+    "height": 820,
+    "units": "px",
+    "note": "Coordinates (x,y,width,height) are relative to the frame. We'll convert to % in code."
+  },
   "fields": {
     "name": {
-      "textAlign": "left",
+      "textLayerName": "card_name",
       "x": 0,
       "y": 0,
       "width": 0,
+      "height": 0,
       "fontFamily": "",
       "fontWeight": 400,
       "fontSize": 0,
       "lineHeight": 0,
       "letterSpacing": 0,
-      "color": "#ffffff"
+      "textAlign": "left",
+      "color": "#FFFFFF"
     },
     "title": {
-      "textAlign": "left",
+      "textLayerName": "card_title",
       "x": 0,
       "y": 0,
       "width": 0,
-      "fontFamily": "",
-      "fontWeight": 700,
-      "fontSize": 0,
-      "lineHeight": 0,
-      "letterSpacing": 0,
-      "color": "#ffffff"
-    },
-    "bio": {
-      "textAlign": "left",
-      "x": 0,
-      "y": 0,
-      "width": 0,
+      "height": 0,
       "fontFamily": "",
       "fontWeight": 400,
       "fontSize": 0,
       "lineHeight": 0,
       "letterSpacing": 0,
-      "color": "#ffffff"
+      "textAlign": "left",
+      "color": "#FFFFFF"
     },
     "phone": {
-      "textAlign": "left",
+      "textLayerName": "card_phone",
       "x": 0,
       "y": 0,
       "width": 0,
+      "height": 0,
       "fontFamily": "",
       "fontWeight": 400,
       "fontSize": 0,
       "lineHeight": 0,
       "letterSpacing": 0,
-      "color": "#ffffff"
+      "textAlign": "left",
+      "color": "#FFFFFF"
     },
     "address": {
-      "textAlign": "left",
+      "textLayerName": "card_address",
       "x": 0,
       "y": 0,
       "width": 0,
+      "height": 0,
       "fontFamily": "",
       "fontWeight": 400,
       "fontSize": 0,
       "lineHeight": 0,
       "letterSpacing": 0,
-      "color": "#ffffff"
+      "textAlign": "left",
+      "color": "#FFFFFF"
     }
   }
 }
