@@ -16,148 +16,69 @@ code {
     monospace;
 }
 
-/* ── Font families ─────────────────────────────────────── */
-.font-script {
-  font-family: 'Great Vibes', cursive;
-}
-.font-decorative {
-  font-family: 'Cinzel Decorative', 'Georgia', serif;
-}
-
-/* ── Card background ───────────────────────────────────── */
-.card-bg {
-  background:
-    radial-gradient(ellipse 120% 60% at 70% 85%, rgba(40,35,30,0.6) 0%, transparent 70%),
-    linear-gradient(180deg, #0e0e0e 0%, #141413 40%, #111110 100%);
-}
-
-/* ── Avatar frame ──────────────────────────────────────── */
-.avatar-wrap {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  flex-shrink: 0;
-}
-.avatar-wrap img.avatar-photo {
+/* ── Card frame ────────────────────────────────────────────
+   New design: 375 × 820  —  all hotspot values are exact %
+   of that coordinate space.                                */
+.home-card-frame {
+  aspect-ratio: 375 / 820;
   width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  object-fit: cover;
 }
-.avatar-wrap img.avatar-frame {
-  position: absolute;
-  inset: -8%;
-  width: 116%;
-  height: 116%;
+
+/* Sharp rendering on high-DPI / retina screens */
+.home-card-frame img {
+  image-rendering: -webkit-optimize-contrast; /* Safari: sharper downscale */
+  image-rendering: auto;
+  will-change: transform;            /* GPU-layer for smooth sub-pixel scaling */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   pointer-events: none;
+  user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
-  user-select: none;
 }
 
-/* ── Contact rows ──────────────────────────────────────── */
-.contact-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 7px 0;
-  color: #fff;
-  font-size: 14px;
+/* ── Hotspot base ──────────────────────────────────────── */
+.hs {
+  position: absolute;
+  z-index: 10;
+  display: block;
   background: transparent;
   border: 0;
+  padding: 0;
   cursor: pointer;
-  width: 100%;
-  text-align: left;
-  transition: opacity 0.2s;
+  pointer-events: auto;
+  touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-.contact-row:active {
-  opacity: 0.6;
-}
-.contact-icon {
-  width: 28px;
-  height: 28px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
 
-/* ── Action buttons ────────────────────────────────────── */
-.action-btn {
-  display: block;
-  width: 100%;
-  padding: 9px 12px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(255, 255, 255, 0.04);
-  color: #fff;
-  font-size: 13px;
-  text-align: center;
-  cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-.action-btn:active {
-  background: rgba(255, 255, 255, 0.12);
-}
+/* ── Language switcher (top-right) ─────────────────────── */
+/* RU / ENG labels top-right of card                        */
+.hs-lang-ru { left: 74.93%; top: 3.50%; width: 8.36%;  height: 3.00%; }
+.hs-lang-en { left: 83.03%; top: 3.50%; width: 10.44%; height: 3.00%; }
 
-.action-btn-gold {
-  display: block;
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 6px;
-  border: 1px solid #c9a84c;
-  background: linear-gradient(180deg, #c9a84c 0%, #a8893a 100%);
-  color: #1a1400;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  text-align: center;
-  cursor: pointer;
-  transition: filter 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-.action-btn-gold:active {
-  filter: brightness(0.85);
-}
+/* ── Contact / social rows (left side)  ────────────────── */
+/* Measured pixel centers (383x828 canvas):                  */
+/*  phone=261px(31.5%) whatsapp=299(36.1%) tg=342(41.3%)    */
+/*  ig=380(45.9%) viber=420(50.7%) email=463(55.9%)         */
+/*  tiktok=507(61.2%) gallery≈547(66%) kalv≈588(71%)        */
+/* tap-zone: top = center% - 2.2%, height = 4.4% (≈36px)   */
+.hs-phone-row { left: 4%; top: 30.8%; width: 50%; height: 4.8%; }
+.hs-whatsapp  { left: 4%; top: 35.6%; width: 50%; height: 4.8%; }
+.hs-telegram  { left: 4%; top: 40.0%; width: 50%; height: 4.8%; }
+.hs-instagram { left: 4%; top: 44.7%; width: 50%; height: 4.8%; }
+.hs-viber     { left: 4%; top: 49.0%; width: 50%; height: 4.8%; }
+.hs-email-row { left: 4%; top: 53.3%; width: 50%; height: 4.8%; }
+.hs-tiktok    { left: 4%; top: 58.2%; width: 50%; height: 4.8%; }
+.hs-gallery   { left: 4%; top: 62.5%; width: 50%; height: 4.8%; }
+.hs-web-row   { left: 4%; top: 67.0%; width: 50%; height: 4.8%; }
 
-.action-btn-uppercase {
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-/* ── Language toggle ───────────────────────────────────── */
-.lang-btn {
-  background: none;
-  border: 0;
-  padding: 2px 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: color 0.2s;
-  -webkit-tap-highlight-color: transparent;
-}
-.lang-btn--active {
-  color: #fff;
-}
-.lang-btn--inactive {
-  color: rgba(255, 255, 255, 0.35);
-}
-
-/* ── Lead form in dark card ────────────────────────────── */
-.lead-input {
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: #222;
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #fff;
-  outline: none;
-}
-.lead-input::placeholder {
-  color: rgba(255, 255, 255, 0.35);
-}
-.lead-input:focus {
-  border-color: rgba(255, 255, 255, 0.35);
-}
+/* ── Action buttons (right side) ───────────────────────── */
+/* Measured pixel centers (right col):                       */
+/*  save=299(36.1%) qr=350(42.3%) book=401(48.4%)           */
+/*  addhome=459(55.4%) share=503(60.7%)                     */
+/* tap-zone: top = center% - 2.5%, height = 5%              */
+.hs-save-contact { left: 54%; top: 35.2%; width: 43%; height: 4.9%; }
+.hs-show-qr      { left: 54%; top: 40.9%; width: 43%; height: 4.9%; }
+.hs-book-now     { left: 54%; top: 46.7%; width: 43%; height: 4.9%; }
+.hs-add-home     { left: 54%; top: 52.8%; width: 43%; height: 4.9%; }
+.hs-share        { left: 54%; top: 57.9%; width: 43%; height: 4.9%; }
