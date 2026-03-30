@@ -46,12 +46,14 @@ export default async function publicRoutes(fastify: FastifyInstance) {
         [card.id]
       )
 
-      return {
-        ...card,
-        links: linksResult.rows,
-        media: mediaResult.rows,
-        services: servicesResult.rows
-      }
+      return reply
+        .header('Cache-Control', 'no-store')
+        .send({
+          ...card,
+          links: linksResult.rows,
+          media: mediaResult.rows,
+          services: servicesResult.rows
+        })
     } catch (error) {
       fastify.log.error(error)
       return reply.code(500).send({ error: 'Internal server error' })
