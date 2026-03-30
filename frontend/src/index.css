@@ -17,16 +17,11 @@ code {
 }
 
 /* ── Card frame ────────────────────────────────────────────
-   Fills the viewport height exactly (accounts for mobile
-   browser chrome via dvh) and derives width from the
-   402 × 906 design ratio.  Thin side strips are covered by
-   the page's #0f0f0f background which matches card edges.  */
+   New design: 402 × 906  —  all hotspot values are exact %
+   of that coordinate space.                                */
 .home-card-frame {
-  height: 100vh;       /* fallback for browsers without dvh */
-  height: 100dvh;      /* dynamic viewport height: no address-bar gaps */
-  width: auto;
   aspect-ratio: 402 / 906;
-  flex-shrink: 0;      /* don't squish inside flex container */
+  width: 100%;
 }
 
 /* Sharp rendering on high-DPI / retina screens */
