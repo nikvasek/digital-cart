@@ -251,8 +251,8 @@ export default function PublicCard() {
       <div className="mx-auto w-full max-w-[430px]">
         <div className="home-card-frame relative w-full overflow-hidden">
           <img
-            src="/figma/home-1x.png"
-            srcSet="/figma/home-1x.png 1x, /figma/home-2x.png 2x, /figma/home-3x.png 3x"
+            src="/figma/home2-1x.png"
+            srcSet="/figma/home2-1x.png 1x, /figma/home2-2x.png 2x, /figma/home2-3x.png 3x"
             alt="Business card"
             className="h-full w-full select-none"
             draggable={false}

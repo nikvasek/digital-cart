@@ -17,10 +17,10 @@ code {
 }
 
 /* ── Card frame ────────────────────────────────────────────
-   New design: 383 × 828  —  all hotspot values are exact %
+   New design: 402 × 906  —  all hotspot values are exact %
    of that coordinate space.                                */
 .home-card-frame {
-  aspect-ratio: 383 / 828;
+  aspect-ratio: 402 / 906;
   width: 100%;
 }
 
@@ -62,23 +62,23 @@ code {
 /*  ig=380(45.9%) viber=420(50.7%) email=463(55.9%)         */
 /*  tiktok=507(61.2%) gallery≈547(66%) kalv≈588(71%)        */
 /* tap-zone: top = center% - 2.2%, height = 4.4% (≈36px)   */
-.hs-phone-row { left: 4%; top: 29.0%; width: 50%; height: 5%; }
-.hs-whatsapp  { left: 4%; top: 33.6%; width: 50%; height: 5%; }
-.hs-telegram  { left: 4%; top: 38.8%; width: 50%; height: 5%; }
-.hs-instagram { left: 4%; top: 43.4%; width: 50%; height: 5%; }
-.hs-viber     { left: 4%; top: 48.2%; width: 50%; height: 5%; }
-.hs-email-row { left: 4%; top: 53.4%; width: 50%; height: 5%; }
-.hs-tiktok    { left: 4%; top: 58.7%; width: 50%; height: 5%; }
-.hs-gallery   { left: 4%; top: 63.5%; width: 50%; height: 5%; }
-.hs-web-row   { left: 4%; top: 68.5%; width: 50%; height: 5%; }
+.hs-phone-row { left: 4%; top: 30.8%; width: 50%; height: 4.8%; }
+.hs-whatsapp  { left: 4%; top: 35.6%; width: 50%; height: 4.8%; }
+.hs-telegram  { left: 4%; top: 40.0%; width: 50%; height: 4.8%; }
+.hs-instagram { left: 4%; top: 44.7%; width: 50%; height: 4.8%; }
+.hs-viber     { left: 4%; top: 49.0%; width: 50%; height: 4.8%; }
+.hs-email-row { left: 4%; top: 53.3%; width: 50%; height: 4.8%; }
+.hs-tiktok    { left: 4%; top: 58.2%; width: 50%; height: 4.8%; }
+.hs-gallery   { left: 4%; top: 62.5%; width: 50%; height: 4.8%; }
+.hs-web-row   { left: 4%; top: 67.0%; width: 50%; height: 4.8%; }
 
 /* ── Action buttons (right side) ───────────────────────── */
 /* Measured pixel centers (right col):                       */
 /*  save=299(36.1%) qr=350(42.3%) book=401(48.4%)           */
 /*  addhome=459(55.4%) share=503(60.7%)                     */
 /* tap-zone: top = center% - 2.5%, height = 5%              */
-.hs-save-contact { left: 54%; top: 33.6%; width: 43%; height: 5%; }
-.hs-show-qr      { left: 54%; top: 39.8%; width: 43%; height: 5%; }
-.hs-book-now     { left: 54%; top: 45.9%; width: 43%; height: 5%; }
-.hs-add-home     { left: 54%; top: 52.9%; width: 43%; height: 5%; }
-.hs-share        { left: 54%; top: 58.2%; width: 43%; height: 5%; }
+.hs-save-contact { left: 54%; top: 35.2%; width: 43%; height: 4.9%; }
+.hs-show-qr      { left: 54%; top: 40.9%; width: 43%; height: 4.9%; }
+.hs-book-now     { left: 54%; top: 46.7%; width: 43%; height: 4.9%; }
+.hs-add-home     { left: 54%; top: 52.8%; width: 43%; height: 4.9%; }
+.hs-share        { left: 54%; top: 57.9%; width: 43%; height: 4.9%; }
