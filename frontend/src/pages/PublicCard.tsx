@@ -268,9 +268,9 @@ export default function PublicCard() {
           />
 
           {/* Dynamic text overlays (name / phone / address) */}
-          <div className="ht ht-name">{card.full_name}</div>
-          <div className="ht ht-phone">{card.phone}</div>
-          <div className="ht ht-address">{card.address || ''}</div>
+          <div className="ht ht-name"><span>{card.full_name}</span></div>
+          <div className="ht ht-phone"><span>{card.phone}</span></div>
+          <div className="ht ht-address"><span>{card.address || ''}</span></div>
 
           <button
             onClick={() => i18n.changeLanguage('ru')}

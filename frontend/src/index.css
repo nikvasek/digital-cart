@@ -58,12 +58,37 @@ code {
   color: white;
   pointer-events: none;
   line-height: 1.15;
+  isolation: isolate;
+}
+
+/* Replacement mode: cover the baked-in text area, then draw new text */
+.ht::before {
+  content: '';
+  position: absolute;
+  inset: -2px -6px;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 6px;
+  z-index: 0;
+}
+
+.ht > span {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
 }
 
 /* Positions are % of 375 × 820 frame (same as hotspots) */
-.ht-name { left: 8%; top: 17.2%; width: 44%; font-size: 22px; font-weight: 700; }
-.ht-phone { left: 18%; top: 32.0%; width: 36%; font-size: 14px; }
-.ht-address { left: 18%; top: 70.8%; width: 38%; font-size: 14px; }
+.ht-name {
+  left: 8%;
+  top: 17.2%;
+  width: 52%;
+  font-size: 26px;
+  font-weight: 400;
+  font-family: 'Snell Roundhand', 'Brush Script MT', 'Segoe Script', cursive;
+}
+
+.ht-phone { left: 18%; top: 32.0%; width: 48%; font-size: 13px; }
+.ht-address { left: 18%; top: 70.8%; width: 52%; font-size: 13px; }
 
 /* ── Language switcher (top-right) ─────────────────────── */
 /* RU / ENG labels top-right of card                        */
