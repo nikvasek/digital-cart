@@ -34,6 +34,20 @@
       "textAlign": "left",
       "color": "#FFFFFF"
     },
+    "bio": {
+      "textLayerName": "card_bio",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "fontFamily": "",
+      "fontWeight": 400,
+      "fontSize": 0,
+      "lineHeight": 0,
+      "letterSpacing": 0,
+      "textAlign": "left",
+      "color": "#FFFFFF"
+    },
     "phone": {
       "textLayerName": "card_phone",
       "x": 0,
@@ -50,6 +64,20 @@
     },
     "address": {
       "textLayerName": "card_address",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "fontFamily": "",
+      "fontWeight": 400,
+      "fontSize": 0,
+      "lineHeight": 0,
+      "letterSpacing": 0,
+      "textAlign": "left",
+      "color": "#FFFFFF"
+    },
+    "website": {
+      "textLayerName": "card_website",
       "x": 0,
       "y": 0,
       "width": 0,

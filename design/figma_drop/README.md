@@ -4,19 +4,15 @@
 
 ## Вариант A (рекомендуемый): фон без текста + шрифты
 1) `background-no-text.png` (или `.jpg`)
-   - Это тот же макет, но слои **имя / телефон / адрес / title / bio** скрыты перед экспортом.
+   - Это тот же макет, но слои текста **имя / title / bio / телефон / адрес** (и любые другие надписи, которые должны меняться) скрыты перед экспортом.
    - Экспорт в ширине 375px (1x) и желательно ещё 750px (2x).
 
 2) `typography.json` (можно просто текстом в файле)
-   - Для каждого поля (name/phone/address/title/bio):
+   - Для каждого поля (name/title/bio/phone/address и т.п.):
      - `fontFamily`, `fontWeight`, `fontSize`, `lineHeight`, `letterSpacing`
      - `color` (hex/rgba)
      - `x`, `y`, `width` (координаты в пределах 375×820 или проценты)
      - `textAlign`
-
-   Где это взять в Figma:
-   - Выберите текстовый слой → справа в панели будут `X / Y / W / H`.
-   - В Dev Mode / Inspect можно скопировать CSS (font-family/size/weight/line-height/letter-spacing/color).
 
 3) Шрифты (если НЕ Google Fonts)
    - Положить в `fonts/` файлы `.woff2` (лучше всего) или `.ttf/.otf`.
@@ -32,8 +28,11 @@
 
 ## Как назвать слои в Figma (желательно)
 - `card_name`
-- `card_phone`
-- `card_address`
 - `card_title`
 - `card_bio`
+- `card_phone`
+- `card_address`
+
+Опционально:
+- `card_website`
 
