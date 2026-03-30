@@ -247,9 +247,9 @@ export default function PublicCard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
-      <div className="mx-auto w-full md:max-w-[430px]">
-        <div className="home-card-frame relative w-full overflow-hidden">
+    <>
+    <div className="flex justify-center bg-[#0f0f0f] text-white">
+      <div className="home-card-frame relative overflow-hidden">
           <img
             src="/figma/home2-1x.png"
             srcSet="/figma/home2-1x.png 1x, /figma/home2-2x.png 2x, /figma/home2-3x.png 3x"
@@ -278,10 +278,10 @@ export default function PublicCard() {
               aria-label={spot.label}
             />
           ))}
-        </div>
+      </div>
 
-        {showLeadForm && (
-          <section className="mt-4 rounded-3xl border border-white/10 bg-[#1a1a1a] p-5">
+      {showLeadForm && (
+        <section className="mt-4 rounded-3xl border border-white/10 bg-[#1a1a1a] p-5">
             <h2 className="mb-4 text-lg font-semibold">{t('leaveContact')}</h2>
             <form onSubmit={submitLead} className="space-y-3">
               <input
@@ -314,9 +314,9 @@ export default function PublicCard() {
             </form>
           </section>
         )}
-      </div>
+    </div>
 
-      {showQR && (
+    {showQR && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowQR(false)}>
           <div className="w-full max-w-sm rounded-2xl bg-white p-4" onClick={(e) => e.stopPropagation()}>
             <img
@@ -332,7 +332,7 @@ export default function PublicCard() {
             </button>
           </div>
         </div>
-      )}
-    </div>
+    )}
+  </>  
   )
 }
