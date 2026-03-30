@@ -48,15 +48,17 @@ const createFallbackCard = (slugParam?: string): CardData => ({
   services: []
 })
 
-type Hotspot = {
-  id: string
-  onClick: () => void
-  label: string
-}
-
 const toExternalUrl = (url: string) => {
   if (!url) return url
   return /^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`
+}
+
+const formatPhone = (phone: string) => {
+  const d = phone.replace(/\D/g, '')
+  if (d.length === 12 && d.startsWith('375')) {
+    return `+${d.slice(0, 3)} ${d.slice(3, 5)} ${d.slice(5, 8)} ${d.slice(8, 10)} ${d.slice(10)}`
+  }
+  return phone
 }
 
 export default function PublicCard() {
@@ -158,18 +160,20 @@ export default function PublicCard() {
 
   const addToHomeHint = async () => {
     await navigator.clipboard.writeText(window.location.href)
-    alert('Open browser menu and tap “Add to Home Screen”. Link copied.')
+    alert('Open browser menu and tap "Add to Home Screen". Link copied.')
   }
 
   const getLinkByType = (type: string) => {
-    return card?.links?.find((link) => link.is_visible && link.type.toLowerCase() === type.toLowerCase())?.url
+    return card?.links?.find(
+      (link) => link.is_visible && link.type.toLowerCase() === type.toLowerCase()
+    )?.url
   }
 
   const submitLead = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
     const formData = new FormData(form)
-    
+
     try {
       await axios.post(`/api/public/card/${slug}/lead`, {
         name: formData.get('name'),
@@ -177,7 +181,7 @@ export default function PublicCard() {
         email: formData.get('email'),
         consent_marketing: formData.get('consent') === 'on'
       })
-      
+
       alert(t('thankYou'))
       setShowLeadForm(false)
       form.reset()
@@ -186,103 +190,181 @@ export default function PublicCard() {
     }
   }
 
-  const hotspots: Hotspot[] = [
-    /* ── Contact / social rows (left side, top→bottom) ──── */
-    { id: 'phone-row', onClick: openTel, label: 'Call phone' },
+  /* ── Contact row definitions ─────────────────────────── */
+  const contacts = [
+    {
+      id: 'phone',
+      icon: '/figma/call.png',
+      label: card ? formatPhone(card.phone) : '',
+      onClick: openTel
+    },
     {
       id: 'whatsapp',
-      onClick: () => openExternal('whatsapp', getLinkByType('whatsapp')),
-      label: 'WhatsApp'
+      icon: '/figma/whatsapp.png',
+      label: 'WhatsApp',
+      onClick: () => openExternal('whatsapp', getLinkByType('whatsapp'))
     },
     {
       id: 'telegram',
-      onClick: () => openExternal('telegram', getLinkByType('telegram')),
-      label: 'Telegram'
+      icon: '/figma/telegram.png',
+      label: 'Telegram',
+      onClick: () => openExternal('telegram', getLinkByType('telegram'))
     },
     {
       id: 'instagram',
-      onClick: () => openExternal('instagram', getLinkByType('instagram')),
-      label: 'Instagram'
+      icon: '/figma/instagram.png',
+      label: 'Instagram',
+      onClick: () => openExternal('instagram', getLinkByType('instagram'))
     },
     {
       id: 'viber',
-      onClick: () => openExternal('viber', getLinkByType('viber')),
-      label: 'Viber'
+      icon: '/figma/viber.png',
+      label: 'Viber',
+      onClick: () => openExternal('viber', getLinkByType('viber'))
     },
-    { id: 'email-row', onClick: openEmail, label: 'Send email' },
+    {
+      id: 'email',
+      icon: '/figma/email.png',
+      label: 'Email',
+      onClick: openEmail
+    },
     {
       id: 'tiktok',
-      onClick: () => openExternal('tiktok', getLinkByType('tiktok')),
-      label: 'TikTok'
+      icon: '/figma/tiktok.png',
+      label: 'Tik tok',
+      onClick: () => openExternal('tiktok', getLinkByType('tiktok'))
     },
-    { id: 'gallery', onClick: openGallery, label: 'Gallery' },
-    { id: 'web-row', onClick: openLocation, label: 'Kalvariyskaya 42' },
-
-    /* ── Action buttons (right side) ──────────────────────── */
-    { id: 'save-contact', onClick: handleSaveContact, label: 'Save contact' },
-    { id: 'show-qr', onClick: () => setShowQR(true), label: 'Show QR' },
     {
-      id: 'book-now',
-      onClick: () => setShowLeadForm((prev) => !prev),
-      label: 'Book now'
+      id: 'gallery',
+      icon: '/figma/gallery-1.png',
+      label: t('gallery'),
+      onClick: openGallery
     },
-    { id: 'add-home', onClick: addToHomeHint, label: 'Add to Home' },
-    { id: 'share', onClick: () => void handleShare(), label: 'Share' }
+    {
+      id: 'location',
+      icon: '/figma/location.png',
+      label: 'Kalvariyskaya 42',
+      onClick: openLocation
+    }
   ]
 
+  /* ── Loading / error states ──────────────────────────── */
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/30" />
       </div>
     )
   }
 
   if (!card) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl text-gray-600">Card not found</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
+        <p className="text-xl text-gray-400">Card not found</p>
       </div>
     )
   }
 
+  /* ── Render ──────────────────────────────────────────── */
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
-      <div className="mx-auto w-full sm:max-w-[430px]">
-        <div className="home-card-frame relative w-full overflow-hidden">
-          <img
-            src="/figma/home2-2x.png"
-            srcSet="/figma/home2-1x.png 402w, /figma/home2-2x.png 804w, /figma/home2-3x.png 1206w"
-            sizes="(min-width: 430px) 430px, 100vw"
-            alt="Business card"
-            className="h-full w-full select-none"
-            draggable={false}
-            style={{ display: 'block' }}
-          />
-
+      <div className="mx-auto w-full max-w-[430px] min-h-screen relative overflow-hidden card-bg">
+        {/* ── Language toggle ──────────────────────────── */}
+        <div className="flex items-center justify-end gap-1 pt-5 pr-5">
           <button
             onClick={() => i18n.changeLanguage('ru')}
-            className="hs hs-lang-ru"
-            aria-label="Russian"
-          />
+            className={`lang-btn ${
+              i18n.language === 'ru' ? 'lang-btn--active' : 'lang-btn--inactive'
+            }`}
+          >
+            RU
+          </button>
+          <span className="text-white/25 text-sm select-none">/</span>
           <button
             onClick={() => i18n.changeLanguage('en')}
-            className="hs hs-lang-en"
-            aria-label="English"
-          />
-
-          {hotspots.map((spot) => (
-            <button
-              key={spot.id}
-              onClick={spot.onClick}
-              className={`hs hs-${spot.id}`}
-              aria-label={spot.label}
-            />
-          ))}
+            className={`lang-btn ${
+              i18n.language === 'en' ? 'lang-btn--active' : 'lang-btn--inactive'
+            }`}
+          >
+            ENG
+          </button>
         </div>
 
+        {/* ── Profile header ──────────────────────────── */}
+        <div className="flex items-start gap-2 px-4 mt-1">
+          {/* Left: avatar + name + tagline */}
+          <div className="flex flex-col items-center flex-shrink-0">
+            <div className="avatar-wrap">
+              <img
+                src={card.avatar_url || '/figma/home-from-pdf.png'}
+                alt={card.full_name}
+                className="avatar-photo"
+              />
+              <img
+                src="/figma/ramka-2x.png"
+                alt=""
+                className="avatar-frame"
+                draggable={false}
+              />
+            </div>
+
+            <h1 className="font-script text-[28px] text-white mt-1 whitespace-nowrap leading-tight">
+              {card.full_name}
+            </h1>
+            <p className="font-script text-[#E87A2F] text-[15px] mt-0.5 leading-snug">
+              {card.bio}
+            </p>
+          </div>
+
+          {/* Right: service description */}
+          <div className="flex-1 pt-8 pl-1">
+            <h2 className="font-decorative text-[18px] text-white leading-snug text-center">
+              {card.title}
+            </h2>
+          </div>
+        </div>
+
+        {/* ── Main content: contacts + actions ─────────── */}
+        <div className="flex gap-3 px-4 mt-8">
+          {/* Left column — contacts */}
+          <div className="flex-1 min-w-0">
+            {contacts.map((c) => (
+              <button key={c.id} onClick={c.onClick} className="contact-row">
+                <img src={c.icon} alt="" className="contact-icon" />
+                <span className="truncate">{c.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Right column — action buttons */}
+          <div className="w-[148px] flex-shrink-0 space-y-2.5 pt-6">
+            <button onClick={handleSaveContact} className="action-btn">
+              {t('saveContact')}
+            </button>
+            <button onClick={() => setShowQR(true)} className="action-btn">
+              {t('showQR')}
+            </button>
+            <button
+              onClick={() => setShowLeadForm((prev) => !prev)}
+              className="action-btn-gold"
+            >
+              {t('bookNow')}
+            </button>
+            <button onClick={addToHomeHint} className="action-btn">
+              {t('addToHome')}
+            </button>
+            <button
+              onClick={() => void handleShare()}
+              className="action-btn action-btn-uppercase"
+            >
+              {t('share')}
+            </button>
+          </div>
+        </div>
+
+        {/* ── Lead form (collapsible) ─────────────────── */}
         {showLeadForm && (
-          <section className="mt-4 rounded-3xl border border-white/10 bg-[#1a1a1a] p-5">
+          <section className="mx-4 mt-6 rounded-2xl border border-white/10 bg-[#1a1a1a] p-5">
             <h2 className="mb-4 text-lg font-semibold">{t('leaveContact')}</h2>
             <form onSubmit={submitLead} className="space-y-3">
               <input
@@ -290,38 +372,58 @@ export default function PublicCard() {
                 name="name"
                 placeholder={t('name')}
                 required
-                className="w-full rounded-xl border border-white/20 bg-[#222] px-4 py-3 text-sm text-white outline-none"
+                className="lead-input"
               />
               <input
                 type="tel"
                 name="phone"
                 placeholder={t('phone')}
                 required
-                className="w-full rounded-xl border border-white/20 bg-[#222] px-4 py-3 text-sm text-white outline-none"
+                className="lead-input"
               />
               <input
                 type="email"
                 name="email"
                 placeholder={t('email')}
-                className="w-full rounded-xl border border-white/20 bg-[#222] px-4 py-3 text-sm text-white outline-none"
+                className="lead-input"
               />
               <label className="flex items-start gap-2 text-xs text-gray-300">
-                <input type="checkbox" name="consent" required className="mt-0.5" />
+                <input
+                  type="checkbox"
+                  name="consent"
+                  required
+                  className="mt-0.5"
+                />
                 <span>{t('consent')}</span>
               </label>
-              <button type="submit" className="w-full rounded-full bg-white px-4 py-3 text-sm font-semibold text-black">
+              <button
+                type="submit"
+                className="w-full rounded-full bg-white px-4 py-3 text-sm font-semibold text-black"
+              >
                 {t('submit')}
               </button>
             </form>
           </section>
         )}
+
+        {/* Bottom spacer */}
+        <div className="h-32" />
       </div>
 
+      {/* ── QR modal ──────────────────────────────────── */}
       {showQR && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowQR(false)}>
-          <div className="w-full max-w-sm rounded-2xl bg-white p-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setShowQR(false)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(window.location.href)}`}
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(
+                window.location.href
+              )}`}
               alt="QR Code"
               className="mx-auto"
             />

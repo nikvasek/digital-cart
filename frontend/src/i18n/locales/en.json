@@ -1,9 +1,9 @@
 {
-  "saveContact": "Save Contact",
-  "share": "Share",
+  "saveContact": "Save contact",
+  "share": "SHARE",
   "showQR": "Show QR",
   "addToHome": "Add to Home",
-  "bookNow": "Book Now",
+  "bookNow": "BOOK NOW",
   "aboutMe": "About Me",
   "gallery": "Gallery",
   "leaveContact": "Leave Your Contact",
@@ -16,5 +16,6 @@
   "views": "Views",
   "clicks": "Clicks",
   "saves": "Saves",
-  "leads": "Leads"
+  "leads": "Leads",
+  "close": "Close"
 }
