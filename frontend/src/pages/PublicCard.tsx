@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import typography from '../figma/typography.json'
 
 interface CardData {
   id: string
@@ -29,7 +31,7 @@ const createFallbackCard = (slugParam?: string): CardData => ({
   full_name: 'Paulline Ferreira',
   title: "Custom men's haircuts and beard styling",
   company_name: 'Digital Business Card',
-  phone: '+375292327382',
+  phone: '+375 29 232 73 82',
   email: 'paulline@example.com',
   address: 'Kalvariyskaya 42, Minsk',
   website: 'kalvariyskaya42.by',
@@ -57,6 +59,84 @@ type Hotspot = {
   onClick: () => void
   label: string
 }
+
+type TypographyField = {
+  textLayerName: string
+  x: number
+  y: number
+  width: number
+  height: number
+  fontFamily: string
+  fontWeight: number
+  fontSize: number
+  lineHeight: number
+  letterSpacing: number
+  textAlign: 'left' | 'center' | 'right' | 'justify'
+  color: string
+}
+
+type TypographyData = {
+  frame: { width: number; height: number }
+  fields: Record<string, TypographyField>
+}
+
+const typographyData = typography as TypographyData
+const frameWidth = typographyData.frame.width || 375
+const frameHeight = typographyData.frame.height || 820
+
+const toPercent = (value: number, max: number) => `${(value / max) * 100}%`
+
+const getFieldStyle = (field?: TypographyField): CSSProperties | undefined => {
+  if (!field) return undefined
+
+  return {
+    left: toPercent(field.x, frameWidth),
+    top: toPercent(field.y, frameHeight),
+    width: toPercent(field.width, frameWidth),
+    height: toPercent(field.height, frameHeight),
+    fontFamily: field.fontFamily || 'inherit',
+    fontWeight: field.fontWeight || 400,
+    fontSize: field.fontSize ? `${field.fontSize}px` : undefined,
+    lineHeight: field.lineHeight ? `${field.lineHeight}px` : undefined,
+    letterSpacing: field.letterSpacing ? `${field.letterSpacing}px` : undefined,
+    textAlign: field.textAlign || 'left',
+    color: field.color || '#FFFFFF'
+  }
+}
+
+const getAutoScale = (value: string, thresholds: Array<{ max: number; scale: number }>) => {
+  const length = value.trim().length
+  for (const item of thresholds) {
+    if (length <= item.max) return item.scale
+  }
+  return thresholds[thresholds.length - 1]?.scale ?? 1
+}
+
+const applyScale = (style: CSSProperties | undefined, scale: number): CSSProperties | undefined => {
+  if (!style || scale === 1) return style
+  const fontSize = style.fontSize ? `calc(${style.fontSize} * ${scale})` : undefined
+  const lineHeight = style.lineHeight ? `calc(${style.lineHeight} * ${scale})` : undefined
+
+  return {
+    ...style,
+    fontSize,
+    lineHeight
+  }
+}
+
+const formatPhoneDisplay = (value: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return trimmed
+  const digits = trimmed.replace(/\D/g, '')
+
+  if (digits.length === 12) {
+    return `+${digits.slice(0, 3)} ${digits.slice(3, 5)} ${digits.slice(5, 8)} ${digits.slice(8, 10)} ${digits.slice(10, 12)}`
+  }
+
+  return trimmed
+}
+
+const normalizeAddress = (value: string) => value.replace(/\s+/g, ' ').trim()
 
 const toExternalUrl = (url: string) => {
   if (!url) return url
@@ -254,23 +334,69 @@ export default function PublicCard() {
     )
   }
 
+  const formattedPhone = formatPhoneDisplay(card.phone || '')
+  const formattedAddress = normalizeAddress(card.address || '')
+  const addressScale = getAutoScale(formattedAddress, [
+    { max: 24, scale: 1 },
+    { max: 32, scale: 0.92 },
+    { max: 44, scale: 0.84 }
+  ])
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <div className="mx-auto w-full sm:max-w-[430px]">
         <div className="home-card-frame relative w-full overflow-hidden">
           <img
-            src="/figma/home@2x.png"
-            srcSet="/figma/home.png 375w, /figma/home@2x.png 750w, /figma/home@3x.png 1125w"
+            src="/figma/background-no-text.png"
+            srcSet="/figma/background-no-text.png 375w, /figma/background-no-text@2x.png 750w"
             sizes="(min-width: 430px) 430px, 100vw"
             alt="Business card"
             className="h-full w-full select-none"
             draggable={false}
           />
 
-          {/* Dynamic text overlays (name / phone / address) */}
-          <div className="ht ht-name"><span>{card.full_name}</span></div>
-          <div className="ht ht-phone"><span>{card.phone}</span></div>
-          <div className="ht ht-address"><span>{card.address || ''}</span></div>
+          {/* Dynamic text overlays from typography.json */}
+          <div
+            className="card-text card-text--clamp-3"
+            style={applyScale(
+              getFieldStyle(typographyData.fields.name),
+              getAutoScale(card.full_name, [
+                { max: 18, scale: 1 },
+                { max: 26, scale: 0.92 },
+                { max: 34, scale: 0.84 }
+              ])
+            )}
+          >
+            {card.full_name}
+          </div>
+          <div
+            className="card-text card-text--clamp-3"
+            style={applyScale(
+              getFieldStyle(typographyData.fields.title),
+              getAutoScale(card.title, [
+                { max: 28, scale: 1 },
+                { max: 40, scale: 0.92 },
+                { max: 52, scale: 0.84 }
+              ])
+            )}
+          >
+            {card.title}
+          </div>
+          <div className="card-text card-text--clamp-3" style={getFieldStyle(typographyData.fields.bio)}>
+            {card.bio}
+          </div>
+          <div className="card-text card-text--nowrap" style={getFieldStyle(typographyData.fields.phone)}>
+            {formattedPhone}
+          </div>
+          <div
+            className="card-text card-text--clamp-2"
+            style={{
+              ...applyScale(getFieldStyle(typographyData.fields.address), addressScale),
+              height: 'auto'
+            }}
+          >
+            {formattedAddress}
+          </div>
 
           <button
             onClick={() => i18n.changeLanguage('ru')}
