@@ -80,6 +80,55 @@ code {
   overflow: hidden;
 }
 
+/* ── Dynamic contact list (left column) ────────────────── */
+.card-links {
+  position: absolute;
+  z-index: 30;
+  left: 6%;
+  top: 29%;
+  width: 48%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.card-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #f5f5f5;
+  text-align: left;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1.2;
+}
+
+.card-link__icon {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #f5f5f5;
+}
+
+.card-link__icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+.card-link__text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── Language switcher (top-right) ─────────────────────── */
 /* RU / ENG labels top-right of card                        */
 .hs-lang-ru { left: 74.93%; top: 3.50%; width: 8.36%;  height: 3.00%; }

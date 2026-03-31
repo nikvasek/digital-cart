@@ -60,6 +60,13 @@ type Hotspot = {
   label: string
 }
 
+type ContactItem = {
+  id: string
+  text: string
+  onClick: () => void
+  icon: JSX.Element
+}
+
 type TypographyField = {
   textLayerName: string
   x: number
@@ -142,6 +149,87 @@ const toExternalUrl = (url: string) => {
   if (!url) return url
   return /^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`
 }
+
+const PhoneIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M6.6 3a1 1 0 0 0-.98.8l-.7 3.4a1 1 0 0 0 .3.95l2.1 2.1a12.9 12.9 0 0 0 6.1 6.1l2.1-2.1a1 1 0 0 0 .95-.3l3.4-.7a1 1 0 0 0 .8-.98V5a2 2 0 0 0-2-2H6.6zM5 5h13v2.3l-2.6.53-2.3 2.3a1 1 0 0 1-1.04.24 10.9 10.9 0 0 1-4.8-4.8 1 1 0 0 1 .24-1.04l2.3-2.3L12.3 5H5z"
+    />
+  </svg>
+)
+
+const TelegramIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M20.5 3.4 2.9 10.3a1 1 0 0 0 .05 1.9l4.4 1.6 1.7 5.3a1 1 0 0 0 1.6.4l2.7-2.2 4.7 3.4a1 1 0 0 0 1.6-.6l3.7-15a1 1 0 0 0-1.4-1.2zM8.5 13.1l9.1-6.1-7 7.3-.3 2.6-1.1-3.6-3.2-1.2 2.5-1z"
+    />
+  </svg>
+)
+
+const WhatsappIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.6-1.2A9 9 0 1 0 12 3zm0 2a7 7 0 0 1 0 14 7 7 0 0 1-3.5-.9l-.4-.2-2.6.7.7-2.5-.2-.4A7 7 0 0 1 12 5zm-3.3 3.3c-.2 0-.5.1-.7.3-.7.7-1.1 1.6-1 2.6.2 1.7 1.7 3.8 3.8 4.9 1.6.9 2.3.7 2.7.6.4-.1 1.2-.5 1.4-1 .2-.5.2-.9.1-1-.1-.1-.3-.2-.6-.3l-1.2-.6c-.3-.1-.5-.1-.7.2l-.3.4c-.2.2-.3.2-.6.1-.3-.1-1.1-.4-2-1.3-.7-.7-.9-1.3-1-1.6-.1-.3 0-.4.1-.5l.3-.4c.1-.1.2-.3.2-.5 0-.2 0-.3-.1-.4l-.6-1.3c-.2-.4-.4-.4-.6-.4z"
+    />
+  </svg>
+)
+
+const InstagramIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zm10 2H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm-5 2.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5zm5.2-2.7a1 1 0 1 1-1 1 1 1 0 0 1 1-1z"
+    />
+  </svg>
+)
+
+const ViberIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M7.2 4h9.6A2.2 2.2 0 0 1 19 6.2v6.6a2.2 2.2 0 0 1-2.2 2.2h-4.6l-3.8 3v-3H7.2A2.2 2.2 0 0 1 5 12.8V6.2A2.2 2.2 0 0 1 7.2 4zm2.3 3.2a.8.8 0 0 0-.8.9 6.4 6.4 0 0 0 6.2 6.2.8.8 0 0 0 .9-.8.9.9 0 0 0-.9-.9 4.7 4.7 0 0 1-4.5-4.5.9.9 0 0 0-.9-.9z"
+    />
+  </svg>
+)
+
+const EmailIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2 8 5 8-5H4zm0 10h16V9l-8 5-8-5v8z"
+    />
+  </svg>
+)
+
+const TikTokIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M14 3a6 6 0 0 0 4.4 1.9V7a8 8 0 0 1-4.4-1.4v7.3a4.6 4.6 0 1 1-4-4.5v2.3a2.3 2.3 0 1 0 1.7 2.2V3h2.3z"
+    />
+  </svg>
+)
+
+const GalleryIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm0 2v8l4-4 3 3 4-4 5 5V7H4z"
+    />
+  </svg>
+)
+
+const LocationIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path
+      fill="currentColor"
+      d="M12 2a7 7 0 0 0-7 7c0 4.7 7 13 7 13s7-8.3 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 14.5 9 2.5 2.5 0 0 1 12 11.5z"
+    />
+  </svg>
+)
 
 export default function PublicCard() {
   const { slug } = useParams<{ slug: string }>()
@@ -231,10 +319,9 @@ export default function PublicCard() {
   }
 
   const openLocation = () => {
-    if (!card) return
+    if (!card?.address) return
     trackEvent('click', { link_type: 'location' })
-    const query = card.address || 'Kalvariyskaya 42, Minsk'
-    window.location.href = `https://maps.google.com/?q=${encodeURIComponent(query)}`
+    window.location.href = `https://maps.google.com/?q=${encodeURIComponent(card.address)}`
   }
 
   const openGallery = () => {
@@ -278,39 +365,95 @@ export default function PublicCard() {
     }
   }
 
-  const hotspots: Hotspot[] = [
-    /* ── Contact / social rows (left side, top→bottom) ──── */
-    { id: 'phone-row', onClick: openTel, label: 'Call phone' },
-    {
-      id: 'whatsapp',
-      onClick: () => openExternal('whatsapp', getLinkByType('whatsapp')),
-      label: 'WhatsApp'
-    },
-    {
-      id: 'telegram',
-      onClick: () => openExternal('telegram', getLinkByType('telegram')),
-      label: 'Telegram'
-    },
-    {
-      id: 'instagram',
-      onClick: () => openExternal('instagram', getLinkByType('instagram')),
-      label: 'Instagram'
-    },
-    {
-      id: 'viber',
-      onClick: () => openExternal('viber', getLinkByType('viber')),
-      label: 'Viber'
-    },
-    { id: 'email-row', onClick: openEmail, label: 'Send email' },
-    {
-      id: 'tiktok',
-      onClick: () => openExternal('tiktok', getLinkByType('tiktok')),
-      label: 'TikTok'
-    },
-    { id: 'gallery', onClick: openGallery, label: 'Gallery' },
-    { id: 'web-row', onClick: openLocation, label: 'Kalvariyskaya 42' },
+  const contactItems: ContactItem[] = []
 
-    /* ── Action buttons (right side) ──────────────────────── */
+  if (card?.phone) {
+    contactItems.push({
+      id: 'phone',
+      text: formatPhoneDisplay(card.phone),
+      onClick: openTel,
+      icon: <PhoneIcon />
+    })
+  }
+
+  const whatsappUrl = getLinkByType('whatsapp')
+  if (whatsappUrl) {
+    contactItems.push({
+      id: 'whatsapp',
+      text: 'WhatsApp',
+      onClick: () => openExternal('whatsapp', whatsappUrl),
+      icon: <WhatsappIcon />
+    })
+  }
+
+  const telegramUrl = getLinkByType('telegram')
+  if (telegramUrl) {
+    contactItems.push({
+      id: 'telegram',
+      text: 'Telegram',
+      onClick: () => openExternal('telegram', telegramUrl),
+      icon: <TelegramIcon />
+    })
+  }
+
+  const instagramUrl = getLinkByType('instagram')
+  if (instagramUrl) {
+    contactItems.push({
+      id: 'instagram',
+      text: 'Instagram',
+      onClick: () => openExternal('instagram', instagramUrl),
+      icon: <InstagramIcon />
+    })
+  }
+
+  const viberUrl = getLinkByType('viber')
+  if (viberUrl) {
+    contactItems.push({
+      id: 'viber',
+      text: 'Viber',
+      onClick: () => openExternal('viber', viberUrl),
+      icon: <ViberIcon />
+    })
+  }
+
+  if (card?.email) {
+    contactItems.push({
+      id: 'email',
+      text: 'Email',
+      onClick: openEmail,
+      icon: <EmailIcon />
+    })
+  }
+
+  const tiktokUrl = getLinkByType('tiktok')
+  if (tiktokUrl) {
+    contactItems.push({
+      id: 'tiktok',
+      text: 'TikTok',
+      onClick: () => openExternal('tiktok', tiktokUrl),
+      icon: <TikTokIcon />
+    })
+  }
+
+  if (card?.portfolio_url) {
+    contactItems.push({
+      id: 'gallery',
+      text: 'Gallery',
+      onClick: openGallery,
+      icon: <GalleryIcon />
+    })
+  }
+
+  if (card?.address) {
+    contactItems.push({
+      id: 'location',
+      text: normalizeAddress(card.address),
+      onClick: openLocation,
+      icon: <LocationIcon />
+    })
+  }
+
+  const hotspots: Hotspot[] = [
     { id: 'save-contact', onClick: handleSaveContact, label: 'Save contact' },
     { id: 'show-qr', onClick: () => setShowQR(true), label: 'Show QR' },
     {
@@ -339,13 +482,6 @@ export default function PublicCard() {
     )
   }
 
-  const formattedPhone = formatPhoneDisplay(card.phone || '')
-  const formattedAddress = normalizeAddress(card.address || '')
-  const addressScale = getAutoScale(formattedAddress, [
-    { max: 24, scale: 1 },
-    { max: 32, scale: 0.92 },
-    { max: 44, scale: 0.84 }
-  ])
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
@@ -390,18 +526,22 @@ export default function PublicCard() {
           <div className="card-text card-text--clamp-3" style={getFieldStyle(typographyData.fields.bio)}>
             {card.bio}
           </div>
-          <div className="card-text card-text--nowrap" style={getFieldStyle(typographyData.fields.phone)}>
-            {formattedPhone}
-          </div>
-          <div
-            className="card-text card-text--clamp-2"
-            style={{
-              ...applyScale(getFieldStyle(typographyData.fields.address), addressScale),
-              height: 'auto'
-            }}
-          >
-            {formattedAddress}
-          </div>
+          {contactItems.length > 0 && (
+            <div className="card-links" aria-label="Contacts">
+              {contactItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="card-link"
+                  onClick={item.onClick}
+                  aria-label={item.text}
+                >
+                  <span className="card-link__icon">{item.icon}</span>
+                  <span className="card-link__text">{item.text}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           <button
             onClick={() => i18n.changeLanguage('ru')}
