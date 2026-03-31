@@ -84,6 +84,7 @@ code {
 /* RU / ENG labels top-right of card                        */
 .hs-lang-ru { left: 74.93%; top: 3.50%; width: 8.36%;  height: 3.00%; }
 .hs-lang-en { left: 83.03%; top: 3.50%; width: 10.44%; height: 3.00%; }
+.hs-admin   { left: 6%; top: 6%; width: 18%; height: 10%; }
 
 /* ── Contact / social rows (left side)  ────────────────── */
 /* Measured pixel centers (383x828 canvas):                  */

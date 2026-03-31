@@ -249,6 +249,10 @@ export default function PublicCard() {
     alert('Open browser menu and tap “Add to Home Screen”. Link copied.')
   }
 
+  const openAdminPanel = () => {
+    window.location.href = '/admin/login'
+  }
+
   const getLinkByType = (type: string) => {
     return card?.links?.find((link) => link.is_visible && link.type.toLowerCase() === type.toLowerCase())?.url
   }
@@ -315,7 +319,8 @@ export default function PublicCard() {
       label: 'Book now'
     },
     { id: 'add-home', onClick: addToHomeHint, label: 'Add to Home' },
-    { id: 'share', onClick: () => void handleShare(), label: 'Share' }
+    { id: 'share', onClick: () => void handleShare(), label: 'Share' },
+    { id: 'admin', onClick: openAdminPanel, label: 'Admin panel' }
   ]
 
   if (loading) {

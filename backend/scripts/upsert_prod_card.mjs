@@ -10,6 +10,8 @@ if (!connectionString) {
 
 const client = new Client({ connectionString, ssl: { rejectUnauthorized: false } })
 
+const address = process.env.CARD_ADDRESS || 'Kalvariyskaya 42, Minsk'
+
 const links = [
   ['instagram', 'https://instagram.com/paulline', true],
   ['telegram', 'https://t.me/paulline', true],
@@ -53,7 +55,7 @@ try {
   const cardRes = await client.query(
     `INSERT INTO cards (
       user_id, slug, full_name, title, company_name,
-      phone, email, website, bio,
+      phone, email, address, website, bio,
       avatar_url, logo_url, language_default, is_active
     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
     ON CONFLICT (slug) DO UPDATE SET
@@ -63,6 +65,7 @@ try {
       company_name = EXCLUDED.company_name,
       phone = EXCLUDED.phone,
       email = EXCLUDED.email,
+      address = EXCLUDED.address,
       website = EXCLUDED.website,
       bio = EXCLUDED.bio,
       avatar_url = EXCLUDED.avatar_url,
@@ -79,6 +82,7 @@ try {
       'Digital Business Card',
       '+375292327382',
       'paulline@example.com',
+      address,
       'https://kalvariyskaya42.by',
       'Eyes are drawn to uniqueness.',
       'https://via.placeholder.com/300x300?text=Avatar',
