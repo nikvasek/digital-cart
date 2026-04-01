@@ -98,20 +98,20 @@ export default function Editor() {
 
     const validationErrors: string[] = []
 
-    if (!normalizeString(card.full_name)) validationErrors.push('Full Name is required')
-    if (!normalizeString(card.title)) validationErrors.push('Title is required')
-    if (!normalizeString(card.company_name)) validationErrors.push('Company is required')
-    if (!normalizeString(card.phone)) validationErrors.push('Phone is required')
+    if (card.is_active && !normalizeString(card.full_name)) validationErrors.push('Full Name is required')
+    if (card.is_active && !normalizeString(card.title)) validationErrors.push('Title is required')
+    if (card.is_active && !normalizeString(card.company_name)) validationErrors.push('Company is required')
+    if (card.is_active && !normalizeString(card.phone)) validationErrors.push('Phone is required')
 
-    if (!normalizeString(card.email)) {
+    if (card.is_active && !normalizeString(card.email)) {
       validationErrors.push('Email is required')
-    } else if (!isValidEmail(normalizeString(card.email))) {
+    } else if (normalizeString(card.email) && !isValidEmail(normalizeString(card.email))) {
       validationErrors.push('Email format is invalid')
     }
 
-    if (!normalizeString(card.website)) {
+    if (card.is_active && !normalizeString(card.website)) {
       validationErrors.push('Website is required')
-    } else if (!isValidUrl(normalizeString(card.website))) {
+    } else if (normalizeString(card.website) && !isValidUrl(normalizeString(card.website))) {
       validationErrors.push('Website format is invalid')
     }
 
@@ -119,9 +119,9 @@ export default function Editor() {
       validationErrors.push('Portfolio URL format is invalid')
     }
 
-    if (!normalizeString(card.avatar_url)) {
+    if (card.is_active && !normalizeString(card.avatar_url)) {
       validationErrors.push('Avatar URL is required')
-    } else if (!isValidUrl(normalizeString(card.avatar_url))) {
+    } else if (normalizeString(card.avatar_url) && !isValidUrl(normalizeString(card.avatar_url))) {
       validationErrors.push('Avatar URL format is invalid')
     }
 

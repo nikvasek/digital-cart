@@ -38,22 +38,22 @@ const getCardValidationErrors = (payload: {
 }) => {
   const errors: string[] = []
 
-  if (!normalizeString(payload.full_name)) errors.push('full_name is required')
-  if (!normalizeString(payload.title)) errors.push('title is required')
-  if (!normalizeString(payload.company_name)) errors.push('company_name is required')
-  if (!normalizeString(payload.phone)) errors.push('phone is required')
+  if (payload.is_active && !normalizeString(payload.full_name)) errors.push('full_name is required')
+  if (payload.is_active && !normalizeString(payload.title)) errors.push('title is required')
+  if (payload.is_active && !normalizeString(payload.company_name)) errors.push('company_name is required')
+  if (payload.is_active && !normalizeString(payload.phone)) errors.push('phone is required')
 
   const email = normalizeString(payload.email)
-  if (!email) {
+  if (payload.is_active && !email) {
     errors.push('email is required')
-  } else if (!isValidEmail(email)) {
+  } else if (email && !isValidEmail(email)) {
     errors.push('email is invalid')
   }
 
   const website = normalizeString(payload.website)
-  if (!website) {
+  if (payload.is_active && !website) {
     errors.push('website is required')
-  } else if (!isValidUrl(website)) {
+  } else if (website && !isValidUrl(website)) {
     errors.push('website is invalid')
   }
 
@@ -62,9 +62,9 @@ const getCardValidationErrors = (payload: {
     errors.push('portfolio_url is invalid')
   }
   const avatar = normalizeString(payload.avatar_url)
-  if (!avatar) {
+  if (payload.is_active && !avatar) {
     errors.push('avatar_url is required')
-  } else if (!isValidUrl(avatar)) {
+  } else if (avatar && !isValidUrl(avatar)) {
     errors.push('avatar_url is invalid')
   }
 
