@@ -34,32 +34,6 @@ type ContactRow = {
 
 const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
 
-const createFallbackCard = (slugParam?: string): CardData => ({
-  id: 'local-demo-card',
-  slug: slugParam || 'paulline-ferreira',
-  full_name: 'Paulline Ferreira',
-  title: "Custom men's haircuts and beard styling",
-  company_name: 'Digital Business Card',
-  phone: '+375 29 232 73 82',
-  email: 'paulline@example.com',
-  address: 'Kalvariyskaya 42',
-  website: 'kalvariyskaya42.by',
-  portfolio_url: 'https://example.com/portfolio',
-  bio: 'Eyes are drawn to uniqueness.',
-  avatar_url: figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.png'),
-  logo_url: '',
-  language_default: 'en',
-  links: [
-    { type: 'instagram', url: 'https://instagram.com', is_visible: true },
-    { type: 'telegram', url: 'https://t.me', is_visible: true },
-    { type: 'whatsapp', url: 'https://wa.me/375292327382', is_visible: true },
-    { type: 'tiktok', url: 'https://www.tiktok.com', is_visible: true },
-    { type: 'viber', url: 'viber://chat?number=%2B375292327382', is_visible: true }
-  ],
-  media: [],
-  services: []
-})
-
 const toExternalUrl = (url: string) => {
   if (!url) return url
   return /^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`
@@ -83,6 +57,7 @@ export default function PublicCard() {
   const { slug } = useParams<{ slug: string }>()
   const { t, i18n } = useTranslation()
   const [card, setCard] = useState<CardData | null>(null)
+  const [loadError, setLoadError] = useState(false)
   const [showLeadForm, setShowLeadForm] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -104,6 +79,7 @@ export default function PublicCard() {
 
   const loadCard = async () => {
     try {
+      setLoadError(false)
       const response = await axios.get(`/api/public/card/${slug}`)
       setCard(response.data)
       await i18n.changeLanguage(response.data.language_default)
@@ -114,9 +90,8 @@ export default function PublicCard() {
       })
     } catch (error) {
       console.error('Failed to load card:', error)
-      const fallback = createFallbackCard(slug)
-      setCard(fallback)
-      await i18n.changeLanguage(fallback.language_default)
+      setLoadError(true)
+      setCard(null)
     } finally {
       setLoading(false)
     }
@@ -291,7 +266,7 @@ export default function PublicCard() {
   if (!card) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
-        <p className="text-xl text-gray-300">Card not found</p>
+        <p className="text-xl text-gray-300">{loadError ? 'Failed to load card' : 'Card not found'}</p>
       </div>
     )
   }
