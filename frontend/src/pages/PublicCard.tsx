@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
-import type { CSSProperties } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
-import typography from '../figma/typography.json'
 
 interface CardData {
   id: string
@@ -25,6 +24,16 @@ interface CardData {
   services: Array<{ title: string; description: string; is_visible: boolean }>
 }
 
+type ContactRow = {
+  id: string
+  label: string
+  iconSrc: string
+  onClick: () => void
+  isVisible: boolean
+}
+
+const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
+
 const createFallbackCard = (slugParam?: string): CardData => ({
   id: 'local-demo-card',
   slug: slugParam || 'paulline-ferreira',
@@ -33,11 +42,11 @@ const createFallbackCard = (slugParam?: string): CardData => ({
   company_name: 'Digital Business Card',
   phone: '+375 29 232 73 82',
   email: 'paulline@example.com',
-  address: 'Kalvariyskaya 42, Minsk',
+  address: 'Kalvariyskaya 42',
   website: 'kalvariyskaya42.by',
   portfolio_url: 'https://example.com/portfolio',
   bio: 'Eyes are drawn to uniqueness.',
-  avatar_url: '/figma/home-from-pdf.png',
+  avatar_url: figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.png'),
   logo_url: '',
   language_default: 'en',
   links: [
@@ -45,122 +54,30 @@ const createFallbackCard = (slugParam?: string): CardData => ({
     { type: 'telegram', url: 'https://t.me', is_visible: true },
     { type: 'whatsapp', url: 'https://wa.me/375292327382', is_visible: true },
     { type: 'tiktok', url: 'https://www.tiktok.com', is_visible: true },
-    { type: 'viber', url: 'viber://chat?number=%2B375292327382', is_visible: true },
-    { type: 'facebook', url: 'https://www.facebook.com/paulline', is_visible: true },
-    { type: 'linkedin', url: 'https://www.linkedin.com/in/paulline', is_visible: true },
-    { type: 'youtube', url: 'https://www.youtube.com/@paulline', is_visible: true }
+    { type: 'viber', url: 'viber://chat?number=%2B375292327382', is_visible: true }
   ],
   media: [],
   services: []
 })
-
-type Hotspot = {
-  id: string
-  onClick: () => void
-  label: string
-}
-
-type ContactItem = {
-  id: string
-  text: string
-  onClick: () => void
-  icon: string
-}
-
-type TypographyField = {
-  textLayerName: string
-  x: number
-  y: number
-  width: number
-  height: number
-  fontFamily: string
-  fontWeight: number
-  fontSize: number
-  lineHeight: number
-  letterSpacing: number
-  textAlign: 'left' | 'center' | 'right' | 'justify'
-  color: string
-}
-
-type TypographyData = {
-  frame: { width: number; height: number }
-  fields: Record<string, TypographyField>
-}
-
-const typographyData = typography as TypographyData
-const frameWidth = typographyData.frame.width || 375
-const frameHeight = typographyData.frame.height || 820
-
-const toPercent = (value: number, max: number) => `${(value / max) * 100}%`
-
-const getFieldStyle = (field?: TypographyField): CSSProperties | undefined => {
-  if (!field) return undefined
-
-  return {
-    left: toPercent(field.x, frameWidth),
-    top: toPercent(field.y, frameHeight),
-    width: toPercent(field.width, frameWidth),
-    height: toPercent(field.height, frameHeight),
-    fontFamily: field.fontFamily || 'inherit',
-    fontWeight: field.fontWeight || 400,
-    fontSize: field.fontSize ? `${field.fontSize}px` : undefined,
-    lineHeight: field.lineHeight ? `${field.lineHeight}px` : undefined,
-    letterSpacing: field.letterSpacing ? `${field.letterSpacing}px` : undefined,
-    textAlign: field.textAlign || 'left',
-    color: field.color || '#FFFFFF'
-  }
-}
-
-const getAutoScale = (value: string, thresholds: Array<{ max: number; scale: number }>) => {
-  const length = value.trim().length
-  for (const item of thresholds) {
-    if (length <= item.max) return item.scale
-  }
-  return thresholds[thresholds.length - 1]?.scale ?? 1
-}
-
-const applyScale = (style: CSSProperties | undefined, scale: number): CSSProperties | undefined => {
-  if (!style || scale === 1) return style
-  const fontSize = style.fontSize ? `calc(${style.fontSize} * ${scale})` : undefined
-  const lineHeight = style.lineHeight ? `calc(${style.lineHeight} * ${scale})` : undefined
-
-  return {
-    ...style,
-    fontSize,
-    lineHeight
-  }
-}
-
-const formatPhoneDisplay = (value: string) => {
-  const trimmed = value.trim()
-  if (!trimmed) return trimmed
-  const digits = trimmed.replace(/\D/g, '')
-
-  if (digits.length === 12) {
-    return `+${digits.slice(0, 3)} ${digits.slice(3, 5)} ${digits.slice(5, 8)} ${digits.slice(8, 10)} ${digits.slice(10, 12)}`
-  }
-
-  return trimmed
-}
-
-const normalizeAddress = (value: string) => value.replace(/\s+/g, ' ').trim()
 
 const toExternalUrl = (url: string) => {
   if (!url) return url
   return /^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`
 }
 
-const iconByType = {
-  phone: '/figma/call.png',
-  whatsapp: '/figma/whatsapp.png',
-  telegram: '/figma/telegram.png',
-  instagram: '/figma/instagram.png',
-  viber: '/figma/viber.png',
-  email: '/figma/email.png',
-  tiktok: '/figma/tiktok.png',
-  gallery: '/figma/gallery-1.png',
-  location: '/figma/location.png'
-} as const
+const formatPhoneDisplay = (value: string) => {
+  const cleaned = value.trim()
+  if (!cleaned) return cleaned
+
+  const digits = cleaned.replace(/\D/g, '')
+  if (digits.length === 12) {
+    return `+${digits.slice(0, 3)} ${digits.slice(3, 5)} ${digits.slice(5, 8)} ${digits.slice(8, 10)} ${digits.slice(10, 12)}`
+  }
+
+  return cleaned
+}
+
+const normalizeAddress = (value: string) => value.replace(/\s+/g, ' ').trim()
 
 export default function PublicCard() {
   const { slug } = useParams<{ slug: string }>()
@@ -171,7 +88,8 @@ export default function PublicCard() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadCard()
+    void loadCard()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
   const trackEvent = (event_type: string, metadata?: Record<string, unknown>) => {
@@ -188,9 +106,9 @@ export default function PublicCard() {
     try {
       const response = await axios.get(`/api/public/card/${slug}`)
       setCard(response.data)
-      i18n.changeLanguage(response.data.language_default)
+      await i18n.changeLanguage(response.data.language_default)
 
-      axios.post('/api/public/events', {
+      void axios.post('/api/public/events', {
         card_id: response.data.id,
         event_type: 'view'
       })
@@ -198,37 +116,14 @@ export default function PublicCard() {
       console.error('Failed to load card:', error)
       const fallback = createFallbackCard(slug)
       setCard(fallback)
-      i18n.changeLanguage(fallback.language_default)
+      await i18n.changeLanguage(fallback.language_default)
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSaveContact = () => {
-    const baseUrl = (axios.defaults.baseURL || '').toString().replace(/\/$/, '')
-    window.location.href = `${baseUrl}/api/public/card/${slug}/vcard`
-    trackEvent('save_vcard')
-  }
-
-  const handleShare = async () => {
-    const url = window.location.href
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: card?.full_name,
-          text: `${card?.title} at ${card?.company_name}`,
-          url: url
-        })
-      } catch (err) {
-        console.log('Share cancelled')
-      }
-    } else {
-      await navigator.clipboard.writeText(url)
-      alert('Link copied to clipboard')
-    }
-
-    trackEvent('share')
+  const getLinkByType = (type: string) => {
+    return card?.links?.find((link) => link.is_visible && link.type.toLowerCase() === type.toLowerCase())?.url
   }
 
   const openExternal = (type: string, url?: string) => {
@@ -262,24 +157,43 @@ export default function PublicCard() {
     }
   }
 
+  const handleSaveContact = () => {
+    const baseUrl = (axios.defaults.baseURL || '').toString().replace(/\/$/, '')
+    window.location.href = `${baseUrl}/api/public/card/${slug}/vcard`
+    trackEvent('save_vcard')
+  }
+
+  const handleShare = async () => {
+    const url = window.location.href
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: card?.full_name,
+          text: `${card?.title} at ${card?.company_name}`,
+          url
+        })
+      } catch {
+        // user cancelled share dialog
+      }
+    } else {
+      await navigator.clipboard.writeText(url)
+      alert('Link copied to clipboard')
+    }
+
+    trackEvent('share')
+  }
+
   const addToHomeHint = async () => {
     await navigator.clipboard.writeText(window.location.href)
     alert('Open browser menu and tap “Add to Home Screen”. Link copied.')
   }
 
-  const openAdminPanel = () => {
-    window.location.href = '/admin/login'
-  }
-
-  const getLinkByType = (type: string) => {
-    return card?.links?.find((link) => link.is_visible && link.type.toLowerCase() === type.toLowerCase())?.url
-  }
-
-  const submitLead = async (e: React.FormEvent<HTMLFormElement>) => {
+  const submitLead = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
     const formData = new FormData(form)
-    
+
     try {
       await axios.post(`/api/public/card/${slug}/lead`, {
         name: formData.get('name'),
@@ -287,214 +201,176 @@ export default function PublicCard() {
         email: formData.get('email'),
         consent_marketing: formData.get('consent') === 'on'
       })
-      
+
       alert(t('thankYou'))
       setShowLeadForm(false)
       form.reset()
-    } catch (error) {
+    } catch {
       alert('Error submitting form')
     }
   }
 
-  const contactItems: ContactItem[] = []
+  const contactRows = useMemo<ContactRow[]>(() => {
+    if (!card) return []
 
-  if (card?.phone) {
-    contactItems.push({
-      id: 'phone',
-      text: formatPhoneDisplay(card.phone),
-      onClick: openTel,
-      icon: iconByType.phone
-    })
-  }
-
-  const whatsappUrl = getLinkByType('whatsapp')
-  if (whatsappUrl) {
-    contactItems.push({
-      id: 'whatsapp',
-      text: 'WhatsApp',
-      onClick: () => openExternal('whatsapp', whatsappUrl),
-      icon: iconByType.whatsapp
-    })
-  }
-
-  const telegramUrl = getLinkByType('telegram')
-  if (telegramUrl) {
-    contactItems.push({
-      id: 'telegram',
-      text: 'Telegram',
-      onClick: () => openExternal('telegram', telegramUrl),
-      icon: iconByType.telegram
-    })
-  }
-
-  const instagramUrl = getLinkByType('instagram')
-  if (instagramUrl) {
-    contactItems.push({
-      id: 'instagram',
-      text: 'Instagram',
-      onClick: () => openExternal('instagram', instagramUrl),
-      icon: iconByType.instagram
-    })
-  }
-
-  const viberUrl = getLinkByType('viber')
-  if (viberUrl) {
-    contactItems.push({
-      id: 'viber',
-      text: 'Viber',
-      onClick: () => openExternal('viber', viberUrl),
-      icon: iconByType.viber
-    })
-  }
-
-  if (card?.email) {
-    contactItems.push({
-      id: 'email',
-      text: 'Email',
-      onClick: openEmail,
-      icon: iconByType.email
-    })
-  }
-
-  const tiktokUrl = getLinkByType('tiktok')
-  if (tiktokUrl) {
-    contactItems.push({
-      id: 'tiktok',
-      text: 'TikTok',
-      onClick: () => openExternal('tiktok', tiktokUrl),
-      icon: iconByType.tiktok
-    })
-  }
-
-  if (card?.portfolio_url) {
-    contactItems.push({
-      id: 'gallery',
-      text: 'Gallery',
-      onClick: openGallery,
-      icon: iconByType.gallery
-    })
-  }
-
-  if (card?.address) {
-    contactItems.push({
-      id: 'location',
-      text: normalizeAddress(card.address),
-      onClick: openLocation,
-      icon: iconByType.location
-    })
-  }
-
-  const hotspots: Hotspot[] = [
-    { id: 'save-contact', onClick: handleSaveContact, label: 'Save contact' },
-    { id: 'show-qr', onClick: () => setShowQR(true), label: 'Show QR' },
-    {
-      id: 'book-now',
-      onClick: () => setShowLeadForm((prev) => !prev),
-      label: 'Book now'
-    },
-    { id: 'add-home', onClick: addToHomeHint, label: 'Add to Home' },
-    { id: 'share', onClick: () => void handleShare(), label: 'Share' },
-    { id: 'admin', onClick: openAdminPanel, label: 'Admin panel' }
-  ]
+    return [
+      {
+        id: 'phone',
+        label: formatPhoneDisplay(card.phone || ''),
+        iconSrc: figmaAsset('call_1062678 1@3x.png'),
+        onClick: openTel,
+        isVisible: Boolean(card.phone)
+      },
+      {
+        id: 'whatsapp',
+        label: 'WhatsApp',
+        iconSrc: figmaAsset('whatsapp_739247 1@3x.png'),
+        onClick: () => openExternal('whatsapp', getLinkByType('whatsapp')),
+        isVisible: Boolean(getLinkByType('whatsapp'))
+      },
+      {
+        id: 'telegram',
+        label: 'Telegram',
+        iconSrc: figmaAsset('telegram 1@3x.png'),
+        onClick: () => openExternal('telegram', getLinkByType('telegram')),
+        isVisible: Boolean(getLinkByType('telegram'))
+      },
+      {
+        id: 'instagram',
+        label: 'Instagram',
+        iconSrc: figmaAsset('instagram_739244 1@3x.png'),
+        onClick: () => openExternal('instagram', getLinkByType('instagram')),
+        isVisible: Boolean(getLinkByType('instagram'))
+      },
+      {
+        id: 'viber',
+        label: 'Viber',
+        iconSrc: figmaAsset('viber_2190481 1@3x.png'),
+        onClick: () => openExternal('viber', getLinkByType('viber')),
+        isVisible: Boolean(getLinkByType('viber'))
+      },
+      {
+        id: 'email',
+        label: card.email || 'Email',
+        iconSrc: figmaAsset('email_347722 1@3x.png'),
+        onClick: openEmail,
+        isVisible: Boolean(card.email)
+      },
+      {
+        id: 'tiktok',
+        label: 'Tik tok',
+        iconSrc: figmaAsset('tik-tok 1@3x.png'),
+        onClick: () => openExternal('tiktok', getLinkByType('tiktok')),
+        isVisible: Boolean(getLinkByType('tiktok'))
+      },
+      {
+        id: 'gallery',
+        label: 'Gallery',
+        iconSrc: figmaAsset('placeholder_1180413 1@3x.png'),
+        onClick: openGallery,
+        isVisible: Boolean(card.portfolio_url)
+      },
+      {
+        id: 'location',
+        label: normalizeAddress(card.address || ''),
+        iconSrc: figmaAsset('image 13@3x.png'),
+        onClick: openLocation,
+        isVisible: Boolean(card.address)
+      }
+    ].filter((row) => row.isVisible)
+  }, [card])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-gray-300"></div>
       </div>
     )
   }
 
   if (!card) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-xl text-gray-600">Card not found</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
+        <p className="text-xl text-gray-300">Card not found</p>
       </div>
     )
   }
-
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <div className="mx-auto w-full sm:max-w-[430px]">
         <div className="home-card-frame relative w-full overflow-hidden">
           <img
-            src="/figma/background-no-text.png"
-            srcSet="/figma/background-no-text.png 375w, /figma/background-no-text@2x.png 750w"
-            sizes="(min-width: 430px) 430px, 100vw"
-            alt="Business card"
-            className="h-full w-full select-none"
+            src={figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.png')}
+            alt="Background"
+            className="dbc-bg-right"
+            draggable={false}
+          />
+          <img
+            src={figmaAsset('Rectangle 71@3x.png')}
+            alt=""
+            aria-hidden="true"
+            className="dbc-bg-left"
             draggable={false}
           />
 
-          {/* Dynamic text overlays from typography.json */}
-          <div
-            className="card-text card-text--clamp-3"
-            style={applyScale(
-              getFieldStyle(typographyData.fields.name),
-              getAutoScale(card.full_name, [
-                { max: 18, scale: 1 },
-                { max: 26, scale: 0.92 },
-                { max: 34, scale: 0.84 }
-              ])
-            )}
-          >
-            {card.full_name}
+          <div className="dbc-avatar-shell">
+            <img src={card.avatar_url || figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.png')} alt={card.full_name} className="dbc-avatar" />
           </div>
-          <div
-            className="card-text card-text--clamp-3"
-            style={applyScale(
-              getFieldStyle(typographyData.fields.title),
-              getAutoScale(card.title, [
-                { max: 28, scale: 1 },
-                { max: 40, scale: 0.92 },
-                { max: 52, scale: 0.84 }
-              ])
-            )}
-          >
-            {card.title}
+
+          <h1 className="dbc-name">{card.full_name}</h1>
+          <p className="dbc-bio">{card.bio}</p>
+          <p className="dbc-title">{card.title}</p>
+
+          <div className="dbc-lang" role="group" aria-label="Language switcher">
+            <button type="button" className="dbc-lang-btn" onClick={() => i18n.changeLanguage('ru')} aria-label="Russian">
+              RU
+            </button>
+            <button type="button" className="dbc-lang-btn" onClick={() => i18n.changeLanguage('en')} aria-label="English">
+              ENG
+            </button>
           </div>
-          <div className="card-text card-text--clamp-3" style={getFieldStyle(typographyData.fields.bio)}>
-            {card.bio}
+
+          <div className="dbc-contacts" aria-label="Contacts">
+            {contactRows.map((row) => (
+              <button key={row.id} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
+                <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" />
+                <span className="dbc-contact-label">{row.label}</span>
+              </button>
+            ))}
           </div>
-          {contactItems.length > 0 && (
-            <div className="card-links" aria-label="Contacts">
-              {contactItems.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className="card-link"
-                  onClick={item.onClick}
-                  aria-label={item.text}
-                >
-                  <span className="card-link__icon">
-                    <img src={item.icon} alt="" aria-hidden="true" />
-                  </span>
-                  <span className="card-link__text">{item.text}</span>
-                </button>
-              ))}
-            </div>
-          )}
+
+          <div className="dbc-actions" aria-label="Actions">
+            <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
+              <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <span className="dbc-action-text">Save contact</span>
+            </button>
+            <button type="button" className="dbc-action-btn" onClick={() => setShowQR(true)} aria-label="Show QR">
+              <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <span className="dbc-action-text">Show QR</span>
+            </button>
+            <button type="button" className="dbc-action-btn dbc-action-btn--gold" onClick={() => setShowLeadForm((prev) => !prev)} aria-label="Book now">
+              <img src={figmaAsset('Rectangle 66@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <span className="dbc-action-text dbc-action-text--gold">BOOK NOW</span>
+            </button>
+            <button type="button" className="dbc-action-btn" onClick={() => void addToHomeHint()} aria-label="Add to Home">
+              <img src={figmaAsset('Rectangle 72@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <span className="dbc-action-text">Add to Home</span>
+            </button>
+            <button type="button" className="dbc-action-btn" onClick={() => void handleShare()} aria-label="Share">
+              <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <span className="dbc-action-text">SHARE</span>
+            </button>
+          </div>
 
           <button
-            onClick={() => i18n.changeLanguage('ru')}
-            className="hs hs-lang-ru"
-            aria-label="Russian"
+            type="button"
+            className="dbc-admin-hitbox"
+            onClick={() => {
+              window.location.href = '/admin/login'
+            }}
+            aria-label="Admin panel"
           />
-          <button
-            onClick={() => i18n.changeLanguage('en')}
-            className="hs hs-lang-en"
-            aria-label="English"
-          />
-
-          {hotspots.map((spot) => (
-            <button
-              key={spot.id}
-              onClick={spot.onClick}
-              className={`hs hs-${spot.id}`}
-              aria-label={spot.label}
-            />
-          ))}
         </div>
 
         {showLeadForm && (

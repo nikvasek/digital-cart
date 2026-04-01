@@ -28,15 +28,17 @@ code {
 
 /* Sharp rendering on high-DPI / retina screens */
 .home-card-frame img {
-  image-rendering: -webkit-optimize-contrast; /* Safari: sharper downscale */
+  image-rendering: -webkit-optimize-contrast;
+  /* Safari: sharper downscale */
   image-rendering: auto;
-  will-change: transform;            /* GPU-layer for smooth sub-pixel scaling */
-  backface-visibility: hidden;
+  will-change: transform;
+  /* GPU-layer for smooth sub-pixel scaling */
   -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   pointer-events: none;
-  user-select: none;
   -webkit-user-select: none;
   -moz-user-select: none;
+  user-select: none;
 }
 
 /* ── Hotspot base ──────────────────────────────────────── */
@@ -84,12 +86,12 @@ code {
 .card-links {
   position: absolute;
   z-index: 30;
-  left: 6%;
-  top: 29%;
+  left: 7%;
+  top: 30.5%;
   width: 48%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   pointer-events: auto;
 }
 
@@ -104,8 +106,10 @@ code {
   color: #f5f5f5;
   text-align: left;
   cursor: pointer;
-  font-size: 16px;
-  line-height: 1.2;
+  font-family: 'Kantumruy Pro', sans-serif;
+  font-size: 13px;
+  line-height: 15px;
+  letter-spacing: -0.4px;
 }
 
 .card-link__icon {
@@ -118,8 +122,13 @@ code {
 }
 
 .card-link__icon img {
-  width: 22px;
-  height: 22px;
+  width: 24px;
+  height: 24px;
+  display: block;
+}
+
+.card-link__label img {
+  height: 15px;
   display: block;
 }
 
@@ -130,34 +139,421 @@ code {
 }
 
 /* ── Language switcher (top-right) ─────────────────────── */
-/* RU / ENG labels top-right of card                        */
-.hs-lang-ru { left: 74.93%; top: 3.50%; width: 8.36%;  height: 3.00%; }
-.hs-lang-en { left: 83.03%; top: 3.50%; width: 10.44%; height: 3.00%; }
-.hs-admin   { left: 6%; top: 6%; width: 18%; height: 10%; }
+.lang-button {
+  position: absolute;
+  z-index: 35;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
 
-/* ── Contact / social rows (left side)  ────────────────── */
-/* Measured pixel centers (383x828 canvas):                  */
-/*  phone=261px(31.5%) whatsapp=299(36.1%) tg=342(41.3%)    */
-/*  ig=380(45.9%) viber=420(50.7%) email=463(55.9%)         */
-/*  tiktok=507(61.2%) gallery≈547(66%) kalv≈588(71%)        */
-/* tap-zone: top = center% - 2.2%, height = 4.4% (≈36px)   */
-.hs-phone-row { left: 4%; top: 30.8%; width: 50%; height: 4.8%; }
-.hs-whatsapp  { left: 4%; top: 34.7%; width: 50%; height: 4.8%; }
-.hs-telegram  { left: 4%; top: 39.6%; width: 50%; height: 4.8%; }
-.hs-instagram { left: 4%; top: 44.5%; width: 50%; height: 4.8%; }
-.hs-viber     { left: 4%; top: 49.5%; width: 50%; height: 4.8%; }
-.hs-email-row { left: 4%; top: 54.3%; width: 50%; height: 4.8%; }
-.hs-tiktok    { left: 4%; top: 59.5%; width: 50%; height: 4.8%; }
-.hs-gallery   { left: 4%; top: 64.3%; width: 50%; height: 4.8%; }
-.hs-web-row   { left: 4%; top: 69.3%; width: 50%; height: 4.8%; }
+.lang-button img {
+  display: block;
+  height: 14px;
+}
+
+.lang-button--ru {
+  right: 14.5%;
+  top: 3.2%;
+}
+
+.lang-button--en {
+  right: 5.5%;
+  top: 3.2%;
+}
+
+.hs-admin {
+  left: 6%;
+  top: 6%;
+  width: 18%;
+  height: 10%;
+}
 
 /* ── Action buttons (right side) ───────────────────────── */
-/* Measured pixel centers (right col):                       */
-/*  save=299(36.1%) qr=350(42.3%) book=401(48.4%)           */
-/*  addhome=459(55.4%) share=503(60.7%)                     */
-/* tap-zone: top = center% - 2.5%, height = 5%              */
-.hs-save-contact { left: 54%; top: 34.3%; width: 43%; height: 4.9%; }
-.hs-show-qr      { left: 54%; top: 40.5%; width: 43%; height: 4.9%; }
-.hs-book-now     { left: 54%; top: 46.8%; width: 43%; height: 4.9%; }
-.hs-add-home     { left: 54%; top: 53.2%; width: 43%; height: 4.9%; }
-.hs-share        { left: 54%; top: 59.0%; width: 43%; height: 4.9%; }
+.card-actions {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  pointer-events: none;
+}
+
+.action-button {
+  position: absolute;
+  left: 54%;
+  width: 43%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  transform: translateY(-50%);
+  pointer-events: auto;
+}
+
+.action-button img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.action-button--save {
+  top: 36.1%;
+}
+
+.action-button--qr {
+  top: 42.3%;
+}
+
+.action-button--book {
+  top: 48.4%;
+}
+
+.action-button--home {
+  top: 55.4%;
+}
+
+.action-button--share {
+  top: 60.7%;
+}
+
+.card-hotspot {
+  position: absolute;
+  z-index: 30;
+  display: block;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.spot-phone {
+  left: 6.133%;
+  top: 30%;
+  width: 34.133%;
+  height: 3.659%;
+}
+
+.spot-whatsapp {
+  left: 6.133%;
+  top: 35%;
+  width: 42.667%;
+  height: 4.146%;
+}
+
+.spot-telegram {
+  left: 6.133%;
+  top: 40.488%;
+  width: 37.867%;
+  height: 4.146%;
+}
+
+.spot-instagram {
+  left: 6.133%;
+  top: 45.854%;
+  width: 40%;
+  height: 4.146%;
+}
+
+.spot-viber {
+  left: 6.133%;
+  top: 51.341%;
+  width: 34.667%;
+  height: 4.146%;
+}
+
+.spot-email {
+  left: 6.133%;
+  top: 56.829%;
+  width: 32%;
+  height: 4.146%;
+}
+
+.spot-tiktok {
+  left: 6.133%;
+  top: 62.317%;
+  width: 34.667%;
+  height: 4.146%;
+}
+
+.spot-gallery {
+  left: 6.133%;
+  top: 67.805%;
+  width: 36.8%;
+  height: 4.146%;
+}
+
+.spot-location {
+  left: 6.133%;
+  top: 73.293%;
+  width: 46.4%;
+  height: 4.146%;
+}
+
+.spot-save {
+  left: 59.467%;
+  top: 38.171%;
+  width: 35.2%;
+  height: 4.634%;
+}
+
+.spot-qr {
+  left: 59.467%;
+  top: 44.756%;
+  width: 35.2%;
+  height: 4.634%;
+}
+
+.spot-book {
+  left: 59.467%;
+  top: 51.341%;
+  width: 35.2%;
+  height: 3.415%;
+}
+
+.spot-home {
+  left: 59.467%;
+  top: 57.195%;
+  width: 35.2%;
+  height: 4.634%;
+}
+
+.spot-share {
+  left: 59.467%;
+  top: 63.78%;
+  width: 35.2%;
+  height: 4.634%;
+}
+
+.spot-lang-ru {
+  left: 70.933%;
+  top: 6.22%;
+  width: 8.533%;
+  height: 2.439%;
+}
+
+.spot-lang-en {
+  left: 82.4%;
+  top: 6.22%;
+  width: 11.733%;
+  height: 2.439%;
+}
+
+.spot-admin {
+  left: 2.667%;
+  top: 1.463%;
+  width: 11.733%;
+  height: 4.146%;
+}
+
+.dbc-bg-right {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dbc-bg-left {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 49.8667%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dbc-avatar-shell {
+  position: absolute;
+  left: 8.267%;
+  top: 4.878%;
+  width: 27.467%;
+  aspect-ratio: 1 / 1;
+  border: 1px solid #e07654;
+  border-radius: 999px;
+  overflow: hidden;
+  z-index: 25;
+}
+
+.dbc-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.dbc-name {
+  position: absolute;
+  left: 5.067%;
+  top: 13.293%;
+  width: 44.533%;
+  margin: 0;
+  color: #ffffff;
+  font-family: 'Allison', cursive;
+  font-size: 40px;
+  font-weight: 400;
+  line-height: 1;
+  text-align: center;
+  z-index: 26;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dbc-bio {
+  position: absolute;
+  left: 5.067%;
+  top: 20.244%;
+  width: 44.8%;
+  margin: 0;
+  color: #e07654;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.15;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  z-index: 26;
+}
+
+.dbc-title {
+  position: absolute;
+  left: 53.067%;
+  top: 12.317%;
+  width: 44.8%;
+  margin: 0;
+  color: #ffffff;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  z-index: 26;
+}
+
+.dbc-lang {
+  position: absolute;
+  top: 6.22%;
+  right: 5.6%;
+  display: flex;
+  gap: 12px;
+  z-index: 35;
+}
+
+.dbc-lang-btn {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #e07654;
+  font-family: 'Kantumruy Pro', sans-serif;
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.dbc-contacts {
+  position: absolute;
+  left: 7.2%;
+  top: 29.756%;
+  width: 42.667%;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  z-index: 30;
+}
+
+.dbc-contact-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 34px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dbc-contact-icon {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+
+.dbc-contact-label {
+  margin-left: 12px;
+  color: #f8f8f8;
+  font-family: 'Kantumruy Pro', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dbc-actions {
+  position: absolute;
+  left: 59.467%;
+  top: 38.049%;
+  width: 35.2%;
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  z-index: 30;
+}
+
+.dbc-action-btn {
+  position: relative;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dbc-action-bg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.dbc-action-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ececec;
+  font-family: 'Kantumruy Pro', sans-serif;
+  font-size: 13px;
+  line-height: 1;
+}
+
+.dbc-action-btn--gold .dbc-action-text {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+}
+
+.dbc-action-text--gold {
+  color: #6a3c00;
+}
+
+.dbc-admin-hitbox {
+  position: absolute;
+  left: 2.667%;
+  top: 1.463%;
+  width: 11.733%;
+  height: 4.146%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  z-index: 40;
+}

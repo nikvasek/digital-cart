@@ -58,7 +58,7 @@
 
 ### Предварительные требования
 
-- Node.js 18+ 
+- Node.js 18+
 - PostgreSQL 14+
 - npm или yarn
 
@@ -119,6 +119,24 @@ npm run dev
 ```
 
 Frontend будет доступен на `http://localhost:5173`
+
+## Figma Site Pull
+
+Если Figma даёт только `site`-ссылку, можно обновить превью-ассеты так:
+
+```bash
+FIGMA_SITE_URL="https://embed.figma.com/site/..." \
+FIGMA_SITE_NODE_IDS="0:3,1:8" \
+npm run figma:pull
+```
+
+Что делает команда:
+- сохраняет изображения узлов в `frontend/public/figma/site-pull/node-<id>.png`
+- обновляет `frontend/public/figma/home-from-pdf.png` первым узлом (по умолчанию)
+
+Опционально:
+- `FIGMA_SITE_SYNC_PRIMARY=false` — не трогать `home-from-pdf.png`
+- `FIGMA_SITE_PRIMARY_TARGET=frame-home.png` — выбрать другой целевой файл
 
 ## 🧪 Тестовые данные
 
