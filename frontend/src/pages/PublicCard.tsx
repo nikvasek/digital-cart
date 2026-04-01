@@ -134,15 +134,28 @@ export default function PublicCard() {
   }
 
   const openLocation = () => {
-    if (!card?.address) return
+    if (!card) return
     trackEvent('click', { link_type: 'location' })
-    window.location.href = `https://maps.google.com/?q=${encodeURIComponent(card.address)}`
+    if (card.address) {
+      window.location.href = `https://maps.google.com/?q=${encodeURIComponent(card.address)}`
+      return
+    }
+
+    if (card.website) {
+      window.location.href = toExternalUrl(card.website)
+    }
   }
 
   const openGallery = () => {
     trackEvent('click', { link_type: 'gallery' })
     if (card?.portfolio_url) {
       window.location.href = toExternalUrl(card.portfolio_url)
+      return
+    }
+
+    const firstImage = card?.media?.find((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url)?.file_url
+    if (firstImage) {
+      window.location.href = toExternalUrl(firstImage)
     }
   }
 
@@ -257,14 +270,17 @@ export default function PublicCard() {
         label: 'Gallery',
         iconSrc: figmaAsset('placeholder_1180413 1@3x.png'),
         onClick: openGallery,
-        isVisible: Boolean(card.portfolio_url)
+        isVisible: Boolean(
+          card.portfolio_url
+          || card.media?.some((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url)
+        )
       },
       {
         id: 'location',
-        label: normalizeAddress(card.address || ''),
+        label: normalizeAddress(card.address || card.company_name || 'Location'),
         iconSrc: figmaAsset('image 13@3x.png'),
         onClick: openLocation,
-        isVisible: Boolean(card.address)
+        isVisible: Boolean(card.address || card.website)
       }
     ].filter((row) => row.isVisible)
   }, [card])
