@@ -45,7 +45,7 @@ interface CardData {
 
 const SOCIAL_TYPES = ['instagram', 'telegram', 'whatsapp', 'viber', 'tiktok', 'facebook', 'linkedin', 'youtube']
 
-const normalizeString = (value: string) => value.trim()
+const normalizeString = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
 
 const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 
