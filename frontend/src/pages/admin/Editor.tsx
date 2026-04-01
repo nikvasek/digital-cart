@@ -51,6 +51,7 @@ const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 
 const isValidUrl = (value: string) => {
   if (!value) return false
+  if (value.startsWith('/')) return true
   if (/^[a-z][a-z\d+.-]*:/i.test(value)) return true
 
   try {
@@ -83,7 +84,7 @@ export default function Editor() {
       const response = await axios.get(`/api/admin/card/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      
+
       setCard(response.data)
     } catch (error) {
       console.error('Failed to load card:', error)
@@ -152,14 +153,14 @@ export default function Editor() {
       alert(`Please fix before save:\n- ${validationErrors.join('\n- ')}`)
       return
     }
-    
+
     setSaving(true)
     try {
       const token = localStorage.getItem('token')
       await axios.patch(`/api/admin/card/${id}`, card, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      
+
       alert('Card updated successfully!')
     } catch (error: any) {
       const details = error?.response?.data?.details

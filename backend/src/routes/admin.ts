@@ -6,6 +6,7 @@ const normalizeString = (value: unknown) => (typeof value === 'string' ? value.t
 
 const isValidUrl = (value: string) => {
   if (!value) return false
+  if (value.startsWith('/')) return true
   if (/^[a-z][a-z\d+.-]*:/i.test(value)) return true
 
   try {
@@ -124,8 +125,8 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     try {
       const result = await db.query(
         `SELECT id, slug, full_name, title, is_active, created_at, updated_at
-         FROM cards 
-         WHERE user_id = $1 
+         FROM cards
+         WHERE user_id = $1
          ORDER BY created_at DESC`,
         [user.id]
       )
@@ -156,16 +157,16 @@ export default async function adminRoutes(fastify: FastifyInstance) {
 
       // Получаем ссылки
       const linksResult = await db.query(
-        `SELECT id, type, url, is_visible, sort_order FROM card_links 
-         WHERE card_id = $1 
+        `SELECT id, type, url, is_visible, sort_order FROM card_links
+         WHERE card_id = $1
          ORDER BY sort_order`,
         [card.id]
       )
 
       // Получаем медиа
       const mediaResult = await db.query(
-        `SELECT id, file_url, type, sort_order FROM card_media 
-         WHERE card_id = $1 
+        `SELECT id, file_url, type, sort_order FROM card_media
+         WHERE card_id = $1
          ORDER BY sort_order`,
         [card.id]
       )
@@ -407,8 +408,8 @@ export default async function adminRoutes(fastify: FastifyInstance) {
 
       // Подсчитываем события
       const eventsResult = await db.query(
-        `SELECT event_type, COUNT(*) as count 
-         FROM events 
+        `SELECT event_type, COUNT(*) as count
+         FROM events
          WHERE card_id = ANY($1::uuid[])
          GROUP BY event_type`,
         [cardIds]
@@ -453,8 +454,8 @@ export default async function adminRoutes(fastify: FastifyInstance) {
 
       // Подсчитываем события
       const eventsResult = await db.query(
-        `SELECT event_type, COUNT(*) as count 
-         FROM events 
+        `SELECT event_type, COUNT(*) as count
+         FROM events
          WHERE card_id = $1
          GROUP BY event_type`,
         [id]
@@ -499,8 +500,8 @@ export default async function adminRoutes(fastify: FastifyInstance) {
 
       const leadsResult = await db.query(
         `SELECT id, name, phone, email, consent_marketing, source, created_at
-         FROM leads 
-         WHERE card_id = $1 
+         FROM leads
+         WHERE card_id = $1
          ORDER BY created_at DESC`,
         [id]
       )
