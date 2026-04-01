@@ -33,6 +33,20 @@ type ContactRow = {
 }
 
 const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
+const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.png')
+
+const resolveAvatarSrc = (value?: string) => {
+  const avatarUrl = (value || '').trim()
+  if (!avatarUrl) return avatarFallbackSrc
+
+  // Guard against accidentally using full-card background as avatar image.
+  const invalidAvatarMarkers = ['/figma/home-1x.png', '/figma/home-from-pdf.png', 'My First Weavy_Gemini']
+  if (invalidAvatarMarkers.some((marker) => avatarUrl.includes(marker))) {
+    return avatarFallbackSrc
+  }
+
+  return avatarUrl
+}
 
 const toExternalUrl = (url: string) => {
   if (!url) return url
@@ -290,7 +304,7 @@ export default function PublicCard() {
           />
 
           <div className="dbc-avatar-shell">
-            <img src={card.avatar_url || figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.png')} alt={card.full_name} className="dbc-avatar" />
+            <img src={resolveAvatarSrc(card.avatar_url)} alt={card.full_name} className="dbc-avatar" />
           </div>
 
           <h1 className="dbc-name">{card.full_name}</h1>
