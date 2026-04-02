@@ -59,41 +59,44 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f7fb] flex items-center justify-center p-4 sm:p-6">
-      <div className="w-full max-w-md rounded-3xl bg-white shadow-[0_20px_70px_rgba(14,30,84,0.14)] border border-[#e6ecf8] p-6 sm:p-8">
+    <div className="admin-pin-page">
+      <div className="admin-pin-glow admin-pin-glow--left" aria-hidden="true" />
+      <div className="admin-pin-glow admin-pin-glow--right" aria-hidden="true" />
+
+      <div className="admin-pin-card">
         <div className="text-center">
-          <p className="inline-flex items-center rounded-full bg-[#edf3ff] px-3 py-1 text-xs font-semibold tracking-[0.08em] text-[#2f5fd5] uppercase">
+          <p className="admin-pin-badge">
             Secure Access
           </p>
-          <h1 className="mt-4 text-2xl sm:text-3xl font-semibold text-[#17223b]">Admin Panel</h1>
-          <p className="mt-2 text-sm text-[#6f7c98]">Enter your 4-digit PIN code</p>
+          <h1 className="admin-pin-title">Admin Panel</h1>
+          <p className="admin-pin-subtitle">Enter your 4-digit PIN code</p>
         </div>
 
-        <div className={`mt-7 rounded-2xl border border-[#dde6f7] bg-[#f8fbff] p-4 sm:p-5 ${shake ? 'pin-shake' : ''}`}>
-          <div className="flex items-center justify-center gap-3" aria-label="PIN progress">
+        <div className={`admin-pin-display ${shake ? 'pin-shake' : ''}`}>
+          <div className="admin-pin-dots" aria-label="PIN progress">
             {Array.from({ length: PIN_LENGTH }).map((_, index) => {
               const filled = index < pin.length
               return (
                 <span
                   key={index}
-                  className={`h-3.5 w-3.5 rounded-full border transition-all duration-200 ${filled ? 'bg-[#2f5fd5] border-[#2f5fd5] scale-105' : 'bg-white border-[#b8c7e3]'}`}
+                  className={`admin-pin-dot ${filled ? 'admin-pin-dot--filled' : ''}`}
                 />
               )
             })}
           </div>
 
-          <p className="mt-4 text-center text-base tracking-[0.45em] text-[#2b3b61] min-h-[24px]" aria-live="polite">
+          <p className="admin-pin-masked" aria-live="polite">
             {'•'.repeat(pin.length)}
           </p>
 
           {error && (
-            <div className="mt-3 rounded-xl bg-[#fff1f2] border border-[#ffd3d8] px-3 py-2 text-center text-sm text-[#c2354e]">
+            <div className="admin-pin-error">
               {error}
             </div>
           )}
         </div>
 
-        <div className="mt-5 grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="admin-pin-keypad">
           {KEYS.slice(0, 9).map((digit) => (
             <button
               key={digit}
@@ -136,7 +139,7 @@ export default function Login() {
           </button>
         </div>
 
-        <div className="mt-5 text-center text-xs text-[#8b97b0]">
+        <div className="admin-pin-hint">
           {loading ? 'Checking PIN...' : 'Tap digits to enter PIN'}
         </div>
       </div>
