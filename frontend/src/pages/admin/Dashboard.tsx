@@ -51,6 +51,8 @@ type SocialType =
 
 interface CardDetails extends CardItem {
     company_name: string
+    phone: string
+    email: string
     bio: string
     avatar_url: string
     logo_url: string
@@ -205,6 +207,8 @@ const normalizeLinksForSave = (links: LinkItem[]) => links.map((link) => ({
 const defaultCardDetails = (card: CardItem): CardDetails => ({
     ...card,
     company_name: '',
+    phone: '',
+    email: '',
     bio: '',
     avatar_url: '',
     logo_url: '',
@@ -459,6 +463,8 @@ export default function Dashboard() {
                             <label>Name<input value={cardData.full_name || ''} onChange={(e) => updateCard({ full_name: e.target.value })} /></label>
                             <label>Title<input value={cardData.title || ''} onChange={(e) => updateCard({ title: e.target.value })} /></label>
                             <label>Company<input value={cardData.company_name || ''} onChange={(e) => updateCard({ company_name: e.target.value })} /></label>
+                            <label>Phone<input type="tel" value={cardData.phone || ''} placeholder="+375 29 000 00 00" onChange={(e) => updateCard({ phone: e.target.value })} /></label>
+                            <label>Email<input type="email" value={cardData.email || ''} placeholder="name@example.com" onChange={(e) => updateCard({ email: e.target.value })} /></label>
                             <label>Bio<textarea rows={3} value={cardData.bio || ''} onChange={(e) => updateCard({ bio: e.target.value })}></textarea></label>
                             <label>Avatar URL<input value={cardData.avatar_url || ''} onChange={(e) => updateCard({ avatar_url: e.target.value })} /></label>
                             <label>Cover / Logo URL<input value={cardData.logo_url || ''} onChange={(e) => updateCard({ logo_url: e.target.value })} /></label>
