@@ -14,6 +14,7 @@ export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
+  adminPin: process.env.ADMIN_PIN || '1111',
   storageType: process.env.STORAGE_TYPE || 'local',
   storagePath: process.env.STORAGE_PATH || './uploads',
   smtp: {

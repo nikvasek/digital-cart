@@ -1,18 +1,59 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db/index.js'
 import bcrypt from 'bcrypt'
+import { config } from '../config/index.js'
 
 export default async function authRoutes(fastify: FastifyInstance) {
   const authGuard = (fastify as any).authenticate
 
   // Логин
   fastify.post('/login', async (request, reply) => {
-    const { email, password } = request.body as {
-      email: string
-      password: string
+    const { email, password, pin } = request.body as {
+      email?: string
+      password?: string
+      pin?: string
     }
 
     try {
+      const normalizedPin = typeof pin === 'string' ? pin.trim() : ''
+
+      if (normalizedPin) {
+        if (normalizedPin !== config.adminPin) {
+          return reply.code(401).send({ error: 'Invalid code' })
+        }
+
+        const userResult = await db.query(
+          `SELECT id, email, role
+           FROM users
+           ORDER BY CASE WHEN role = 'owner' THEN 0 ELSE 1 END, created_at ASC
+           LIMIT 1`
+        )
+
+        if (userResult.rows.length === 0) {
+          return reply.code(404).send({ error: 'Admin user not found' })
+        }
+
+        const user = userResult.rows[0]
+        const token = fastify.jwt.sign({
+          id: user.id,
+          email: user.email,
+          role: user.role
+        }, { expiresIn: '7d' })
+
+        return {
+          token,
+          user: {
+            id: user.id,
+            email: user.email,
+            role: user.role
+          }
+        }
+      }
+
+      if (!email || !password) {
+        return reply.code(400).send({ error: 'Email and password are required' })
+      }
+
       const result = await db.query(
         `SELECT id, email, password_hash, role FROM users WHERE email = $1`,
         [email]
