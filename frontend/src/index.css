@@ -358,9 +358,14 @@ code {
   position: absolute;
   top: 0;
   left: 0;
-  width: 49.8667%;
+  width: 50%;
   height: 100%;
-  object-fit: cover;
+  /* Frosted glass panel — no border, no shadow, no rounding */
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(20px) saturate(110%);
+  -webkit-backdrop-filter: blur(20px) saturate(110%);
+  /* isolate so backdrop-filter clips to this element */
+  isolation: isolate;
 }
 
 .dbc-avatar-shell {
@@ -1368,7 +1373,9 @@ code {
 
 /* ── Loading spinner ─────────────────────────────────────── */
 @keyframes dbc-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Spinner overlay — sits on top of card frame, fades out */

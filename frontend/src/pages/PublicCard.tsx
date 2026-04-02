@@ -35,7 +35,7 @@ type ContactRow = {
 const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
 const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.webp')
 const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.webp')
-const heroBgLeftSrc = figmaAsset('Rectangle 71@3x.webp')
+
 
 const resolveAvatarSrc = (value?: string) => {
   const avatarUrl = (value || '').trim()
@@ -85,7 +85,6 @@ const preloadImage = (src: string) => new Promise<void>((resolve) => {
 const preloadCriticalAssets = async (avatarUrl?: string) => {
   const criticalImages = [
     heroBgRightSrc,
-    heroBgLeftSrc,
     resolveAvatarSrc(avatarUrl),
     figmaAsset('call_1062678 1@3x.png'),
     figmaAsset('whatsapp_739247 1@3x.png'),
@@ -341,85 +340,76 @@ export default function PublicCard() {
 
           {/* Card content — fades in when card is ready */}
           <div className={`dbc-card-reveal${!loading && card ? ' dbc-card-reveal--show' : ''}`}>
-          {card && (<>
-          <img
-            src={heroBgRightSrc}
-            alt="Background"
-            className="dbc-bg-right"
-            fetchPriority="high"
-            loading="eager"
-            decoding="async"
-            draggable={false}
-          />
-          <img
-            src={heroBgLeftSrc}
-            alt=""
-            aria-hidden="true"
-            className="dbc-bg-left"
-            fetchPriority="high"
-            loading="eager"
-            decoding="async"
-            draggable={false}
-          />
+            {card && (<>
+              <img
+                src={heroBgRightSrc}
+                alt="Background"
+                className="dbc-bg-right"
+                fetchPriority="high"
+                loading="eager"
+                decoding="async"
+                draggable={false}
+              />
+              <div className="dbc-bg-left" aria-hidden="true" />
 
-          <div className="dbc-avatar-shell">
-            <img src={resolveAvatarSrc(card.avatar_url)} alt={card.full_name} className="dbc-avatar" fetchPriority="high" loading="eager" decoding="async" />
-          </div>
+              <div className="dbc-avatar-shell">
+                <img src={resolveAvatarSrc(card.avatar_url)} alt={card.full_name} className="dbc-avatar" fetchPriority="high" loading="eager" decoding="async" />
+              </div>
 
-          <h1 className="dbc-name">{card.full_name}</h1>
-          <p className="dbc-bio">{card.bio}</p>
-          <p className="dbc-title">{card.title}</p>
+              <h1 className="dbc-name">{card.full_name}</h1>
+              <p className="dbc-bio">{card.bio}</p>
+              <p className="dbc-title">{card.title}</p>
 
-          <div className="dbc-lang" role="group" aria-label="Language switcher">
-            <button type="button" className="dbc-lang-btn" onClick={() => i18n.changeLanguage('ru')} aria-label="Russian">
-              RU
-            </button>
-            <button type="button" className="dbc-lang-btn" onClick={() => i18n.changeLanguage('en')} aria-label="English">
-              ENG
-            </button>
-          </div>
+              <div className="dbc-lang" role="group" aria-label="Language switcher">
+                <button type="button" className="dbc-lang-btn" onClick={() => i18n.changeLanguage('ru')} aria-label="Russian">
+                  RU
+                </button>
+                <button type="button" className="dbc-lang-btn" onClick={() => i18n.changeLanguage('en')} aria-label="English">
+                  ENG
+                </button>
+              </div>
 
-          <div className="dbc-contacts" aria-label="Contacts">
-            {contactRows.map((row) => (
-              <button key={row.id} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
-                <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
-                <span className="dbc-contact-label">{row.label}</span>
-              </button>
-            ))}
-          </div>
+              <div className="dbc-contacts" aria-label="Contacts">
+                {contactRows.map((row) => (
+                  <button key={row.id} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
+                    <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
+                    <span className="dbc-contact-label">{row.label}</span>
+                  </button>
+                ))}
+              </div>
 
-          <div className="dbc-actions" aria-label="Actions">
-            <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
-              <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-              <span className="dbc-action-text">Save contact</span>
-            </button>
-            <button type="button" className="dbc-action-btn" onClick={() => setShowQR(true)} aria-label="Show QR">
-              <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-              <span className="dbc-action-text">Show QR</span>
-            </button>
-            <button type="button" className="dbc-action-btn dbc-action-btn--gold" onClick={() => setShowLeadForm((prev) => !prev)} aria-label="Book now">
-              <img src={figmaAsset('Rectangle 66@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-              <span className="dbc-action-text dbc-action-text--gold">BOOK NOW</span>
-            </button>
-            <button type="button" className="dbc-action-btn" onClick={() => void addToHomeHint()} aria-label="Add to Home">
-              <img src={figmaAsset('Rectangle 72@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-              <span className="dbc-action-text">Add to Home</span>
-            </button>
-            <button type="button" className="dbc-action-btn" onClick={() => void handleShare()} aria-label="Share">
-              <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-              <span className="dbc-action-text">SHARE</span>
-            </button>
-          </div>
+              <div className="dbc-actions" aria-label="Actions">
+                <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
+                  <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                  <span className="dbc-action-text">Save contact</span>
+                </button>
+                <button type="button" className="dbc-action-btn" onClick={() => setShowQR(true)} aria-label="Show QR">
+                  <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                  <span className="dbc-action-text">Show QR</span>
+                </button>
+                <button type="button" className="dbc-action-btn dbc-action-btn--gold" onClick={() => setShowLeadForm((prev) => !prev)} aria-label="Book now">
+                  <img src={figmaAsset('Rectangle 66@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                  <span className="dbc-action-text dbc-action-text--gold">BOOK NOW</span>
+                </button>
+                <button type="button" className="dbc-action-btn" onClick={() => void addToHomeHint()} aria-label="Add to Home">
+                  <img src={figmaAsset('Rectangle 72@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                  <span className="dbc-action-text">Add to Home</span>
+                </button>
+                <button type="button" className="dbc-action-btn" onClick={() => void handleShare()} aria-label="Share">
+                  <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                  <span className="dbc-action-text">SHARE</span>
+                </button>
+              </div>
 
-          <button
-            type="button"
-            className="dbc-admin-hitbox"
-            onClick={() => {
-              window.location.href = '/admin/login'
-            }}
-            aria-label="Admin panel"
-          />
-          </>)}
+              <button
+                type="button"
+                className="dbc-admin-hitbox"
+                onClick={() => {
+                  window.location.href = '/admin/login'
+                }}
+                aria-label="Admin panel"
+              />
+            </>)}
           </div>
         </div>
 
