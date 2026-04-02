@@ -8,8 +8,9 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
   fastify.post('/pin-login', async (request, reply) => {
     const { pin } = request.body as { pin: string }
+    const normalizedPin = typeof pin === 'string' ? pin.trim() : ''
 
-    if (pin !== config.adminPin) {
+    if (normalizedPin !== config.adminPin) {
       return reply.code(401).send({ error: 'Invalid PIN' })
     }
 
