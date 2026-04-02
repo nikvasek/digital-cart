@@ -1366,19 +1366,49 @@ code {
   }
 }
 
-/* ── Skeleton loader ─────────────────────────────────────── */
-@keyframes skeleton-shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position:  200% 0; }
+/* ── Loading spinner ─────────────────────────────────────── */
+@keyframes dbc-spin {
+  to { transform: rotate(360deg); }
 }
 
-.skeleton-pulse {
-  background: linear-gradient(
-    90deg,
-    #222 25%,
-    #2e2e2e 50%,
-    #222 75%
-  );
-  background-size: 200% 100%;
-  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+/* Spinner overlay — sits on top of card frame, fades out */
+.dbc-spinner-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.dbc-spinner-overlay--show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* CSS arc spinner — Apple-style white arc on dark */
+.dbc-spinner {
+  display: block;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.12);
+  border-top-color: rgba(255, 255, 255, 0.85);
+  animation: dbc-spin 0.75s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Card content layer — fades in after spinner fades out */
+.dbc-card-reveal {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  /* 0.2s delay: spinner finishes fading before content appears */
+  transition: opacity 0.5s ease 0.2s;
+}
+
+.dbc-card-reveal--show {
+  opacity: 1;
 }
