@@ -37,6 +37,18 @@ interface MediaItem {
   type: string
 }
 
+type SocialType =
+  | 'instagram'
+  | 'telegram'
+  | 'whatsapp'
+  | 'viber'
+  | 'tiktok'
+  | 'facebook'
+  | 'linkedin'
+  | 'youtube'
+  | 'email'
+  | 'phone'
+
 interface CardDetails extends CardItem {
   company_name: string
   bio: string
@@ -71,6 +83,34 @@ const SECTIONS: Array<{ id: SectionId; label: string }> = [
   { id: 'settings', label: 'Settings' },
   { id: 'analytics', label: 'Analytics' }
 ]
+
+const SOCIAL_OPTIONS: SocialType[] = [
+  'instagram',
+  'telegram',
+  'whatsapp',
+  'viber',
+  'tiktok',
+  'facebook',
+  'linkedin',
+  'youtube',
+  'email',
+  'phone'
+]
+
+const socialPlaceholder = (type: string) => {
+  const key = type.toLowerCase()
+  if (key === 'instagram') return 'https://instagram.com/username'
+  if (key === 'telegram') return 'https://t.me/username'
+  if (key === 'whatsapp') return 'https://wa.me/375292327382'
+  if (key === 'viber') return 'viber://chat?number=375292327382'
+  if (key === 'tiktok') return 'https://www.tiktok.com/@username'
+  if (key === 'facebook') return 'https://facebook.com/username'
+  if (key === 'linkedin') return 'https://linkedin.com/in/username'
+  if (key === 'youtube') return 'https://youtube.com/@username'
+  if (key === 'email') return 'mailto:name@example.com'
+  if (key === 'phone') return 'tel:+375292327382'
+  return 'https://example.com/profile'
+}
 
 const MOBILE_SECTION_LABELS: Record<SectionId, string> = {
   dashboard: 'Панель управления',
@@ -245,24 +285,6 @@ export default function Dashboard() {
           <p>Control center</p>
         </div>
 
-        <div className="admin-card-switcher">
-          <p className="admin-sidebar-label">My Cards</p>
-          {cards.map((card) => (
-            <button
-              key={card.id}
-              type="button"
-              onClick={() => setSelectedCardId(card.id)}
-              className={`admin-card-chip ${card.id === selectedCardId ? 'is-active' : ''}`}
-            >
-              <span>
-                <strong>{card.full_name}</strong>
-                <small>/{card.slug}</small>
-              </span>
-              <em>{card.is_active ? 'Active' : 'Draft'}</em>
-            </button>
-          ))}
-        </div>
-
         <nav className="admin-nav">
           {SECTIONS.map((section) => (
             <button
@@ -280,15 +302,26 @@ export default function Dashboard() {
       </aside>
 
       <main className="admin-main">
-        <header className="admin-header glass-card">
-          <div>
-            <h2>{SECTIONS.find((section) => section.id === selectedSection)?.label}</h2>
-            <p>{selectedCard ? `${selectedCard.full_name} · /${selectedCard.slug}` : 'No selected card'}</p>
+        <section className="admin-top-controls glass-card">
+          <div className="admin-card-picker">
+            <label htmlFor="card-picker">Выбор карточки</label>
+            <select
+              id="card-picker"
+              value={selectedCardId}
+              onChange={(e) => setSelectedCardId(e.target.value)}
+            >
+              {cards.map((card) => (
+                <option key={card.id} value={card.id}>
+                  {card.full_name} ({card.is_active ? 'Active' : 'Draft'})
+                </option>
+              ))}
+            </select>
           </div>
-          <button type="button" className="admin-primary" onClick={saveCard} disabled={saving || !cardData}>
-            {saving ? 'Saving...' : 'Save Changes'}
+
+          <button type="button" className="admin-primary admin-save-top" onClick={saveCard} disabled={saving || !cardData}>
+            {saving ? 'Сохранение...' : 'Сохранить изменения'}
           </button>
-        </header>
+        </section>
 
         <div className="admin-mobile-nav-wrap" aria-label="Навигация по разделам">
           <nav className="admin-mobile-nav" role="tablist" aria-orientation="horizontal">
@@ -407,16 +440,23 @@ export default function Dashboard() {
                 onDrop={() => handleDropLinks(index)}
               >
                 <span className="drag-mark">⋮⋮</span>
-                <input
+                <select
                   value={link.type}
                   onChange={(e) => {
                     const next = [...cardData.links]
                     next[index] = { ...next[index], type: e.target.value }
                     updateCard({ links: next })
                   }}
-                />
+                >
+                  {SOCIAL_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
                 <input
                   value={link.url}
+                  placeholder={socialPlaceholder(link.type)}
                   onChange={(e) => {
                     const next = [...cardData.links]
                     next[index] = { ...next[index], url: e.target.value }
@@ -435,6 +475,16 @@ export default function Dashboard() {
                   />
                   Visible
                 </label>
+                <button
+                  type="button"
+                  className="row-delete"
+                  onClick={() => {
+                    const next = cardData.links.filter((_, i) => i !== index)
+                    updateCard({ links: next })
+                  }}
+                >
+                  Remove
+                </button>
               </div>
             ))}
           </section>
