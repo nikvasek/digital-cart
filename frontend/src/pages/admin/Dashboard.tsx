@@ -467,7 +467,7 @@ export default function Dashboard() {
                         <div className="glass-card live-preview">
                             <h3>Live Preview</h3>
                             <div className="preview-card">
-                                <img src={cardData.avatar_url || cardData.logo_url || '/figma/home-from-pdf.png'} alt="avatar" loading="lazy" />
+                                <img src={cardData.avatar_url || cardData.logo_url || '/figma/home-from-pdf.webp'} alt="avatar" loading="lazy" />
                                 <h4>{cardData.full_name || 'Name'}</h4>
                                 <p>{cardData.title || 'Title'}</p>
                                 <small>{cardData.bio || 'Bio preview appears here'}</small>

@@ -11,7 +11,8 @@
     "start:backend": "npm start --prefix backend",
     "db:migrate": "npm run db:migrate --prefix backend",
     "db:seed": "npm run db:seed --prefix backend",
-    "figma:pull": "node scripts/figma_pull.mjs"
+    "figma:pull": "node scripts/figma_pull.mjs",
+    "assets:optimize": "node backend/scripts/optimize_public_assets.mjs"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

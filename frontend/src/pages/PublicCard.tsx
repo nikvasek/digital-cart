@@ -33,16 +33,16 @@ type ContactRow = {
 }
 
 const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
-const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.png')
-const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.png')
-const heroBgLeftSrc = figmaAsset('Rectangle 71@3x.png')
+const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.webp')
+const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.webp')
+const heroBgLeftSrc = figmaAsset('Rectangle 71@3x.webp')
 
 const resolveAvatarSrc = (value?: string) => {
   const avatarUrl = (value || '').trim()
   if (!avatarUrl) return avatarFallbackSrc
 
   // Guard against accidentally using full-card background as avatar image.
-  const invalidAvatarMarkers = ['/figma/home-1x.png', '/figma/home-from-pdf.png', 'My First Weavy_Gemini']
+  const invalidAvatarMarkers = ['/figma/home-1x.png', '/figma/home-from-pdf.png', '/figma/home-from-pdf.webp', 'My First Weavy_Gemini']
   if (invalidAvatarMarkers.some((marker) => avatarUrl.includes(marker))) {
     return avatarFallbackSrc
   }
