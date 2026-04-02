@@ -338,6 +338,7 @@ export default function PublicCard() {
         isVisible: Boolean(getLinkByType('location') || card.address)
       }
     ].filter((row) => row.isVisible)
+     .sort((a, b) => (a.id === 'location' ? 1 : b.id === 'location' ? -1 : 0))
   }, [card])
 
   if (!loading && !card) {
@@ -393,7 +394,7 @@ export default function PublicCard() {
                 {contactRows.map((row) => (
                   <button key={row.id} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
                     <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
-                    <span className="dbc-contact-label">{row.label}</span>
+                    <span className={`dbc-contact-label${row.id === 'location' ? ' dbc-contact-label--wrap' : ''}`}>{row.label}</span>
                   </button>
                 ))}
               </div>

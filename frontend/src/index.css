@@ -499,6 +499,19 @@ code {
   text-overflow: ellipsis;
 }
 
+.dbc-contact-label--wrap {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.dbc-contact-row:has(.dbc-contact-label--wrap) {
+  align-items: flex-start;
+  padding-top: 2px;
+}
+
 .dbc-actions {
   position: absolute;
   left: 59.467%;
@@ -1219,9 +1232,11 @@ code {
   box-sizing: border-box;
   transition: border-color 0.15s;
 }
+
 .link-picker-search:focus {
   border-color: #6b7280;
 }
+
 .link-picker-search::placeholder {
   color: #9ca3af;
 }
@@ -1254,13 +1269,16 @@ code {
   overflow: hidden;
   line-height: 1.2;
 }
+
 .link-picker-btn:hover {
   filter: brightness(1.15);
 }
+
 .link-picker-btn.is-light {
   color: #111;
 }
-.link-picker-btn > span:last-child {
+
+.link-picker-btn>span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1274,6 +1292,7 @@ code {
   padding: 10px 0;
   border-bottom: 1px solid #e5e7eb;
 }
+
 .link-row:last-of-type {
   border-bottom: none;
 }
@@ -1305,6 +1324,7 @@ code {
   gap: 3px;
   min-width: 0;
 }
+
 .link-row-label {
   font-size: 10px;
   color: #6b7280;
@@ -1312,6 +1332,7 @@ code {
   letter-spacing: 0.06em;
   font-weight: 600;
 }
+
 .link-row-body input {
   background: transparent;
   border: none;
@@ -1323,9 +1344,11 @@ code {
   width: 100%;
   caret-color: #111827;
 }
+
 .link-row-body input:focus {
   border-bottom-color: #374151;
 }
+
 .link-row-body input::placeholder {
   color: #9ca3af;
 }
@@ -1340,6 +1363,7 @@ code {
   padding: 0 2px;
   transition: opacity 0.15s;
 }
+
 .link-row-vis.is-on {
   opacity: 0.85;
 }
@@ -1356,6 +1380,7 @@ code {
   transition: opacity 0.15s;
   line-height: 1;
 }
+
 .link-row-remove:hover {
   opacity: 1;
 }
