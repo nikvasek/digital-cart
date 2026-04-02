@@ -1183,21 +1183,35 @@ code {
 
 /* ── EnBizCard-style Link Editor ── */
 
-/* Picker container (shown inline below existing rows) */
+/* CSS mask icon — renders SVGs correctly in ALL browsers regardless of internal viewBox/path coords */
+.link-icon-mask {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
+/* Picker container — always visible below link rows */
 .link-picker-wrap {
-  margin-top: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 16px;
+  border: 1px solid #e5e7eb;
   border-radius: 16px;
   padding: 14px;
-  background: rgba(0, 0, 0, 0.25);
+  background: #f9fafb;
 }
 
 .link-picker-search {
   width: 100%;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #fff;
+  border: 1px solid #d1d5db;
   border-radius: 10px;
-  color: #fff;
+  color: #111;
   font-size: 14px;
   padding: 10px 14px;
   outline: none;
@@ -1206,23 +1220,23 @@ code {
   transition: border-color 0.15s;
 }
 .link-picker-search:focus {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: #6b7280;
 }
 .link-picker-search::placeholder {
-  color: rgba(255, 255, 255, 0.3);
+  color: #9ca3af;
 }
 
-/* 2-column grid — same as EnBizCard "Secondary actions" picker */
+/* 2-column grid matching EnBizCard secondary actions */
 .link-picker-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
-  max-height: 360px;
+  max-height: 380px;
   overflow-y: auto;
   padding-right: 2px;
 }
 
-/* Each platform button gets full background color */
+/* Each platform button carries its brand color as background */
 .link-picker-btn {
   display: flex;
   align-items: center;
@@ -1238,6 +1252,7 @@ code {
   min-height: 48px;
   transition: filter 0.15s;
   overflow: hidden;
+  line-height: 1.2;
 }
 .link-picker-btn:hover {
   filter: brightness(1.15);
@@ -1245,70 +1260,26 @@ code {
 .link-picker-btn.is-light {
   color: #111;
 }
-.link-picker-btn img {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  flex-shrink: 0;
-}
-.link-picker-btn.is-light img {
-  filter: none;
-}
-.link-picker-btn > span:first-child { flex-shrink: 0; }
 .link-picker-btn > span:last-child {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Letter abbreviation for platforms with no icon */
-.link-picker-abbr {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: rgba(0, 0, 0, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 11px;
-  flex-shrink: 0;
-}
-.link-picker-btn.is-light .link-picker-abbr {
-  background: rgba(0, 0, 0, 0.15);
-  color: #111;
-}
-
-.link-picker-cancel {
-  margin-top: 12px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 13px;
-  padding: 10px;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.link-picker-cancel:hover {
-  background: rgba(255, 255, 255, 0.13);
-}
-
-/* ── Link rows ── */
+/* ── Link rows (on light glass-card background) ── */
 .link-row {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid #e5e7eb;
 }
 .link-row:last-of-type {
   border-bottom: none;
 }
 
 .link-row-drag {
-  color: rgba(255, 255, 255, 0.3);
+  color: #9ca3af;
   font-size: 13px;
   cursor: grab;
   user-select: none;
@@ -1325,46 +1296,38 @@ code {
   justify-content: center;
   flex-shrink: 0;
 }
-.link-row-badge img {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-}
-.link-row-badge > span {
-  color: #fff;
-  font-weight: 800;
-  font-size: 15px;
-}
 
 /* Label + input stacked */
 .link-row-body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 .link-row-label {
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.45);
+  color: #6b7280;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
+  font-weight: 600;
 }
 .link-row-body input {
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  color: #fff;
+  border-bottom: 1px solid #d1d5db;
+  color: #111827;
   font-size: 13px;
-  padding: 3px 0;
+  padding: 4px 0;
   outline: none;
   width: 100%;
+  caret-color: #111827;
 }
 .link-row-body input:focus {
-  border-bottom-color: rgba(255, 255, 255, 0.45);
+  border-bottom-color: #374151;
 }
 .link-row-body input::placeholder {
-  color: rgba(255, 255, 255, 0.25);
+  color: #9ca3af;
 }
 
 .link-row-vis {
@@ -1372,7 +1335,7 @@ code {
   border: none;
   font-size: 15px;
   cursor: pointer;
-  opacity: 0.3;
+  opacity: 0.35;
   flex-shrink: 0;
   padding: 0 2px;
   transition: opacity 0.15s;
@@ -1384,7 +1347,7 @@ code {
 .link-row-remove {
   background: none;
   border: none;
-  color: #ff5555;
+  color: #ef4444;
   font-size: 15px;
   cursor: pointer;
   flex-shrink: 0;
@@ -1399,7 +1362,7 @@ code {
 
 .link-empty {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.35);
+  color: #6b7280;
   text-align: center;
   padding: 16px 0;
 }

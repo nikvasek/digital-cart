@@ -307,7 +307,6 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [dragIndex, setDragIndex] = useState<number | null>(null)
-    const [showLinkPicker, setShowLinkPicker] = useState(false)
     const [filterPicker, setFilterPicker] = useState('')
     const [galleryView, setGalleryView] = useState<'grid' | 'list'>('grid')
     const [previewUrl, setPreviewUrl] = useState<string>('')
@@ -563,15 +562,6 @@ export default function Dashboard() {
                     <section className="glass-card section-stack">
                         <div className="section-head-row">
                             <h3>Контакты и ссылки</h3>
-                            {!showLinkPicker && (
-                                <button
-                                    type="button"
-                                    className="admin-ghost"
-                                    onClick={() => { setShowLinkPicker(true); setFilterPicker('') }}
-                                >
-                                    + Добавить
-                                </button>
-                            )}
                         </div>
 
                         {/* ── Active link rows ── */}
@@ -592,10 +582,14 @@ export default function Dashboard() {
                                         className="link-row-badge"
                                         style={{ background: platform.color }}
                                     >
-                                        {platform.icon
-                                            ? <img src={platform.icon} alt={platform.label} />
-                                            : <span>{platform.label[0]}</span>
-                                        }
+                                        <span
+                                            className="link-icon-mask"
+                                            style={{
+                                                WebkitMaskImage: `url(${platform.icon})`,
+                                                maskImage: `url(${platform.icon})`,
+                                                backgroundColor: platform.light ? '#222' : '#fff',
+                                            } as React.CSSProperties}
+                                        />
                                     </span>
 
                                     <div className="link-row-body">
@@ -636,8 +630,7 @@ export default function Dashboard() {
                                         type="button"
                                         className="link-row-remove"
                                         title="Удалить"
-                                        onClick={() => updateCard({ links: cardData.links.filter((_, i) => i !== index) })
-                                        }
+                                        onClick={() => updateCard({ links: cardData.links.filter((_, i) => i !== index) })}
                                     >
                                         ✕
                                     </button>
@@ -645,62 +638,51 @@ export default function Dashboard() {
                             )
                         })}
 
-                        {cardData.links.length === 0 && !showLinkPicker && (
-                            <p className="link-empty">Нет ссылок. Нажмите «+ Добавить» чтобы выбрать платформу.</p>
-                        )}
-
-                        {/* ── Platform picker ── */}
-                        {showLinkPicker && (
-                            <div className="link-picker-wrap">
-                                <input
-                                    className="link-picker-search"
-                                    type="text"
-                                    placeholder="Search an action"
-                                    value={filterPicker}
-                                    onChange={(e) => setFilterPicker(e.target.value)}
-                                    autoFocus
-                                />
-                                {(() => {
-                                    const q = filterPicker.trim().toLowerCase()
-                                    const filtered = PLATFORMS.filter((p) =>
-                                        p.label.toLowerCase().includes(q)
-                                    )
-                                    if (!filtered.length) return (
-                                        <p className="link-empty">Платформа не найдена</p>
-                                    )
-                                    return (
-                                        <div className="link-picker-grid">
-                                            {filtered.map((p) => (
-                                                <button
-                                                    key={p.id}
-                                                    type="button"
-                                                    className={`link-picker-btn${p.light ? ' is-light' : ''}`}
-                                                    style={{ background: p.color }}
-                                                    onClick={() => {
-                                                        updateCard({ links: [...cardData.links, { type: p.id, url: '', is_visible: true }] })
-                                                        setShowLinkPicker(false)
-                                                        setFilterPicker('')
-                                                    }}
-                                                >
-                                                    {p.icon
-                                                        ? <img src={p.icon} alt="" />
-                                                        : <span className="link-picker-abbr">{p.label.slice(0, 2)}</span>
-                                                    }
-                                                    <span>{p.label}</span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )
-                                })()}
-                                <button
-                                    type="button"
-                                    className="link-picker-cancel"
-                                    onClick={() => { setShowLinkPicker(false); setFilterPicker('') }}
-                                >
-                                    Закрыть
-                                </button>
-                            </div>
-                        )}
+                        {/* ── Platform picker — always visible ── */}
+                        <div className="link-picker-wrap">
+                            <input
+                                className="link-picker-search"
+                                type="text"
+                                placeholder="Search an action"
+                                value={filterPicker}
+                                onChange={(e) => setFilterPicker(e.target.value)}
+                            />
+                            {(() => {
+                                const q = filterPicker.trim().toLowerCase()
+                                const filtered = PLATFORMS.filter((p) =>
+                                    p.label.toLowerCase().includes(q)
+                                )
+                                if (!filtered.length) return (
+                                    <p className="link-picker-empty">Платформа не найдена</p>
+                                )
+                                return (
+                                    <div className="link-picker-grid">
+                                        {filtered.map((p) => (
+                                            <button
+                                                key={p.id}
+                                                type="button"
+                                                className={`link-picker-btn${p.light ? ' is-light' : ''}`}
+                                                style={{ background: p.color }}
+                                                onClick={() => {
+                                                    updateCard({ links: [...cardData.links, { type: p.id, url: '', is_visible: true }] })
+                                                    setFilterPicker('')
+                                                }}
+                                            >
+                                                <span
+                                                    className="link-icon-mask"
+                                                    style={{
+                                                        WebkitMaskImage: `url(${p.icon})`,
+                                                        maskImage: `url(${p.icon})`,
+                                                        backgroundColor: p.light ? '#222' : '#fff',
+                                                    } as React.CSSProperties}
+                                                />
+                                                <span>{p.label}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )
+                            })()}
+                        </div>
                     </section>
                 )}
 
