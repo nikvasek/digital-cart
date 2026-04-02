@@ -69,6 +69,22 @@ const formatPhoneDisplay = (value: string) => {
 
 const normalizeAddress = (value: string) => value.replace(/\s+/g, ' ').trim()
 
+const parseAddressField = (value: string): { label: string; mapsUrl: string } => {
+  const trimmed = value.trim()
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    try {
+      const u = new URL(trimmed)
+      const placeMatch = u.pathname.match(/\/maps\/place\/([^/@]+)/)
+      if (placeMatch) {
+        return { label: decodeURIComponent(placeMatch[1].replace(/\+/g, ' ')), mapsUrl: trimmed }
+      }
+      const q = u.searchParams.get('q')
+      if (q) return { label: q, mapsUrl: trimmed }
+    } catch { /* not a URL */ }
+  }
+  return { label: trimmed, mapsUrl: `https://maps.google.com/?q=${encodeURIComponent(trimmed)}` }
+}
+
 const preloadImage = (src: string) => new Promise<void>((resolve) => {
   if (!src) {
     resolve()
@@ -172,10 +188,9 @@ export default function PublicCard() {
     if (!card) return
     trackEvent('click', { link_type: 'location' })
     if (card.address) {
-      window.location.href = `https://maps.google.com/?q=${encodeURIComponent(card.address)}`
+      window.location.href = parseAddressField(card.address).mapsUrl
       return
     }
-
     if (card.website) {
       window.location.href = toExternalUrl(card.website)
     }
@@ -303,7 +318,7 @@ export default function PublicCard() {
       {
         id: 'gallery',
         label: 'Gallery',
-        iconSrc: figmaAsset('placeholder_1180413 1@3x.png'),
+        iconSrc: figmaAsset('image 13@3x.png'),
         onClick: openGallery,
         isVisible: Boolean(
           card.portfolio_url
@@ -312,8 +327,8 @@ export default function PublicCard() {
       },
       {
         id: 'location',
-        label: normalizeAddress(card.address || card.company_name || 'Location'),
-        iconSrc: figmaAsset('image 13@3x.png'),
+        label: normalizeAddress((card.address ? parseAddressField(card.address).label : null) || card.company_name || 'Location'),
+        iconSrc: figmaAsset('placeholder_1180413 1@3x.png'),
         onClick: openLocation,
         isVisible: Boolean(card.address || card.website)
       }
