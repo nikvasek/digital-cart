@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import { getPlatform } from '../lib/platforms'
 
 interface CardData {
   id: string
@@ -124,6 +125,7 @@ export default function PublicCard() {
   const [showLeadForm, setShowLeadForm] = useState(false)
   const [showQR, setShowQR] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showAllLinks, setShowAllLinks] = useState(false)
 
   useEffect(() => {
     void loadCard()
@@ -397,6 +399,71 @@ export default function PublicCard() {
                     <span className={`dbc-contact-label${row.id === 'location' ? ' dbc-contact-label--wrap' : ''}`}>{row.label}</span>
                   </button>
                 ))}
+                {card.links.some((l) => l.is_visible) && (
+                  <button
+                    type="button"
+                    className="dbc-more-btn"
+                    onClick={() => setShowAllLinks(true)}
+                    aria-label="More contacts"
+                  >
+                    More contact...
+                  </button>
+                )}
+              </div>
+
+              {/* ── All-links overlay ── */}
+              <div
+                className={`dbc-links-overlay${showAllLinks ? ' dbc-links-overlay--show' : ''}`}
+                aria-hidden={!showAllLinks}
+              >
+                <div className="dbc-links-overlay-head">
+                  <button
+                    type="button"
+                    className="dbc-back-btn"
+                    onClick={() => setShowAllLinks(false)}
+                    aria-label="Back"
+                  >
+                    ←
+                  </button>
+                  <span className="dbc-links-overlay-title">Контакты</span>
+                </div>
+
+                <div className="dbc-links-icon-grid">
+                  {card.links.filter((l) => l.is_visible && l.url).map((link) => {
+                    const meta = getPlatform(link.type)
+                    return (
+                      <button
+                        key={`${link.type}-${link.url}`}
+                        type="button"
+                        className="dbc-link-icon-btn"
+                        onClick={() => {
+                          trackEvent('click', { link_type: link.type })
+                          window.location.href = toExternalUrl(link.url)
+                        }}
+                        aria-label={meta.label}
+                      >
+                        <span
+                          className="dbc-link-icon-circle"
+                          style={{ background: meta.color }}
+                        >
+                          {meta.icon ? (
+                            <span
+                              className="dbc-link-icon-mask"
+                              style={{
+                                WebkitMaskImage: `url(${meta.icon})`,
+                                maskImage: `url(${meta.icon})`,
+                                backgroundColor: meta.light ? '#222' : '#fff',
+                              } as React.CSSProperties}
+                            />
+                          ) : (
+                            <span className="dbc-link-icon-fallback">{meta.label.slice(0, 2).toUpperCase()}</span>
+                          )}
+                        </span>
+                        <span className="dbc-link-icon-label">{meta.label}</span>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               <div className="dbc-actions" aria-label="Actions">
