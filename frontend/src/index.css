@@ -1240,7 +1240,7 @@ code {
   overflow: hidden;
 }
 .link-picker-btn:hover {
-  filter: brightness(1.2);
+  filter: brightness(1.15);
 }
 .link-picker-btn.is-light {
   color: #111;
@@ -1249,7 +1249,6 @@ code {
   width: 22px;
   height: 22px;
   object-fit: contain;
-  filter: brightness(10);
   flex-shrink: 0;
 }
 .link-picker-btn.is-light img {
@@ -1330,7 +1329,6 @@ code {
   width: 22px;
   height: 22px;
   object-fit: contain;
-  filter: brightness(10);
 }
 .link-row-badge > span {
   color: #fff;
