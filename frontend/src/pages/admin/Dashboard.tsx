@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
@@ -72,6 +72,17 @@ const SECTIONS: Array<{ id: SectionId; label: string }> = [
   { id: 'analytics', label: 'Analytics' }
 ]
 
+const MOBILE_SECTION_LABELS: Record<SectionId, string> = {
+  dashboard: 'Панель управления',
+  'my-cards': 'Мои карточки',
+  'edit-card': 'Редактировать карточку',
+  'social-links': 'Социальные ссылки',
+  services: 'Сервисы',
+  gallery: 'Галерея',
+  settings: 'Настройки',
+  analytics: 'Аналитика'
+}
+
 const sparkline = [12, 18, 16, 24, 30, 27, 35]
 
 const reorder = <T,>(items: T[], from: number, to: number) => {
@@ -98,6 +109,7 @@ const defaultCardDetails = (card: CardItem): CardDetails => ({
 
 export default function Dashboard() {
   const navigate = useNavigate()
+  const mobileNavRefs = useRef<Partial<Record<SectionId, HTMLButtonElement | null>>>({})
   const [cards, setCards] = useState<CardItem[]>([])
   const [analytics, setAnalytics] = useState<Analytics | null>(null)
   const [selectedCardId, setSelectedCardId] = useState<string>('')
@@ -118,6 +130,12 @@ export default function Dashboard() {
     if (!selectedCardId) return
     void loadCardDetails(selectedCardId)
   }, [selectedCardId])
+
+  useEffect(() => {
+    const el = mobileNavRefs.current[selectedSection]
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
+  }, [selectedSection])
 
   const selectedCard = useMemo(() => cards.find((card) => card.id === selectedCardId), [cards, selectedCardId])
 
@@ -271,6 +289,26 @@ export default function Dashboard() {
             {saving ? 'Saving...' : 'Save Changes'}
           </button>
         </header>
+
+        <div className="admin-mobile-nav-wrap" aria-label="Навигация по разделам">
+          <nav className="admin-mobile-nav" role="tablist" aria-orientation="horizontal">
+            {SECTIONS.map((section) => (
+              <button
+                key={section.id}
+                ref={(node) => {
+                  mobileNavRefs.current[section.id] = node
+                }}
+                type="button"
+                role="tab"
+                aria-selected={selectedSection === section.id}
+                onClick={() => setSelectedSection(section.id)}
+                className={`admin-mobile-nav-item ${selectedSection === section.id ? 'is-active' : ''}`}
+              >
+                {MOBILE_SECTION_LABELS[section.id]}
+              </button>
+            ))}
+          </nav>
+        </div>
 
         {selectedSection === 'dashboard' && (
           <section className="admin-grid">
