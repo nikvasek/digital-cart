@@ -185,15 +185,9 @@ export default function PublicCard() {
   }
 
   const openLocation = () => {
-    if (!card) return
+    if (!card?.address) return
     trackEvent('click', { link_type: 'location' })
-    if (card.address) {
-      window.location.href = parseAddressField(card.address).mapsUrl
-      return
-    }
-    if (card.website) {
-      window.location.href = toExternalUrl(card.website)
-    }
+    window.location.href = parseAddressField(card.address).mapsUrl
   }
 
   const openGallery = () => {
@@ -330,7 +324,7 @@ export default function PublicCard() {
         label: normalizeAddress((card.address ? parseAddressField(card.address).label : null) || card.company_name || 'Location'),
         iconSrc: figmaAsset('placeholder_1180413 1@3x.png'),
         onClick: openLocation,
-        isVisible: Boolean(card.address || card.website)
+        isVisible: Boolean(card.address)
       }
     ].filter((row) => row.isVisible)
   }, [card])

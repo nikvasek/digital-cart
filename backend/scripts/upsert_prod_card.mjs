@@ -57,7 +57,7 @@ try {
       user_id, slug, full_name, title, company_name,
       phone, email, address, website, bio,
       avatar_url, logo_url, language_default, is_active
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
     ON CONFLICT (slug) DO UPDATE SET
       user_id = EXCLUDED.user_id,
       full_name = EXCLUDED.full_name,
