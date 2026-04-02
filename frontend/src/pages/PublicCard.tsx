@@ -34,6 +34,8 @@ type ContactRow = {
 
 const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
 const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.png')
+const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.png')
+const heroBgLeftSrc = figmaAsset('Rectangle 71@3x.png')
 
 const resolveAvatarSrc = (value?: string) => {
   const avatarUrl = (value || '').trim()
@@ -67,6 +69,38 @@ const formatPhoneDisplay = (value: string) => {
 
 const normalizeAddress = (value: string) => value.replace(/\s+/g, ' ').trim()
 
+const preloadImage = (src: string) => new Promise<void>((resolve) => {
+  if (!src) {
+    resolve()
+    return
+  }
+
+  const image = new Image()
+  image.decoding = 'async'
+  image.onload = () => resolve()
+  image.onerror = () => resolve()
+  image.src = src
+})
+
+const preloadCriticalAssets = async (avatarUrl?: string) => {
+  const criticalImages = [
+    heroBgRightSrc,
+    heroBgLeftSrc,
+    resolveAvatarSrc(avatarUrl),
+    figmaAsset('call_1062678 1@3x.png'),
+    figmaAsset('whatsapp_739247 1@3x.png'),
+    figmaAsset('telegram 1@3x.png'),
+    figmaAsset('instagram_739244 1@3x.png'),
+    figmaAsset('viber_2190481 1@3x.png'),
+    figmaAsset('email_347722 1@3x.png'),
+    figmaAsset('tik-tok 1@3x.png'),
+    figmaAsset('placeholder_1180413 1@3x.png'),
+    figmaAsset('image 13@3x.png')
+  ]
+
+  await Promise.allSettled(criticalImages.map((src) => preloadImage(src)))
+}
+
 export default function PublicCard() {
   const { slug } = useParams<{ slug: string }>()
   const { t, i18n } = useTranslation()
@@ -92,9 +126,11 @@ export default function PublicCard() {
   }
 
   const loadCard = async () => {
+    setLoading(true)
     try {
       setLoadError(false)
       const response = await axios.get(`/api/public/card/${slug}`)
+      await preloadCriticalAssets(response.data.avatar_url)
       setCard(response.data)
       await i18n.changeLanguage(response.data.language_default)
 
@@ -306,21 +342,27 @@ export default function PublicCard() {
       <div className="mx-auto w-full sm:max-w-[430px]">
         <div className="home-card-frame relative w-full overflow-hidden">
           <img
-            src={figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.png')}
+            src={heroBgRightSrc}
             alt="Background"
             className="dbc-bg-right"
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
             draggable={false}
           />
           <img
-            src={figmaAsset('Rectangle 71@3x.png')}
+            src={heroBgLeftSrc}
             alt=""
             aria-hidden="true"
             className="dbc-bg-left"
+            fetchPriority="high"
+            loading="eager"
+            decoding="async"
             draggable={false}
           />
 
           <div className="dbc-avatar-shell">
-            <img src={resolveAvatarSrc(card.avatar_url)} alt={card.full_name} className="dbc-avatar" />
+            <img src={resolveAvatarSrc(card.avatar_url)} alt={card.full_name} className="dbc-avatar" fetchPriority="high" loading="eager" decoding="async" />
           </div>
 
           <h1 className="dbc-name">{card.full_name}</h1>
