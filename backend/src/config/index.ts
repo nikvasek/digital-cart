@@ -15,6 +15,7 @@ export const config = {
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
   adminPin: process.env.ADMIN_PIN || '1111',
+  adminEmail: process.env.ADMIN_EMAIL || 'admin@example.com',
   storageType: process.env.STORAGE_TYPE || 'local',
   storagePath: process.env.STORAGE_PATH || './uploads',
   smtp: {

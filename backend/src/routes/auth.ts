@@ -6,54 +6,58 @@ import { config } from '../config/index.js'
 export default async function authRoutes(fastify: FastifyInstance) {
   const authGuard = (fastify as any).authenticate
 
-  // Логин
-  fastify.post('/login', async (request, reply) => {
-    const { email, password, pin } = request.body as {
-      email?: string
-      password?: string
-      pin?: string
+  fastify.post('/pin-login', async (request, reply) => {
+    const { pin } = request.body as { pin: string }
+
+    if (pin !== config.adminPin) {
+      return reply.code(401).send({ error: 'Invalid PIN' })
     }
 
     try {
-      const normalizedPin = typeof pin === 'string' ? pin.trim() : ''
+      let userResult = await db.query(
+        `SELECT id, email, role FROM users WHERE email = $1 LIMIT 1`,
+        [config.adminEmail]
+      )
 
-      if (normalizedPin) {
-        if (normalizedPin !== config.adminPin) {
-          return reply.code(401).send({ error: 'Invalid code' })
-        }
-
-        const userResult = await db.query(
-          `SELECT id, email, role
-           FROM users
-           ORDER BY CASE WHEN role = 'owner' THEN 0 ELSE 1 END, created_at ASC
-           LIMIT 1`
+      if (userResult.rows.length === 0) {
+        userResult = await db.query(
+          `SELECT id, email, role FROM users ORDER BY created_at ASC LIMIT 1`
         )
+      }
 
-        if (userResult.rows.length === 0) {
-          return reply.code(404).send({ error: 'Admin user not found' })
-        }
+      if (userResult.rows.length === 0) {
+        return reply.code(500).send({ error: 'No admin user configured' })
+      }
 
-        const user = userResult.rows[0]
-        const token = fastify.jwt.sign({
+      const user = userResult.rows[0]
+      const token = fastify.jwt.sign({
+        id: user.id,
+        email: user.email,
+        role: user.role
+      }, { expiresIn: '7d' })
+
+      return {
+        token,
+        user: {
           id: user.id,
           email: user.email,
           role: user.role
-        }, { expiresIn: '7d' })
-
-        return {
-          token,
-          user: {
-            id: user.id,
-            email: user.email,
-            role: user.role
-          }
         }
       }
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.code(500).send({ error: 'Internal server error' })
+    }
+  })
 
-      if (!email || !password) {
-        return reply.code(400).send({ error: 'Email and password are required' })
-      }
+  // Логин
+  fastify.post('/login', async (request, reply) => {
+    const { email, password } = request.body as {
+      email: string
+      password: string
+    }
 
+    try {
       const result = await db.query(
         `SELECT id, email, password_hash, role FROM users WHERE email = $1`,
         [email]

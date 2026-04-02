@@ -1,72 +1,144 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+
+const PIN_LENGTH = 4
+const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
 export default function Login() {
   const navigate = useNavigate()
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [shake, setShake] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const submitPin = async (pinValue: string) => {
+    if (pinValue.length !== PIN_LENGTH || loading) return
+
     setError('')
     setLoading(true)
 
     try {
-      const response = await axios.post('/api/auth/login', {
-        pin
+      const response = await axios.post('/api/auth/pin-login', {
+        pin: pinValue
       })
-      
-      // Сохранение токена
+
       localStorage.setItem('token', response.data.token)
-      
-      // Перенаправление в дашборд
       navigate('/admin/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Login failed')
+      setError(err.response?.data?.error || 'Invalid PIN')
+      setShake(true)
+      setPin('')
+      window.setTimeout(() => setShake(false), 360)
     } finally {
       setLoading(false)
     }
   }
 
+  useEffect(() => {
+    if (pin.length === PIN_LENGTH) {
+      void submitPin(pin)
+    }
+  }, [pin])
+
+  const pushDigit = (digit: string) => {
+    if (loading || pin.length >= PIN_LENGTH) return
+    setError('')
+    setPin((prev) => `${prev}${digit}`)
+  }
+
+  const deleteDigit = () => {
+    if (loading || !pin.length) return
+    setPin((prev) => prev.slice(0, -1))
+  }
+
+  const clearPin = () => {
+    if (loading) return
+    setPin('')
+    setError('')
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-8">Admin Login</h1>
-        
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
-            {error}
+    <div className="min-h-screen bg-[#f4f7fb] flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-md rounded-3xl bg-white shadow-[0_20px_70px_rgba(14,30,84,0.14)] border border-[#e6ecf8] p-6 sm:p-8">
+        <div className="text-center">
+          <p className="inline-flex items-center rounded-full bg-[#edf3ff] px-3 py-1 text-xs font-semibold tracking-[0.08em] text-[#2f5fd5] uppercase">
+            Secure Access
+          </p>
+          <h1 className="mt-4 text-2xl sm:text-3xl font-semibold text-[#17223b]">Admin Panel</h1>
+          <p className="mt-2 text-sm text-[#6f7c98]">Enter your 4-digit PIN code</p>
+        </div>
+
+        <div className={`mt-7 rounded-2xl border border-[#dde6f7] bg-[#f8fbff] p-4 sm:p-5 ${shake ? 'pin-shake' : ''}`}>
+          <div className="flex items-center justify-center gap-3" aria-label="PIN progress">
+            {Array.from({ length: PIN_LENGTH }).map((_, index) => {
+              const filled = index < pin.length
+              return (
+                <span
+                  key={index}
+                  className={`h-3.5 w-3.5 rounded-full border transition-all duration-200 ${filled ? 'bg-[#2f5fd5] border-[#2f5fd5] scale-105' : 'bg-white border-[#b8c7e3]'}`}
+                />
+              )
+            })}
           </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              PIN Code
-            </label>
-            <input
-              type="password"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={4}
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              required
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="1111"
-            />
-          </div>
-          
+
+          <p className="mt-4 text-center text-base tracking-[0.45em] text-[#2b3b61] min-h-[24px]" aria-live="polite">
+            {'•'.repeat(pin.length)}
+          </p>
+
+          {error && (
+            <div className="mt-3 rounded-xl bg-[#fff1f2] border border-[#ffd3d8] px-3 py-2 text-center text-sm text-[#c2354e]">
+              {error}
+            </div>
+          )}
+        </div>
+
+        <div className="mt-5 grid grid-cols-3 gap-3 sm:gap-4">
+          {KEYS.slice(0, 9).map((digit) => (
+            <button
+              key={digit}
+              type="button"
+              onClick={() => pushDigit(digit)}
+              disabled={loading}
+              className="pin-key"
+              aria-label={`Digit ${digit}`}
+            >
+              {digit}
+            </button>
+          ))}
+
           <button
-            type="submit"
-            disabled={loading || pin.length !== 4}
-            className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+            type="button"
+            onClick={clearPin}
+            disabled={loading}
+            className="pin-action-key"
           >
-            {loading ? 'Logging in...' : 'Enter'}
+            Clear
           </button>
-        </form>
+
+          <button
+            type="button"
+            onClick={() => pushDigit('0')}
+            disabled={loading}
+            className="pin-key"
+            aria-label="Digit 0"
+          >
+            0
+          </button>
+
+          <button
+            type="button"
+            onClick={deleteDigit}
+            disabled={loading}
+            className="pin-action-key"
+          >
+            Delete
+          </button>
+        </div>
+
+        <div className="mt-5 text-center text-xs text-[#8b97b0]">
+          {loading ? 'Checking PIN...' : 'Tap digits to enter PIN'}
+        </div>
       </div>
     </div>
   )

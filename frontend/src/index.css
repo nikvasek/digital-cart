@@ -557,3 +557,64 @@ code {
   cursor: pointer;
   z-index: 40;
 }
+
+@keyframes pin-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-7px);
+  }
+  40% {
+    transform: translateX(7px);
+  }
+  60% {
+    transform: translateX(-5px);
+  }
+  80% {
+    transform: translateX(5px);
+  }
+}
+
+.pin-shake {
+  animation: pin-shake 0.35s ease-in-out;
+}
+
+.pin-key,
+.pin-action-key {
+  height: 60px;
+  border-radius: 16px;
+  border: 1px solid #d8e3f8;
+  background: linear-gradient(180deg, #ffffff 0%, #f1f6ff 100%);
+  color: #1c2947;
+  font-size: 1.2rem;
+  font-weight: 600;
+  transition: transform 0.14s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 8px 18px rgba(22, 41, 85, 0.08);
+}
+
+.pin-action-key {
+  font-size: 0.85rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #41547f;
+}
+
+.pin-key:hover,
+.pin-action-key:hover {
+  border-color: #b9c8e7;
+  box-shadow: 0 10px 22px rgba(22, 41, 85, 0.13);
+}
+
+.pin-key:active,
+.pin-action-key:active {
+  transform: translateY(2px) scale(0.98);
+}
+
+.pin-key:disabled,
+.pin-action-key:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
