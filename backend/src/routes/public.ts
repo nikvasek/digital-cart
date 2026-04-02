@@ -47,7 +47,7 @@ export default async function publicRoutes(fastify: FastifyInstance) {
       )
 
       return reply
-        .header('Cache-Control', 'no-store')
+        .header('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400')
         .send({
           ...card,
           links: linksResult.rows,

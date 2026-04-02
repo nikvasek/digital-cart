@@ -6,9 +6,6 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // Temporary safety mode: unregister SW and disable offline caching
-      // to avoid stale UI after Railway deploys.
-      selfDestroying: true,
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
@@ -32,16 +29,19 @@ export default defineConfig({
         ]
       },
       workbox: {
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\./,
+            // Cache public card data: NetworkFirst with 3s timeout fallback to cache
+            urlPattern: /\/api\/public\/card\//,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'card-api-cache',
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 300
-              }
+                maxEntries: 20,
+                maxAgeSeconds: 300,
+              },
+              networkTimeoutSeconds: 3,
             }
           }
         ]
