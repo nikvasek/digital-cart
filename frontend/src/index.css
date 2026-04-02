@@ -1181,6 +1181,155 @@ code {
   color: #9ca3af;
 }
 
+/* ── EnBizCard-style Link Editor ── */
+
+.link-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 14px 0 6px;
+}
+
+.link-picker-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 6px 10px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.link-picker-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+  transform: scale(1.04);
+}
+
+.link-picker-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.link-picker-icon img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: brightness(10);
+}
+.link-picker-icon > span {
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.link-picker-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+  line-height: 1.2;
+}
+
+.link-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.link-row:last-of-type {
+  border-bottom: none;
+}
+
+.link-row-drag {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  cursor: grab;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.link-row-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.link-row-badge img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: brightness(10);
+}
+.link-row-badge > span {
+  color: #fff;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.link-row-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 13px;
+  padding: 4px 2px;
+  outline: none;
+  min-width: 0;
+}
+.link-row-input:focus {
+  border-bottom-color: rgba(255, 255, 255, 0.5);
+}
+.link-row-input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.link-row-vis {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  opacity: 0.35;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+.link-row-vis.is-on {
+  opacity: 0.85;
+}
+
+.link-row-remove {
+  background: none;
+  border: none;
+  color: #ff6060;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0 2px;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+.link-row-remove:hover {
+  opacity: 1;
+}
+
+.link-empty {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* ── end Link Editor ── */
+
 .service-item {
   display: grid;
   gap: 8px;

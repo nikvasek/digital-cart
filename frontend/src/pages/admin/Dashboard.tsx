@@ -2,6 +2,31 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
+// ── Platform definitions ──────────────────────────────────
+const PLATFORMS: Array<{
+    id: string
+    label: string
+    color: string
+    icon: string
+    placeholder: string
+}> = [
+    { id: 'phone',     label: 'Phone',     color: '#2db37b', icon: '/figma/call_1062678 1@3x.png',         placeholder: '+375 29 000 00 00' },
+    { id: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', icon: '/figma/whatsapp_739247 1@3x.png',      placeholder: 'wa.me/375…' },
+    { id: 'telegram',  label: 'Telegram',  color: '#2AABEE', icon: '/figma/telegram 1@3x.png',             placeholder: 't.me/username' },
+    { id: 'instagram', label: 'Instagram', color: '#E1306C', icon: '/figma/instagram_739244 1@3x.png',     placeholder: 'instagram.com/…' },
+    { id: 'viber',     label: 'Viber',     color: '#7360F2', icon: '/figma/viber_2190481 1@3x.png',        placeholder: 'viber://chat?number=…' },
+    { id: 'email',     label: 'Email',     color: '#e07654', icon: '/figma/email_347722 1@3x.png',         placeholder: 'name@example.com' },
+    { id: 'tiktok',    label: 'TikTok',    color: '#010101', icon: '/figma/tik-tok 1@3x.png',              placeholder: 'tiktok.com/@username' },
+    { id: 'facebook',  label: 'Facebook',  color: '#1877F2', icon: '',                                     placeholder: 'facebook.com/…' },
+    { id: 'linkedin',  label: 'LinkedIn',  color: '#0A66C2', icon: '',                                     placeholder: 'linkedin.com/in/…' },
+    { id: 'youtube',   label: 'YouTube',   color: '#FF0000', icon: '',                                     placeholder: 'youtube.com/@…' },
+    { id: 'website',   label: 'Website',   color: '#6b7280', icon: '/figma/placeholder_1180413 1@3x.png',  placeholder: 'https://example.com' },
+    { id: 'location',  label: 'Location',  color: '#f59e0b', icon: '/figma/image 13@3x.png',               placeholder: 'Google Maps link or address' },
+]
+
+const getPlatform = (id: string) =>
+    PLATFORMS.find((p) => p.id === id) ?? { id, label: id, color: '#444', icon: '', placeholder: '' }
+
 interface Analytics {
     views: number
     clicks: number
@@ -37,18 +62,6 @@ interface MediaItem {
     type: string
 }
 
-type SocialType =
-    | 'instagram'
-    | 'telegram'
-    | 'whatsapp'
-    | 'viber'
-    | 'tiktok'
-    | 'facebook'
-    | 'linkedin'
-    | 'youtube'
-    | 'email'
-    | 'phone'
-
 interface CardDetails extends CardItem {
     company_name: string
     phone: string
@@ -83,34 +96,6 @@ const SECTIONS: Array<{ id: SectionId; label: string }> = [
     { id: 'settings', label: 'Settings' },
     { id: 'analytics', label: 'Analytics' }
 ]
-
-const SOCIAL_OPTIONS: SocialType[] = [
-    'instagram',
-    'telegram',
-    'whatsapp',
-    'viber',
-    'tiktok',
-    'facebook',
-    'linkedin',
-    'youtube',
-    'email',
-    'phone'
-]
-
-const socialPlaceholder = (type: string) => {
-    const key = type.toLowerCase()
-    if (key === 'instagram') return 'https://instagram.com/username'
-    if (key === 'telegram') return 'https://t.me/username'
-    if (key === 'whatsapp') return 'https://wa.me/375292327382'
-    if (key === 'viber') return 'viber://chat?number=375292327382'
-    if (key === 'tiktok') return 'https://www.tiktok.com/@username'
-    if (key === 'facebook') return 'https://facebook.com/username'
-    if (key === 'linkedin') return 'https://linkedin.com/in/username'
-    if (key === 'youtube') return 'https://youtube.com/@username'
-    if (key === 'email') return 'mailto:name@example.com'
-    if (key === 'phone') return 'tel:+375292327382'
-    return 'https://example.com/profile'
-}
 
 const MOBILE_SECTION_LABELS: Record<SectionId, string> = {
     dashboard: 'Панель управления',
@@ -232,6 +217,7 @@ export default function Dashboard() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [dragIndex, setDragIndex] = useState<number | null>(null)
+    const [showLinkPicker, setShowLinkPicker] = useState(false)
     const [galleryView, setGalleryView] = useState<'grid' | 'list'>('grid')
     const [previewUrl, setPreviewUrl] = useState<string>('')
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light')
@@ -489,75 +475,119 @@ export default function Dashboard() {
                             <button
                                 type="button"
                                 className="admin-ghost"
-                                onClick={() => updateCard({ links: [...cardData.links, { type: 'instagram', url: '', is_visible: true }] })}
+                                onClick={() => setShowLinkPicker((v) => !v)}
                             >
-                                Add Link
+                                {showLinkPicker ? '✕ Закрыть' : '+ Добавить'}
                             </button>
                         </div>
-                        {cardData.links.map((link, index) => (
-                            <div
-                                key={`${link.type}-${index}`}
-                                className="sortable-item"
-                                draggable
-                                onDragStart={() => setDragIndex(index)}
-                                onDragOver={(e) => e.preventDefault()}
-                                onDrop={() => handleDropLinks(index)}
-                            >
-                                <span className="drag-mark">⋮⋮</span>
-                                <select
-                                    value={link.type}
-                                    onChange={(e) => {
-                                        const next = [...cardData.links]
-                                        next[index] = { ...next[index], type: e.target.value }
-                                        updateCard({ links: next })
-                                    }}
+
+                        {/* ── Platform picker grid ── */}
+                        {showLinkPicker && (
+                            <div className="link-picker-grid">
+                                {PLATFORMS.map((platform) => (
+                                    <button
+                                        key={platform.id}
+                                        type="button"
+                                        className="link-picker-btn"
+                                        onClick={() => {
+                                            updateCard({ links: [...cardData.links, { type: platform.id, url: '', is_visible: true }] })
+                                            setShowLinkPicker(false)
+                                        }}
+                                    >
+                                        <span
+                                            className="link-picker-icon"
+                                            style={{ background: platform.color }}
+                                        >
+                                            {platform.icon
+                                                ? <img src={platform.icon} alt="" />
+                                                : <span>{platform.label[0]}</span>
+                                            }
+                                        </span>
+                                        <span className="link-picker-label">{platform.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* ── Link rows ── */}
+                        {cardData.links.map((link, index) => {
+                            const platform = getPlatform(link.type)
+                            return (
+                                <div
+                                    key={`${link.type}-${index}`}
+                                    className="link-row"
+                                    draggable
+                                    onDragStart={() => setDragIndex(index)}
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onDrop={() => handleDropLinks(index)}
                                 >
-                                    {SOCIAL_OPTIONS.map((option) => (
-                                        <option key={option} value={option}>
-                                            {option}
-                                        </option>
-                                    ))}
-                                </select>
-                                <input
-                                    value={link.url}
-                                    placeholder={socialPlaceholder(link.type)}
-                                    onChange={(e) => {
-                                        const next = [...cardData.links]
-                                        next[index] = { ...next[index], url: e.target.value }
-                                        updateCard({ links: next })
-                                    }}
-                                    onBlur={(e) => {
-                                        const normalized = normalizeSocialInput(link.type, e.target.value)
-                                        if (normalized === e.target.value) return
-                                        const next = [...cardData.links]
-                                        next[index] = { ...next[index], url: normalized }
-                                        updateCard({ links: next })
-                                    }}
-                                />
-                                <label className="toggle-wrap">
+                                    <span className="link-row-drag" title="Drag to reorder">⋮⋮</span>
+
+                                    {/* Icon badge */}
+                                    <span
+                                        className="link-row-badge"
+                                        style={{ background: platform.color }}
+                                        title={platform.label}
+                                    >
+                                        {platform.icon
+                                            ? <img src={platform.icon} alt={platform.label} />
+                                            : <span>{platform.label[0]}</span>
+                                        }
+                                    </span>
+
+                                    {/* Input */}
                                     <input
-                                        type="checkbox"
-                                        checked={link.is_visible}
+                                        className="link-row-input"
+                                        value={link.url}
+                                        placeholder={platform.placeholder}
                                         onChange={(e) => {
                                             const next = [...cardData.links]
-                                            next[index] = { ...next[index], is_visible: e.target.checked }
+                                            next[index] = { ...next[index], url: e.target.value }
                                             updateCard({ links: next })
                                         }}
+                                        onBlur={(e) => {
+                                            const normalized = normalizeSocialInput(link.type, e.target.value)
+                                            if (normalized === e.target.value) return
+                                            const next = [...cardData.links]
+                                            next[index] = { ...next[index], url: normalized }
+                                            updateCard({ links: next })
+                                        }}
+                                        aria-label={`${platform.label} URL`}
                                     />
-                                    Visible
-                                </label>
-                                <button
-                                    type="button"
-                                    className="row-delete"
-                                    onClick={() => {
-                                        const next = cardData.links.filter((_, i) => i !== index)
-                                        updateCard({ links: next })
-                                    }}
-                                >
-                                    Remove
-                                </button>
-                            </div>
-                        ))}
+
+                                    {/* Visible toggle */}
+                                    <button
+                                        type="button"
+                                        className={`link-row-vis${link.is_visible ? ' is-on' : ''}`}
+                                        title={link.is_visible ? 'Скрыть' : 'Показать'}
+                                        onClick={() => {
+                                            const next = [...cardData.links]
+                                            next[index] = { ...next[index], is_visible: !link.is_visible }
+                                            updateCard({ links: next })
+                                        }}
+                                    >
+                                        {link.is_visible ? '👁' : '🚫'}
+                                    </button>
+
+                                    {/* Remove */}
+                                    <button
+                                        type="button"
+                                        className="link-row-remove"
+                                        title="Удалить"
+                                        onClick={() => {
+                                            const next = cardData.links.filter((_, i) => i !== index)
+                                            updateCard({ links: next })
+                                        }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            )
+                        })}
+
+                        {cardData.links.length === 0 && !showLinkPicker && (
+                            <p className="link-empty">Нет ссылок. Нажмите «+ Добавить» чтобы выбрать платформу.</p>
+                        )}
                     </section>
                 )}
 
