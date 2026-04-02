@@ -9,23 +9,76 @@ const PLATFORMS: Array<{
     color: string
     icon: string
     placeholder: string
+    href?: string
+    hrefEnd?: string
+    light?: boolean
+    category: 'contact' | 'social'
 }> = [
-    { id: 'phone',     label: 'Phone',     color: '#2db37b', icon: '/figma/call_1062678 1@3x.png',         placeholder: '+375 29 000 00 00' },
-    { id: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', icon: '/figma/whatsapp_739247 1@3x.png',      placeholder: 'wa.me/375…' },
-    { id: 'telegram',  label: 'Telegram',  color: '#2AABEE', icon: '/figma/telegram 1@3x.png',             placeholder: 't.me/username' },
-    { id: 'instagram', label: 'Instagram', color: '#E1306C', icon: '/figma/instagram_739244 1@3x.png',     placeholder: 'instagram.com/…' },
-    { id: 'viber',     label: 'Viber',     color: '#7360F2', icon: '/figma/viber_2190481 1@3x.png',        placeholder: 'viber://chat?number=…' },
-    { id: 'email',     label: 'Email',     color: '#e07654', icon: '/figma/email_347722 1@3x.png',         placeholder: 'name@example.com' },
-    { id: 'tiktok',    label: 'TikTok',    color: '#010101', icon: '/figma/tik-tok 1@3x.png',              placeholder: 'tiktok.com/@username' },
-    { id: 'facebook',  label: 'Facebook',  color: '#1877F2', icon: '',                                     placeholder: 'facebook.com/…' },
-    { id: 'linkedin',  label: 'LinkedIn',  color: '#0A66C2', icon: '',                                     placeholder: 'linkedin.com/in/…' },
-    { id: 'youtube',   label: 'YouTube',   color: '#FF0000', icon: '',                                     placeholder: 'youtube.com/@…' },
-    { id: 'website',   label: 'Website',   color: '#6b7280', icon: '/figma/placeholder_1180413 1@3x.png',  placeholder: 'https://example.com' },
-    { id: 'location',  label: 'Location',  color: '#f59e0b', icon: '/figma/image 13@3x.png',               placeholder: 'Google Maps link or address' },
+    // ── Contacts ────────────────────────────────────────────
+    { id: 'phone',        label: 'Mobile',       category: 'contact', color: '#2db37b', icon: '/figma/call_1062678 1@3x.png',       placeholder: '+XX XXXXX XXXXX',             href: 'tel:' },
+    { id: 'office',       label: 'Office',        category: 'contact', color: '#2db37b', icon: '/figma/call_1062678 1@3x.png',       placeholder: '+XX XXXXX XXXXX',             href: 'tel:' },
+    { id: 'home',         label: 'Home',          category: 'contact', color: '#2db37b', icon: '/figma/call_1062678 1@3x.png',       placeholder: '+XX XXXXX XXXXX',             href: 'tel:' },
+    { id: 'sms',          label: 'SMS',           category: 'contact', color: '#3b82f6', icon: '',                                    placeholder: '+XX XXXXX XXXXX',             href: 'sms:' },
+    { id: 'email',        label: 'Email',         category: 'contact', color: '#e07654', icon: '/figma/email_347722 1@3x.png',       placeholder: 'info@example.com',            href: 'mailto:' },
+    { id: 'website',      label: 'Website',       category: 'contact', color: '#6b7280', icon: '/figma/placeholder_1180413 1@3x.png', placeholder: 'https://example.com' },
+    { id: 'store',        label: 'Store',         category: 'contact', color: '#059669', icon: '',                                    placeholder: 'https://example.com/store' },
+    { id: 'location',     label: 'Location',      category: 'contact', color: '#f59e0b', icon: '/figma/image 13@3x.png',             placeholder: 'https://maps.google.com/…' },
+    { id: 'whatsapp',     label: 'WhatsApp',      category: 'contact', color: '#25D366', icon: '/figma/whatsapp_739247 1@3x.png',    placeholder: '+XX XXXXX XXXXX' },
+    { id: 'telegram',     label: 'Telegram',      category: 'contact', color: '#2AABEE', icon: '/figma/telegram 1@3x.png',           placeholder: 'username',                    href: 'https://t.me/' },
+    { id: 'signal',       label: 'Signal',        category: 'contact', color: '#3a76f0', icon: '',                                    placeholder: '+XXXXXXXXXXXX',               href: 'https://signal.me/#p/' },
+    { id: 'viber',        label: 'Viber',         category: 'contact', color: '#7360F2', icon: '/figma/viber_2190481 1@3x.png',      placeholder: 'XX XXXXX XXXXX' },
+    { id: 'messenger',    label: 'Messenger',     category: 'contact', color: '#0078FF', icon: '',                                    placeholder: 'username',                    href: 'https://m.me/' },
+    { id: 'skype',        label: 'Skype',         category: 'contact', color: '#00AFF0', icon: '',                                    placeholder: 'username',                    href: 'skype:',       hrefEnd: '?chat' },
+    { id: 'line',         label: 'Line',          category: 'contact', color: '#06C755', icon: '',                                    placeholder: 'LINE ID',                     href: 'https://line.me/ti/p/' },
+    { id: 'wechat',       label: 'WeChat',        category: 'contact', color: '#07C160', icon: '',                                    placeholder: 'WeChat ID' },
+    { id: 'matrix',       label: 'Matrix',        category: 'contact', color: '#000000', icon: '',                                    placeholder: '@username:matrix.org',        href: 'https://matrix.to/#/' },
+    { id: 'xmpp',         label: 'XMPP',          category: 'contact', color: '#002B5C', icon: '',                                    placeholder: 'XMPP ID',                     href: 'xmpp:' },
+    { id: 'calendar',     label: 'Calendar',      category: 'contact', color: '#4285F4', icon: '',                                    placeholder: 'https://cal.example.com' },
+    // ── Social networks ──────────────────────────────────────
+    { id: 'instagram',    label: 'Instagram',     category: 'social',  color: '#E1306C', icon: '/figma/instagram_739244 1@3x.png',   placeholder: 'username',                    href: 'https://instagram.com/' },
+    { id: 'threads',      label: 'Threads',       category: 'social',  color: '#000000', icon: '',                                    placeholder: '@username',                   href: 'https://www.threads.net/' },
+    { id: 'facebook',     label: 'Facebook',      category: 'social',  color: '#1877F2', icon: '',                                    placeholder: 'username or pagename',        href: 'https://facebook.com/' },
+    { id: 'twitter',      label: 'Twitter',       category: 'social',  color: '#1DA1F2', icon: '',                                    placeholder: 'username',                    href: 'https://twitter.com/' },
+    { id: 'mastodon',     label: 'Mastodon',      category: 'social',  color: '#2B90D9', icon: '',                                    placeholder: 'https://mastodon.social/@username' },
+    { id: 'pixelfed',     label: 'Pixelfed',      category: 'social',  color: '#8d59a8', icon: '',                                    placeholder: 'https://pixelfed.social/username' },
+    { id: 'diaspora',     label: 'Diaspora',      category: 'social',  color: '#333333', icon: '',                                    placeholder: 'https://diaspora.social/username' },
+    { id: 'friendica',    label: 'Friendica',     category: 'social',  color: '#1d6e9a', icon: '',                                    placeholder: 'https://friendica.social/username' },
+    { id: 'linkedin',     label: 'LinkedIn',      category: 'social',  color: '#0A66C2', icon: '',                                    placeholder: 'in/username or company/companyname' },
+    { id: 'youtube',      label: 'YouTube',       category: 'social',  color: '#FF0000', icon: '',                                    placeholder: 'channel name or @handle' },
+    { id: 'vimeo',        label: 'Vimeo',         category: 'social',  color: '#1AB7EA', icon: '',                                    placeholder: 'channelname',                 href: 'https://vimeo.com/' },
+    { id: 'peertube',     label: 'Peertube',      category: 'social',  color: '#f1680d', icon: '',                                    placeholder: 'https://peertube.video/channelname' },
+    { id: 'tiktok',       label: 'TikTok',        category: 'social',  color: '#010101', icon: '/figma/tik-tok 1@3x.png',            placeholder: 'username',                    href: 'https://tiktok.com/@' },
+    { id: 'snapchat',     label: 'Snapchat',      category: 'social',  color: '#FFFC00', icon: '', light: true,                         placeholder: 'username',                    href: 'https://www.snapchat.com/add/' },
+    { id: 'pinterest',    label: 'Pinterest',     category: 'social',  color: '#BD081C', icon: '',                                    placeholder: 'username',                    href: 'https://pinterest.com/' },
+    { id: 'reddit',       label: 'Reddit',        category: 'social',  color: '#FF5700', icon: '',                                    placeholder: 'username',                    href: 'https://reddit.com/user/' },
+    { id: 'tumblr',       label: 'Tumblr',        category: 'social',  color: '#2C4762', icon: '',                                    placeholder: 'username',                    href: 'https://',     hrefEnd: '.tumblr.com/' },
+    { id: 'quora',        label: 'Quora',         category: 'social',  color: '#A82400', icon: '',                                    placeholder: 'username',                    href: 'https://quora.com/' },
+    { id: 'medium',       label: 'Medium',        category: 'social',  color: '#000000', icon: '',                                    placeholder: 'https://medium.com/@username' },
+    { id: 'discord',      label: 'Discord',       category: 'social',  color: '#5865F2', icon: '',                                    placeholder: 'https://discord.gg/invitecode' },
+    { id: 'twitch',       label: 'Twitch',        category: 'social',  color: '#9146FF', icon: '',                                    placeholder: 'username',                    href: 'https://twitch.tv/' },
+    { id: 'spotify',      label: 'Spotify',       category: 'social',  color: '#1ED760', icon: '', light: true,                         placeholder: 'username',                    href: 'https://open.spotify.com/user/' },
+    { id: 'soundcloud',   label: 'Soundcloud',    category: 'social',  color: '#FF3300', icon: '',                                    placeholder: 'username',                    href: 'https://soundcloud.com/' },
+    { id: 'funkwhale',    label: 'Funkwhale',     category: 'social',  color: '#333', icon: '',                                        placeholder: 'https://funkwhale.audio/username' },
+    { id: 'github',       label: 'GitHub',        category: 'social',  color: '#24292e', icon: '',                                    placeholder: 'username',                    href: 'https://github.com/' },
+    { id: 'gitlab',       label: 'GitLab',        category: 'social',  color: '#171321', icon: '',                                    placeholder: 'username',                    href: 'https://gitlab.com/' },
+    { id: 'codeberg',     label: 'Codeberg',      category: 'social',  color: '#2185d0', icon: '',                                    placeholder: 'username',                    href: 'https://codeberg.org/' },
+    { id: 'behance',      label: 'Behance',       category: 'social',  color: '#1769FF', icon: '',                                    placeholder: 'username',                    href: 'https://behance.net/' },
+    { id: 'dribbble',     label: 'Dribbble',      category: 'social',  color: '#EA4C89', icon: '',                                    placeholder: 'username',                    href: 'https://dribbble.com/' },
+    { id: 'artstation',   label: 'ArtStation',    category: 'social',  color: '#171717', icon: '',                                    placeholder: 'username',                    href: 'https://www.artstation.com/' },
+    { id: 'vk',           label: 'VK',            category: 'social',  color: '#4A76A8', icon: '',                                    placeholder: 'pagename',                    href: 'https://vk.com/' },
+    { id: 'patreon',      label: 'Patreon',       category: 'social',  color: '#FF424D', icon: '',                                    placeholder: 'username',                    href: 'https://patreon.com/' },
+    { id: 'paypal',       label: 'PayPal',        category: 'social',  color: '#003087', icon: '',                                    placeholder: 'username',                    href: 'https://paypal.me/' },
+    { id: 'opencollective', label: 'Open Collective', category: 'social', color: '#ffffff', icon: '', light: true,                    placeholder: 'projectname',                 href: 'https://opencollective.com/' },
+    { id: 'buymeacoffee', label: 'Buy me a coffee', category: 'social', color: '#FFDD00', icon: '', light: true,                      placeholder: 'username',                    href: 'https://www.buymeacoffee.com/' },
+    { id: 'cashapp',      label: 'Cash App',      category: 'social',  color: '#00D632', icon: '', light: true,                         placeholder: '$username',                   href: 'https://cash.app/$' },
+    { id: 'yelp',         label: 'Yelp',          category: 'social',  color: '#FF1A1A', icon: '',                                    placeholder: 'bizname',                     href: 'https://yelp.com/' },
+    { id: 'appstore',     label: 'App Store',     category: 'social',  color: '#147efb', icon: '',                                    placeholder: 'https://apps.apple.com/…' },
+    { id: 'playstore',    label: 'Play Store',    category: 'social',  color: '#ffffff', icon: '', light: true,                         placeholder: 'https://play.google.com/store/…' },
+    { id: 'siilo',        label: 'Siilo',         category: 'social',  color: '#17233b', icon: '',                                    placeholder: 'userID',                      href: 'https://app.siilo.com/qr/' },
 ]
 
 const getPlatform = (id: string) =>
-    PLATFORMS.find((p) => p.id === id) ?? { id, label: id, color: '#444', icon: '', placeholder: '' }
+    PLATFORMS.find((p) => p.id === id) ?? { id, label: id, color: '#555', icon: '', placeholder: '', category: 'social' as const }
 
 interface Analytics {
     views: number
@@ -121,67 +174,104 @@ const hasProtocol = (value: string) => /^[a-z][a-z\d+.-]*:/i.test(value)
 const normalizeSocialInput = (type: string, rawValue: string) => {
     const value = rawValue.trim()
     if (!value) return ''
+    if (hasProtocol(value)) return value
 
     const kind = type.toLowerCase()
-    const cleaned = value.replace(/^@/, '')
-    const digits = value.replace(/[^\d+]/g, '')
+    const cleaned = value.replace(/^@/, '').replace(/^\$/, '')
     const digitsOnly = value.replace(/\D/g, '')
 
+    // ── Contacts ──────────────────────────────────────────────
     if (kind === 'email') {
-        if (value.startsWith('mailto:')) return value
         return /@/.test(value) ? `mailto:${value}` : value
     }
 
-    if (kind === 'phone') {
-        if (value.startsWith('tel:')) return value
-        if (digits) return `tel:${digits.startsWith('+') ? digits : `+${digitsOnly}`}`
+    if (kind === 'phone' || kind === 'mobile' || kind === 'office' || kind === 'home') {
+        if (digitsOnly) return `tel:${value.startsWith('+') ? value.replace(/\s/g, '') : `+${digitsOnly}`}`
         return value
     }
 
+    if (kind === 'sms') {
+        return `sms:${digitsOnly ? (value.startsWith('+') ? value.replace(/\s/g, '') : `+${digitsOnly}`) : cleaned}`
+    }
+
     if (kind === 'whatsapp') {
-        if (value.includes('wa.me/') || value.includes('whatsapp.com/') || hasProtocol(value)) return value
+        if (value.includes('wa.me/') || value.includes('whatsapp.com/')) return value
         if (digitsOnly) return `https://wa.me/${digitsOnly}`
         return `https://wa.me/${cleaned}`
     }
 
-    if (kind === 'telegram') {
-        if (value.includes('t.me/') || hasProtocol(value)) return value
-        return `https://t.me/${cleaned}`
-    }
-
     if (kind === 'viber') {
-        if (value.startsWith('viber://') || hasProtocol(value)) return value
-        if (digits) return `viber://chat?number=${digits.startsWith('+') ? digits : `+${digitsOnly}`}`
+        if (value.startsWith('viber://')) return value
+        if (digitsOnly) return `viber://chat?number=${value.startsWith('+') ? value.replace(/\s/g, '') : `+${digitsOnly}`}`
         return `viber://chat?number=${cleaned}`
     }
 
+    if (kind === 'wechat') return `weixin://dl/chat?${cleaned}`
+    if (kind === 'xmpp') return `xmpp:${value}`
+
+    if (kind === 'skype') {
+        return `skype:${cleaned}?chat`
+    }
+
+    // ── Social networks ───────────────────────────────────────
     if (kind === 'instagram') {
-        if (value.includes('instagram.com/') || hasProtocol(value)) return value
+        if (value.includes('instagram.com/')) return value
         return `https://instagram.com/${cleaned}`
     }
 
-    if (kind === 'tiktok') {
-        if (value.includes('tiktok.com/') || hasProtocol(value)) return value
-        return `https://www.tiktok.com/${cleaned.startsWith('@') ? cleaned : `@${cleaned}`}`
-    }
-
     if (kind === 'facebook') {
-        if (value.includes('facebook.com/') || hasProtocol(value)) return value
+        if (value.includes('facebook.com/')) return value
         return `https://facebook.com/${cleaned}`
     }
 
+    if (kind === 'twitter') {
+        if (value.includes('twitter.com/') || value.includes('x.com/')) return value
+        return `https://twitter.com/${cleaned}`
+    }
+
     if (kind === 'linkedin') {
-        if (value.includes('linkedin.com/') || hasProtocol(value)) return value
+        if (value.includes('linkedin.com/')) return value
         return `https://www.linkedin.com/in/${cleaned.replace(/^in\//, '')}`
     }
 
     if (kind === 'youtube') {
-        if (value.includes('youtube.com/') || value.includes('youtu.be/') || hasProtocol(value)) return value
+        if (value.includes('youtube.com/') || value.includes('youtu.be/')) return value
         if (cleaned.startsWith('UC')) return `https://www.youtube.com/channel/${cleaned}`
         return `https://www.youtube.com/@${cleaned}`
     }
 
-    return hasProtocol(value) ? value : `https://${value}`
+    if (kind === 'tiktok') {
+        if (value.includes('tiktok.com/')) return value
+        const handle = cleaned.startsWith('@') ? cleaned : `@${cleaned}`
+        return `https://www.tiktok.com/${handle}`
+    }
+
+    if (kind === 'snapchat') {
+        if (value.includes('snapchat.com/')) return value
+        return `https://www.snapchat.com/add/${cleaned}`
+    }
+
+    if (kind === 'tumblr') {
+        return `https://${cleaned}.tumblr.com/`
+    }
+
+    if (kind === 'reddit') {
+        if (value.includes('reddit.com/')) return value
+        return `https://reddit.com/user/${cleaned}`
+    }
+
+    if (kind === 'cashapp') {
+        const handle = value.startsWith('$') ? value : `$${cleaned}`
+        return `https://cash.app/${handle}`
+    }
+
+    // ── Generic: use platform href prefix ─────────────────────
+    const platform = PLATFORMS.find((p) => p.id === kind)
+    if (platform?.href) {
+        return `${platform.href}${cleaned}${platform.hrefEnd ?? ''}`
+    }
+
+    return `https://${value}`
 }
 
 const normalizeLinksForSave = (links: LinkItem[]) => links.map((link) => ({
@@ -218,6 +308,7 @@ export default function Dashboard() {
     const [saving, setSaving] = useState(false)
     const [dragIndex, setDragIndex] = useState<number | null>(null)
     const [showLinkPicker, setShowLinkPicker] = useState(false)
+    const [filterPicker, setFilterPicker] = useState('')
     const [galleryView, setGalleryView] = useState<'grid' | 'list'>('grid')
     const [previewUrl, setPreviewUrl] = useState<string>('')
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light')
@@ -471,45 +562,19 @@ export default function Dashboard() {
                 {selectedSection === 'social-links' && cardData && (
                     <section className="glass-card section-stack">
                         <div className="section-head-row">
-                            <h3>Social Links</h3>
-                            <button
-                                type="button"
-                                className="admin-ghost"
-                                onClick={() => setShowLinkPicker((v) => !v)}
-                            >
-                                {showLinkPicker ? '✕ Закрыть' : '+ Добавить'}
-                            </button>
+                            <h3>Контакты и ссылки</h3>
+                            {!showLinkPicker && (
+                                <button
+                                    type="button"
+                                    className="admin-ghost"
+                                    onClick={() => { setShowLinkPicker(true); setFilterPicker('') }}
+                                >
+                                    + Добавить
+                                </button>
+                            )}
                         </div>
 
-                        {/* ── Platform picker grid ── */}
-                        {showLinkPicker && (
-                            <div className="link-picker-grid">
-                                {PLATFORMS.map((platform) => (
-                                    <button
-                                        key={platform.id}
-                                        type="button"
-                                        className="link-picker-btn"
-                                        onClick={() => {
-                                            updateCard({ links: [...cardData.links, { type: platform.id, url: '', is_visible: true }] })
-                                            setShowLinkPicker(false)
-                                        }}
-                                    >
-                                        <span
-                                            className="link-picker-icon"
-                                            style={{ background: platform.color }}
-                                        >
-                                            {platform.icon
-                                                ? <img src={platform.icon} alt="" />
-                                                : <span>{platform.label[0]}</span>
-                                            }
-                                        </span>
-                                        <span className="link-picker-label">{platform.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* ── Link rows ── */}
+                        {/* ── Active link rows ── */}
                         {cardData.links.map((link, index) => {
                             const platform = getPlatform(link.type)
                             return (
@@ -521,13 +586,11 @@ export default function Dashboard() {
                                     onDragOver={(e) => e.preventDefault()}
                                     onDrop={() => handleDropLinks(index)}
                                 >
-                                    <span className="link-row-drag" title="Drag to reorder">⋮⋮</span>
+                                    <span className="link-row-drag">⋮⋮</span>
 
-                                    {/* Icon badge */}
                                     <span
                                         className="link-row-badge"
                                         style={{ background: platform.color }}
-                                        title={platform.label}
                                     >
                                         {platform.icon
                                             ? <img src={platform.icon} alt={platform.label} />
@@ -535,27 +598,27 @@ export default function Dashboard() {
                                         }
                                     </span>
 
-                                    {/* Input */}
-                                    <input
-                                        className="link-row-input"
-                                        value={link.url}
-                                        placeholder={platform.placeholder}
-                                        onChange={(e) => {
-                                            const next = [...cardData.links]
-                                            next[index] = { ...next[index], url: e.target.value }
-                                            updateCard({ links: next })
-                                        }}
-                                        onBlur={(e) => {
-                                            const normalized = normalizeSocialInput(link.type, e.target.value)
-                                            if (normalized === e.target.value) return
-                                            const next = [...cardData.links]
-                                            next[index] = { ...next[index], url: normalized }
-                                            updateCard({ links: next })
-                                        }}
-                                        aria-label={`${platform.label} URL`}
-                                    />
+                                    <div className="link-row-body">
+                                        <span className="link-row-label">{platform.label}</span>
+                                        <input
+                                            value={link.url}
+                                            placeholder={platform.placeholder}
+                                            onChange={(e) => {
+                                                const next = [...cardData.links]
+                                                next[index] = { ...next[index], url: e.target.value }
+                                                updateCard({ links: next })
+                                            }}
+                                            onBlur={(e) => {
+                                                const normalized = normalizeSocialInput(link.type, e.target.value)
+                                                if (normalized === e.target.value) return
+                                                const next = [...cardData.links]
+                                                next[index] = { ...next[index], url: normalized }
+                                                updateCard({ links: next })
+                                            }}
+                                            aria-label={`${platform.label} URL`}
+                                        />
+                                    </div>
 
-                                    {/* Visible toggle */}
                                     <button
                                         type="button"
                                         className={`link-row-vis${link.is_visible ? ' is-on' : ''}`}
@@ -566,18 +629,15 @@ export default function Dashboard() {
                                             updateCard({ links: next })
                                         }}
                                     >
-                                        {link.is_visible ? '👁' : '🚫'}
+                                        {link.is_visible ? '👁' : '🙈'}
                                     </button>
 
-                                    {/* Remove */}
                                     <button
                                         type="button"
                                         className="link-row-remove"
                                         title="Удалить"
-                                        onClick={() => {
-                                            const next = cardData.links.filter((_, i) => i !== index)
-                                            updateCard({ links: next })
-                                        }}
+                                        onClick={() => updateCard({ links: cardData.links.filter((_, i) => i !== index) })
+                                        }
                                     >
                                         ✕
                                     </button>
@@ -587,6 +647,59 @@ export default function Dashboard() {
 
                         {cardData.links.length === 0 && !showLinkPicker && (
                             <p className="link-empty">Нет ссылок. Нажмите «+ Добавить» чтобы выбрать платформу.</p>
+                        )}
+
+                        {/* ── Platform picker ── */}
+                        {showLinkPicker && (
+                            <div className="link-picker-wrap">
+                                <input
+                                    className="link-picker-search"
+                                    type="text"
+                                    placeholder="Search an action"
+                                    value={filterPicker}
+                                    onChange={(e) => setFilterPicker(e.target.value)}
+                                    autoFocus
+                                />
+                                {(() => {
+                                    const q = filterPicker.trim().toLowerCase()
+                                    const filtered = PLATFORMS.filter((p) =>
+                                        p.label.toLowerCase().includes(q)
+                                    )
+                                    if (!filtered.length) return (
+                                        <p className="link-empty">Платформа не найдена</p>
+                                    )
+                                    return (
+                                        <div className="link-picker-grid">
+                                            {filtered.map((p) => (
+                                                <button
+                                                    key={p.id}
+                                                    type="button"
+                                                    className={`link-picker-btn${p.light ? ' is-light' : ''}`}
+                                                    style={{ background: p.color }}
+                                                    onClick={() => {
+                                                        updateCard({ links: [...cardData.links, { type: p.id, url: '', is_visible: true }] })
+                                                        setShowLinkPicker(false)
+                                                        setFilterPicker('')
+                                                    }}
+                                                >
+                                                    {p.icon
+                                                        ? <img src={p.icon} alt="" />
+                                                        : <span className="link-picker-abbr">{p.label.slice(0, 2)}</span>
+                                                    }
+                                                    <span>{p.label}</span>
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )
+                                })()}
+                                <button
+                                    type="button"
+                                    className="link-picker-cancel"
+                                    onClick={() => { setShowLinkPicker(false); setFilterPicker('') }}
+                                >
+                                    Закрыть
+                                </button>
+                            </div>
                         )}
                     </section>
                 )}
