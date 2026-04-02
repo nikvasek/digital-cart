@@ -1,5 +1,6 @@
 import Fastify from 'fastify'
 import cors from '@fastify/cors'
+import compress from '@fastify/compress'
 import jwt from '@fastify/jwt'
 import multipart from '@fastify/multipart'
 import staticFiles from '@fastify/static'
@@ -211,6 +212,11 @@ const ensureCoreSchema = async () => {
 }
 
 // Плагины
+await fastify.register(compress, {
+  encodings: ['br', 'gzip', 'deflate'],
+  threshold: 1024, // only compress responses > 1 KB
+})
+
 await fastify.register(cors, {
   origin: config.nodeEnv === 'production'
     ? (process.env.FRONTEND_URL || true)

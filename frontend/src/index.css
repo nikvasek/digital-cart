@@ -1365,3 +1365,20 @@ code {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Skeleton loader ─────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+.skeleton-pulse {
+  background: linear-gradient(
+    90deg,
+    #222 25%,
+    #2e2e2e 50%,
+    #222 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}

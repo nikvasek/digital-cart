@@ -323,8 +323,33 @@ export default function PublicCard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
-        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-gray-300"></div>
+      <div className="min-h-screen bg-[#0f0f0f]">
+        <div className="mx-auto w-full sm:max-w-[430px]">
+          <div className="home-card-frame relative w-full overflow-hidden bg-[#1a1a1a]">
+            {/* Avatar skeleton */}
+            <div className="skeleton-pulse absolute rounded-full border border-[#333]"
+              style={{ left: '8.267%', top: '4.878%', width: '27.467%', aspectRatio: '1/1', zIndex: 25 }} />
+            {/* Name skeleton */}
+            <div className="skeleton-pulse absolute rounded-md"
+              style={{ left: '8%', top: '14%', width: '38%', height: '5%', zIndex: 26 }} />
+            {/* Bio line skeleton */}
+            <div className="skeleton-pulse absolute rounded-md"
+              style={{ left: '8%', top: '21%', width: '30%', height: '2.5%', zIndex: 26 }} />
+            {/* Title skeleton */}
+            <div className="skeleton-pulse absolute rounded-md"
+              style={{ left: '8%', top: '25%', width: '35%', height: '2%', zIndex: 26 }} />
+            {/* Contact rows skeleton */}
+            {[32, 37, 42, 47, 52, 57, 62, 67].map((top) => (
+              <div key={top} className="skeleton-pulse absolute rounded-md"
+                style={{ left: '8%', top: `${top}%`, width: '40%', height: '3.5%', zIndex: 26 }} />
+            ))}
+            {/* Action buttons skeleton */}
+            {[75, 81, 87, 93].map((top) => (
+              <div key={top} className="skeleton-pulse absolute rounded-xl"
+                style={{ left: '56%', top: `${top}%`, width: '38%', height: '4.5%', zIndex: 26 }} />
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -381,7 +406,7 @@ export default function PublicCard() {
           <div className="dbc-contacts" aria-label="Contacts">
             {contactRows.map((row) => (
               <button key={row.id} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
-                <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" />
+                <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
                 <span className="dbc-contact-label">{row.label}</span>
               </button>
             ))}
@@ -389,23 +414,23 @@ export default function PublicCard() {
 
           <div className="dbc-actions" aria-label="Actions">
             <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
-              <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
               <span className="dbc-action-text">Save contact</span>
             </button>
             <button type="button" className="dbc-action-btn" onClick={() => setShowQR(true)} aria-label="Show QR">
-              <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
               <span className="dbc-action-text">Show QR</span>
             </button>
             <button type="button" className="dbc-action-btn dbc-action-btn--gold" onClick={() => setShowLeadForm((prev) => !prev)} aria-label="Book now">
-              <img src={figmaAsset('Rectangle 66@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <img src={figmaAsset('Rectangle 66@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
               <span className="dbc-action-text dbc-action-text--gold">BOOK NOW</span>
             </button>
             <button type="button" className="dbc-action-btn" onClick={() => void addToHomeHint()} aria-label="Add to Home">
-              <img src={figmaAsset('Rectangle 72@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <img src={figmaAsset('Rectangle 72@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
               <span className="dbc-action-text">Add to Home</span>
             </button>
             <button type="button" className="dbc-action-btn" onClick={() => void handleShare()} aria-label="Share">
-              <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" />
+              <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
               <span className="dbc-action-text">SHARE</span>
             </button>
           </div>

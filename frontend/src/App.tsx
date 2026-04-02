@@ -1,25 +1,30 @@
+import { Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import PublicCard from './pages/PublicCard'
-import AdminLogin from './pages/admin/Login'
-import AdminDashboard from './pages/admin/Dashboard'
-import AdminEditor from './pages/admin/Editor'
+
+// Admin routes are lazy-loaded — they add ~150 KB that public visitors never need
+const AdminLogin = lazy(() => import('./pages/admin/Login'))
+const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'))
+const AdminEditor = lazy(() => import('./pages/admin/Editor'))
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/paulline-ferreira" replace />} />
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/paulline-ferreira" replace />} />
 
-        {/* Публичная визитка */}
-        <Route path="/:slug" element={<PublicCard />} />
-        
-        {/* Админ-панель */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/card/:id" element={<AdminEditor />} />
-        
-        <Route path="*" element={<Navigate to="/paulline-ferreira" replace />} />
-      </Routes>
+          {/* Публичная визитка */}
+          <Route path="/:slug" element={<PublicCard />} />
+
+          {/* Админ-панель (lazy) */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/card/:id" element={<AdminEditor />} />
+
+          <Route path="*" element={<Navigate to="/paulline-ferreira" replace />} />
+        </Routes>
+      </Suspense>
     </Router>
   )
 }
