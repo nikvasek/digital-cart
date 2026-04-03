@@ -374,6 +374,7 @@ const defaultCardDetails = (card: CardItem): CardDetails => ({
 export default function Dashboard() {
     const navigate = useNavigate()
     const mobileNavRefs = useRef<Partial<Record<SectionId, HTMLButtonElement | null>>>({})
+    const mediaInputRef = useRef<HTMLInputElement | null>(null)
     const [cards, setCards] = useState<CardItem[]>([])
     const [analytics, setAnalytics] = useState<Analytics | null>(null)
     const [selectedCardId, setSelectedCardId] = useState<string>('')
@@ -386,6 +387,7 @@ export default function Dashboard() {
     const [galleryView, setGalleryView] = useState<'grid' | 'list'>('grid')
     const [previewUrl, setPreviewUrl] = useState<string>('')
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light')
+    const [uploadingMedia, setUploadingMedia] = useState(false)
 
     useEffect(() => {
         void loadData()
@@ -501,6 +503,51 @@ export default function Dashboard() {
         if (dragIndex === null || !cardData) return
         setCardData({ ...cardData, media: reorder(cardData.media, dragIndex, toIndex) })
         setDragIndex(null)
+    }
+
+    const uploadGalleryFiles = async (fileList: FileList | null) => {
+        if (!cardData || !fileList || fileList.length === 0) return
+
+        setUploadingMedia(true)
+        try {
+            const token = localStorage.getItem('token')
+            const uploadedUrls: string[] = []
+
+            for (const file of Array.from(fileList)) {
+                const formData = new FormData()
+                formData.append('file', file)
+
+                const response = await axios.post('/api/admin/media/upload', formData, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                })
+
+                if (response.data?.url) {
+                    uploadedUrls.push(response.data.url)
+                }
+            }
+
+            if (uploadedUrls.length > 0) {
+                setCardData((prev) => {
+                    if (!prev) return prev
+                    return {
+                        ...prev,
+                        media: [
+                            ...prev.media,
+                            ...uploadedUrls.map((url) => ({ file_url: url, type: 'image' as const }))
+                        ]
+                    }
+                })
+            }
+        } catch (error: any) {
+            const message = error?.response?.data?.error || 'Upload failed'
+            alert(`Не удалось загрузить изображение: ${message}`)
+        } finally {
+            if (mediaInputRef.current) mediaInputRef.current.value = ''
+            setUploadingMedia(false)
+        }
     }
 
     const logout = () => {
@@ -815,6 +862,24 @@ export default function Dashboard() {
                         <div className="section-head-row">
                             <h3>Галерея</h3>
                             <div className="view-toggle">
+                                <input
+                                    ref={mediaInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    style={{ display: 'none' }}
+                                    onChange={(e) => {
+                                        void uploadGalleryFiles(e.target.files)
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    className="admin-ghost"
+                                    disabled={uploadingMedia}
+                                    onClick={() => mediaInputRef.current?.click()}
+                                >
+                                    {uploadingMedia ? 'Загрузка…' : 'Загрузить фото'}
+                                </button>
                                 <button type="button" className={galleryView === 'grid' ? 'is-active' : ''} onClick={() => setGalleryView('grid')}>Сетка</button>
                                 <button type="button" className={galleryView === 'list' ? 'is-active' : ''} onClick={() => setGalleryView('list')}>Список</button>
                             </div>

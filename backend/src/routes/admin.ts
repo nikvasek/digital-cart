@@ -1,6 +1,11 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db/index.js'
+import { config } from '../config/index.js'
 import QRCode from 'qrcode'
+import { v2 as cloudinary } from 'cloudinary'
+import { randomUUID } from 'node:crypto'
+import { mkdir, writeFile } from 'node:fs/promises'
+import path from 'node:path'
 
 const normalizeString = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
 
@@ -19,6 +24,26 @@ const isValidUrl = (value: string) => {
 
 const isValidEmail = (value: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+const getFileExtensionFromMime = (mime: string) => {
+  if (mime === 'image/jpeg') return 'jpg'
+  if (mime === 'image/png') return 'png'
+  if (mime === 'image/webp') return 'webp'
+  if (mime === 'image/gif') return 'gif'
+  return 'bin'
+}
+
+const extractCloudinaryPublicId = (secureUrl: string) => {
+  // https://res.cloudinary.com/<cloud>/image/upload/v123/folder/name.jpg -> folder/name
+  const marker = '/upload/'
+  const idx = secureUrl.indexOf(marker)
+  if (idx === -1) return secureUrl
+
+  let tail = secureUrl.slice(idx + marker.length)
+  tail = tail.replace(/^v\d+\//, '')
+  tail = tail.replace(/\.[^.\/]+$/, '')
+  return tail
 }
 
 const getCardValidationErrors = (payload: {
@@ -117,6 +142,76 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   // Все маршруты требуют авторизации
   const authGuard = (fastify as any).authenticate
   fastify.addHook('onRequest', authGuard)
+
+  // Upload media (Cloudinary or local fallback)
+  fastify.post('/media/upload', async (request, reply) => {
+    try {
+      const part = await (request as any).file({ limits: { fileSize: 15 * 1024 * 1024 } })
+      if (!part) {
+        return reply.code(400).send({ error: 'File is required' })
+      }
+
+      const mimeType = (part.mimetype || '').toLowerCase()
+      if (!mimeType.startsWith('image/')) {
+        return reply.code(400).send({ error: 'Only image files are allowed' })
+      }
+
+      const fileBuffer = await part.toBuffer()
+      if (!fileBuffer.length) {
+        return reply.code(400).send({ error: 'Uploaded file is empty' })
+      }
+
+      if (config.storageType === 'cloudinary') {
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME
+        const apiKey = process.env.CLOUDINARY_API_KEY
+        const apiSecret = process.env.CLOUDINARY_API_SECRET
+
+        if (!cloudName || !apiKey || !apiSecret) {
+          return reply.code(500).send({ error: 'Cloudinary is not configured' })
+        }
+
+        cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret })
+        const folder = process.env.CLOUDINARY_FOLDER || 'digital_cart/gallery'
+
+        const uploaded = await new Promise<{ secure_url: string }>((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              folder,
+              resource_type: 'image',
+              use_filename: true,
+              unique_filename: true,
+              overwrite: false,
+              quality: 'auto',
+              fetch_format: 'auto'
+            },
+            (error, result) => {
+              if (error || !result?.secure_url) {
+                reject(error || new Error('Cloudinary upload failed'))
+                return
+              }
+              resolve({ secure_url: result.secure_url })
+            }
+          )
+
+          stream.end(fileBuffer)
+        })
+
+        return { url: uploaded.secure_url, type: 'image', public_id: extractCloudinaryPublicId(uploaded.secure_url) }
+      }
+
+      const uploadsDir = path.resolve(process.cwd(), 'uploads')
+      await mkdir(uploadsDir, { recursive: true })
+      const ext = getFileExtensionFromMime(mimeType)
+      const fileName = `${Date.now()}-${randomUUID()}.${ext}`
+      const fullPath = path.join(uploadsDir, fileName)
+      await writeFile(fullPath, fileBuffer)
+
+      return { url: `/uploads/${fileName}`, type: 'image' }
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.code(500).send({ error: 'Failed to upload media' })
+    }
+  })
 
   // Получить список визиток пользователя
   fastify.get('/cards', async (request, reply) => {
