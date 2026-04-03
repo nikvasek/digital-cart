@@ -342,6 +342,19 @@ const toAddressLabel = (value: string) => {
     return compactAddress(trimmed).slice(0, 255)
 }
 
+const resolveMediaUrl = (value?: string) => {
+    const raw = (value || '').trim()
+    if (!raw) return ''
+    if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:') || raw.startsWith('blob:')) return raw
+
+    const apiBase = (axios.defaults.baseURL || '').toString().replace(/\/$/, '')
+    if (raw.startsWith('/')) {
+        return apiBase ? `${apiBase}${raw}` : raw
+    }
+
+    return raw
+}
+
 const getCoreFieldsFromLinks = (links: LinkItem[], current: Pick<CardDetails, 'phone' | 'email' | 'address'>) => {
     const phoneRaw = getFirstLinkValue(links, ['phone', 'mobile', 'office', 'home'])
     const emailRaw = getFirstLinkValue(links, ['email'])
@@ -785,7 +798,7 @@ export default function Dashboard() {
                         <div className="glass-card live-preview">
                             <h3>Предпросмотр</h3>
                             <div className="preview-card">
-                                <img src={cardData.avatar_url || cardData.logo_url || '/figma/home-from-pdf.webp'} alt="avatar" loading="lazy" />
+                                <img src={resolveMediaUrl(cardData.avatar_url || cardData.logo_url) || '/figma/home-from-pdf.webp'} alt="avatar" loading="lazy" />
                                 <h4>{cardData.full_name || 'Имя'}</h4>
                                 <p>{cardData.title || 'Должность'}</p>
                                 <small>{cardData.bio || 'Описание будет здесь'}</small>
@@ -998,7 +1011,7 @@ export default function Dashboard() {
                                     onDragOver={(e) => e.preventDefault()}
                                     onDrop={() => handleDropMedia(index)}
                                 >
-                                    <img src={item.file_url} alt="media" loading="lazy" onClick={() => setPreviewUrl(item.file_url)} />
+                                    <img src={resolveMediaUrl(item.file_url)} alt="media" loading="lazy" onClick={() => setPreviewUrl(resolveMediaUrl(item.file_url))} />
                                     <div>
                                         <strong>{item.type || 'фото'}</strong>
                                         <small>{item.file_url.includes('video') ? 'Видео' : 'Фото'}</small>

@@ -113,11 +113,25 @@ const resolveAvatarSrc = (value?: string) => {
     return avatarFallbackSrc
   }
 
-  return avatarUrl
+  return resolveMediaUrl(avatarUrl)
+}
+
+const resolveMediaUrl = (value?: string) => {
+  const raw = (value || '').trim()
+  if (!raw) return ''
+  if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:') || raw.startsWith('blob:')) return raw
+
+  const apiBase = (axios.defaults.baseURL || '').toString().replace(/\/$/, '')
+  if (raw.startsWith('/')) {
+    return apiBase ? `${apiBase}${raw}` : raw
+  }
+
+  return raw
 }
 
 const toExternalUrl = (url: string) => {
   if (!url) return url
+  if (url.startsWith('/')) return resolveMediaUrl(url)
   return /^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`
 }
 
@@ -310,7 +324,8 @@ export default function PublicCard() {
 
     const firstImage = card?.media?.find((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url)?.file_url
     if (firstImage) {
-      window.location.href = toExternalUrl(firstImage)
+      const resolvedImage = resolveMediaUrl(firstImage)
+      if (resolvedImage) window.location.href = resolvedImage
     }
   }
 
