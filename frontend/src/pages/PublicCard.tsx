@@ -3,7 +3,6 @@ import type { FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
-import { getPlatform } from '../lib/platforms'
 
 interface CardData {
   id: string
@@ -33,9 +32,25 @@ type ContactRow = {
   isVisible: boolean
 }
 
+type ChannelItem = {
+  id: string
+  label: string
+  icon: string
+  onClick: () => void
+}
+
 const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
 const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.webp')
 const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.webp')
+
+const ICON_ALIASES: Record<string, string> = {
+  mobile: 'phone',
+  office: 'phone',
+  home: 'phone',
+  website: 'website',
+  appstore: 'appstore',
+  playstore: 'playstore'
+}
 
 
 const resolveAvatarSrc = (value?: string) => {
@@ -54,6 +69,12 @@ const resolveAvatarSrc = (value?: string) => {
 const toExternalUrl = (url: string) => {
   if (!url) return url
   return /^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`
+}
+
+const formatChannelLabel = (value: string) => {
+  const normalized = value.replace(/[_-]+/g, ' ').trim().toLowerCase()
+  if (!normalized) return value
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1)
 }
 
 const formatPhoneDisplay = (value: string) => {
@@ -124,8 +145,8 @@ export default function PublicCard() {
   const [loadError, setLoadError] = useState(false)
   const [showLeadForm, setShowLeadForm] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const [showMoreContacts, setShowMoreContacts] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [showAllLinks, setShowAllLinks] = useState(false)
 
   useEffect(() => {
     void loadCard()
@@ -209,6 +230,29 @@ export default function PublicCard() {
     if (firstImage) {
       window.location.href = toExternalUrl(firstImage)
     }
+  }
+
+  const resolveChannelIcon = (type: string) => {
+    const key = type.toLowerCase().trim()
+    return `/icons/${ICON_ALIASES[key] || key}.svg`
+  }
+
+  const openChannelByType = (type: string, url: string) => {
+    const key = type.toLowerCase()
+    trackEvent('click', { link_type: key })
+
+    if (key === 'email') {
+      window.location.href = /^mailto:/i.test(url) ? url : `mailto:${url}`
+      return
+    }
+
+    if (key === 'phone' || key === 'mobile' || key === 'office' || key === 'home') {
+      const digits = url.replace(/\s+/g, '')
+      window.location.href = /^tel:/i.test(digits) ? digits : `tel:${digits}`
+      return
+    }
+
+    window.location.href = toExternalUrl(url)
   }
 
   const handleSaveContact = () => {
@@ -343,6 +387,68 @@ export default function PublicCard() {
      .sort((a, b) => (a.id === 'location' ? 1 : b.id === 'location' ? -1 : 0))
   }, [card])
 
+  const moreChannelItems = useMemo<ChannelItem[]>(() => {
+    if (!card) return []
+
+    const items: ChannelItem[] = []
+    const pushUnique = (next: ChannelItem) => {
+      if (!items.some((item) => item.id === next.id)) items.push(next)
+    }
+
+    for (const link of card.links || []) {
+      if (!link?.is_visible || !link?.url) continue
+      const id = link.type.toLowerCase()
+      pushUnique({
+        id,
+        label: formatChannelLabel(id),
+        icon: resolveChannelIcon(id),
+        onClick: () => openChannelByType(id, link.url)
+      })
+    }
+
+    if (card.phone && !items.some((item) => ['phone', 'mobile', 'office', 'home'].includes(item.id))) {
+      pushUnique({
+        id: 'phone',
+        label: 'Phone',
+        icon: resolveChannelIcon('phone'),
+        onClick: openTel
+      })
+    }
+
+    if (card.email && !items.some((item) => item.id === 'email')) {
+      pushUnique({
+        id: 'email',
+        label: 'Email',
+        icon: resolveChannelIcon('email'),
+        onClick: openEmail
+      })
+    }
+
+    if ((getLinkByType('location') || card.address) && !items.some((item) => item.id === 'location')) {
+      pushUnique({
+        id: 'location',
+        label: 'Location',
+        icon: resolveChannelIcon('location'),
+        onClick: openLocation
+      })
+    }
+
+    if (
+      (card.portfolio_url
+      || card.media?.some((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url))
+      && !items.some((item) => item.id === 'gallery')
+    ) {
+      pushUnique({
+        id: 'gallery',
+        label: 'Gallery',
+        icon: resolveChannelIcon('gallery'),
+        onClick: openGallery
+      })
+    }
+
+    return items
+  }, [card])
+
   if (!loading && !card) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
@@ -392,81 +498,21 @@ export default function PublicCard() {
                 </button>
               </div>
 
-              <div className="dbc-contacts" aria-label="Contacts">
+              <div className={`dbc-main-view${showMoreContacts ? ' is-hidden' : ''}`} aria-hidden={showMoreContacts}>
+                <div className="dbc-contacts" aria-label="Contacts">
                 {contactRows.map((row) => (
                   <button key={row.id} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
                     <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
                     <span className={`dbc-contact-label${row.id === 'location' ? ' dbc-contact-label--wrap' : ''}`}>{row.label}</span>
                   </button>
                 ))}
-                {card.links.some((l) => l.is_visible) && (
-                  <button
-                    type="button"
-                    className="dbc-more-btn"
-                    onClick={() => setShowAllLinks(true)}
-                    aria-label="More contacts"
-                  >
-                    More contact...
-                  </button>
-                )}
               </div>
 
-              {/* ── All-links overlay ── */}
-              <div
-                className={`dbc-links-overlay${showAllLinks ? ' dbc-links-overlay--show' : ''}`}
-                aria-hidden={!showAllLinks}
-              >
-                <div className="dbc-links-overlay-head">
-                  <button
-                    type="button"
-                    className="dbc-back-btn"
-                    onClick={() => setShowAllLinks(false)}
-                    aria-label="Back"
-                  >
-                    ←
-                  </button>
-                  <span className="dbc-links-overlay-title">Контакты</span>
-                </div>
+                <button type="button" className="dbc-more-toggle" onClick={() => setShowMoreContacts(true)}>
+                  More contact...
+                </button>
 
-                <div className="dbc-links-icon-grid">
-                  {card.links.filter((l) => l.is_visible && l.url).map((link) => {
-                    const meta = getPlatform(link.type)
-                    return (
-                      <button
-                        key={`${link.type}-${link.url}`}
-                        type="button"
-                        className="dbc-link-icon-btn"
-                        onClick={() => {
-                          trackEvent('click', { link_type: link.type })
-                          window.location.href = toExternalUrl(link.url)
-                        }}
-                        aria-label={meta.label}
-                      >
-                        <span
-                          className="dbc-link-icon-circle"
-                          style={{ background: meta.color }}
-                        >
-                          {meta.icon ? (
-                            <span
-                              className="dbc-link-icon-mask"
-                              style={{
-                                WebkitMaskImage: `url(${meta.icon})`,
-                                maskImage: `url(${meta.icon})`,
-                                backgroundColor: meta.light ? '#222' : '#fff',
-                              } as React.CSSProperties}
-                            />
-                          ) : (
-                            <span className="dbc-link-icon-fallback">{meta.label.slice(0, 2).toUpperCase()}</span>
-                          )}
-                        </span>
-                        <span className="dbc-link-icon-label">{meta.label}</span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="dbc-actions" aria-label="Actions">
+                <div className="dbc-actions" aria-label="Actions">
                 <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
                   <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
                   <span className="dbc-action-text">Save contact</span>
@@ -487,6 +533,39 @@ export default function PublicCard() {
                   <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
                   <span className="dbc-action-text">SHARE</span>
                 </button>
+              </div>
+              </div>
+
+              <div className={`dbc-more-view${showMoreContacts ? ' is-active' : ''}`} aria-hidden={!showMoreContacts}>
+                <button
+                  type="button"
+                  className="dbc-more-back"
+                  onClick={() => setShowMoreContacts(false)}
+                  aria-label="Back"
+                >
+                  ← Назад
+                </button>
+
+                <div className="dbc-more-grid" aria-label="More contacts">
+                  {moreChannelItems.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="dbc-more-item"
+                      onClick={item.onClick}
+                      aria-label={item.label}
+                    >
+                      <span
+                        className="dbc-more-icon"
+                        style={{
+                          WebkitMaskImage: `url(${item.icon})`,
+                          maskImage: `url(${item.icon})`
+                        }}
+                      />
+                      <span className="dbc-more-label">{item.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <button
