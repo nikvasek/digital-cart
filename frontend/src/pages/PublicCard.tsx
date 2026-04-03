@@ -725,7 +725,9 @@ export default function PublicCard() {
                       className="dbc-gallery-item"
                       onClick={() => openGalleryImageAt(idx)}
                     >
-                      <img src={src} alt={`Gallery ${idx + 1}`} loading="lazy" decoding="async" />
+                      <span className="dbc-gallery-thumb">
+                        <img src={src} alt={`Gallery ${idx + 1}`} loading="lazy" decoding="async" />
+                      </span>
                     </button>
                   ))}
                 </div>

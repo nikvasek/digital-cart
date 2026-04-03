@@ -447,7 +447,8 @@ code {
   right: 5.6%;
   display: flex;
   gap: 12px;
-  z-index: 35;
+  z-index: 27;
+  opacity: 0.72;
 }
 
 .dbc-lang-btn {
@@ -460,6 +461,7 @@ code {
   line-height: 1;
   letter-spacing: 0.02em;
   cursor: pointer;
+  opacity: 0.82;
 }
 
 .dbc-contacts {
@@ -823,26 +825,27 @@ code {
   overflow-y: auto;
   overflow-x: hidden;
   align-content: start;
+  align-items: start;
 }
 
 .dbc-gallery-item {
-  position: relative;
   display: block;
   width: 100%;
   border: 0;
   border-radius: 0;
-  overflow: hidden;
   background: transparent;
   padding: 0;
 }
 
-.dbc-gallery-item::before {
-  content: '';
+.dbc-gallery-thumb {
+  position: relative;
   display: block;
+  width: 100%;
   padding-top: 100%;
+  overflow: hidden;
 }
 
-.dbc-gallery-item img {
+.dbc-gallery-thumb img {
   position: absolute;
   inset: 0;
   width: 100%;
