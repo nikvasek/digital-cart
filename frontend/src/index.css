@@ -799,6 +799,7 @@ code {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  overflow: hidden;
   opacity: 0;
   visibility: hidden;
   transform: translateX(24px);
@@ -814,9 +815,11 @@ code {
 
 .dbc-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  overflow: auto;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding-right: 2px;
 }
 
@@ -832,6 +835,24 @@ code {
   aspect-ratio: 1 / 1;
   object-fit: cover;
   display: block;
+}
+
+.dbc-gallery-viewer {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+.dbc-gallery-viewer-image {
+  max-width: 100%;
+  max-height: 88%;
+  border-radius: 12px;
+  object-fit: contain;
 }
 .admin-pin-glow--right {
   right: -110px;

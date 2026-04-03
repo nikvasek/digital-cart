@@ -226,7 +226,8 @@ export default function PublicCard() {
   const [showMoreContacts, setShowMoreContacts] = useState(false)
   const [showServicesMode, setShowServicesMode] = useState(false)
   const [showGalleryMode, setShowGalleryMode] = useState(false)
-  const [galleryPreviewUrl, setGalleryPreviewUrl] = useState<string | null>(null)
+  const [galleryActiveIndex, setGalleryActiveIndex] = useState<number | null>(null)
+  const [viewerTouchStart, setViewerTouchStart] = useState<{ x: number; y: number } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -515,6 +516,27 @@ export default function PublicCard() {
 
   const showAltMode = showMoreContacts || showServicesMode || showGalleryMode
 
+  const openGalleryImageAt = (index: number) => {
+    if (index < 0 || index >= galleryImages.length) return
+    setGalleryActiveIndex(index)
+  }
+
+  const moveGalleryImage = (direction: 'prev' | 'next') => {
+    if (galleryActiveIndex === null || galleryImages.length === 0) return
+
+    if (direction === 'next') {
+      setGalleryActiveIndex((galleryActiveIndex + 1) % galleryImages.length)
+      return
+    }
+
+    setGalleryActiveIndex((galleryActiveIndex - 1 + galleryImages.length) % galleryImages.length)
+  }
+
+  const closeGalleryViewer = () => {
+    setGalleryActiveIndex(null)
+    setViewerTouchStart(null)
+  }
+
   if (!loading && !card) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
@@ -677,7 +699,7 @@ export default function PublicCard() {
                   className="dbc-social-back"
                   onClick={() => {
                     setShowGalleryMode(false)
-                    setGalleryPreviewUrl(null)
+                    closeGalleryViewer()
                   }}
                   aria-label="Back"
                 >
@@ -690,12 +712,46 @@ export default function PublicCard() {
                       key={`${src}-${idx}`}
                       type="button"
                       className="dbc-gallery-item"
-                      onClick={() => setGalleryPreviewUrl(src)}
+                      onClick={() => openGalleryImageAt(idx)}
                     >
                       <img src={src} alt={`Gallery ${idx + 1}`} loading="lazy" decoding="async" />
                     </button>
                   ))}
                 </div>
+
+                {galleryActiveIndex !== null && galleryImages[galleryActiveIndex] && (
+                  <div
+                    className="dbc-gallery-viewer"
+                    onClick={(e) => {
+                      const target = e.currentTarget.getBoundingClientRect()
+                      const isRightSide = (e.clientX - target.left) > target.width / 2
+                      moveGalleryImage(isRightSide ? 'next' : 'prev')
+                    }}
+                    onTouchStart={(e) => {
+                      const touch = e.touches[0]
+                      if (!touch) return
+                      setViewerTouchStart({ x: touch.clientX, y: touch.clientY })
+                    }}
+                    onTouchEnd={(e) => {
+                      const touch = e.changedTouches[0]
+                      if (!touch || !viewerTouchStart) return
+
+                      const dx = touch.clientX - viewerTouchStart.x
+                      const dy = touch.clientY - viewerTouchStart.y
+
+                      if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) {
+                        closeGalleryViewer()
+                        return
+                      }
+
+                      if (Math.abs(dx) > 20) {
+                        moveGalleryImage(dx > 0 ? 'next' : 'prev')
+                      }
+                    }}
+                  >
+                    <img src={galleryImages[galleryActiveIndex]} alt={`Gallery preview ${galleryActiveIndex + 1}`} className="dbc-gallery-viewer-image" />
+                  </div>
+                )}
               </div>
 
               <div className={`dbc-services-mode${showServicesMode ? ' is-active' : ''}`} aria-hidden={!showServicesMode}>
@@ -821,13 +877,6 @@ export default function PublicCard() {
         </div>
       )}
 
-      {galleryPreviewUrl && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setGalleryPreviewUrl(null)}>
-          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-2" onClick={(e) => e.stopPropagation()}>
-            <img src={galleryPreviewUrl} alt="Gallery preview" className="h-auto w-full rounded-xl" />
-          </div>
-        </div>
-      )}
     </div>
   )
 }
