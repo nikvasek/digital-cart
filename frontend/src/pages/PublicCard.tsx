@@ -491,7 +491,7 @@ export default function PublicCard() {
                 decoding="async"
                 draggable={false}
               />
-              <div className="dbc-bg-left" aria-hidden="true" />
+              <div className={`dbc-bg-left${showMoreContacts ? ' dbc-bg-left--plain' : ''}`} aria-hidden="true" />
 
               <div className="dbc-avatar-shell">
                 <img src={resolveAvatarSrc(card.avatar_url)} alt={card.full_name} className="dbc-avatar" fetchPriority="high" loading="eager" decoding="async" />

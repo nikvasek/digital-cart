@@ -367,6 +367,11 @@ code {
   isolation: isolate;
 }
 
+.dbc-bg-left.dbc-bg-left--plain {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .dbc-avatar-shell {
   position: absolute;
   left: 11.267%;
