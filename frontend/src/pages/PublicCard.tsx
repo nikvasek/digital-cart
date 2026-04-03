@@ -225,6 +225,8 @@ export default function PublicCard() {
   const [locationModal, setLocationModal] = useState<{ label: string; mapsUrl: string; embedUrl: string } | null>(null)
   const [showMoreContacts, setShowMoreContacts] = useState(false)
   const [showServicesMode, setShowServicesMode] = useState(false)
+  const [showGalleryMode, setShowGalleryMode] = useState(false)
+  const [galleryPreviewUrl, setGalleryPreviewUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -312,6 +314,13 @@ export default function PublicCard() {
 
   const openGallery = () => {
     trackEvent('click', { link_type: 'gallery' })
+    if (galleryImages.length > 0) {
+      setShowServicesMode(false)
+      setShowMoreContacts(false)
+      setShowGalleryMode(true)
+      return
+    }
+
     const galleryLink = getFirstLinkByTypes(['gallery'])
     if (galleryLink?.url) {
       window.location.href = toExternalUrl(galleryLink.url)
@@ -319,13 +328,6 @@ export default function PublicCard() {
     }
     if (card?.portfolio_url) {
       window.location.href = toExternalUrl(card.portfolio_url)
-      return
-    }
-
-    const firstImage = card?.media?.find((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url)?.file_url
-    if (firstImage) {
-      const resolvedImage = resolveMediaUrl(firstImage)
-      if (resolvedImage) window.location.href = resolvedImage
     }
   }
 
@@ -381,6 +383,14 @@ export default function PublicCard() {
       alert('Error submitting form')
     }
   }
+
+  const galleryImages = useMemo(() => {
+    if (!card) return [] as string[]
+    return (card.media || [])
+      .filter((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url)
+      .map((item) => resolveMediaUrl(item.file_url))
+      .filter(Boolean)
+  }, [card])
 
   const contactRows = useMemo(() => {
     if (!card) return [] as ContactRow[]
@@ -459,6 +469,14 @@ export default function PublicCard() {
     const mainLinks = orderedWithoutLocation.slice(0, maxMain)
     if (location) {
       mainLinks.push(location)
+
+      const galleryInMainIndex = mainLinks.findIndex((link) => link.type === 'gallery')
+      const locationIndex = mainLinks.findIndex((link) => link.type === 'location')
+      if (galleryInMainIndex !== -1 && locationIndex !== -1 && galleryInMainIndex !== locationIndex - 1) {
+        const [galleryLink] = mainLinks.splice(galleryInMainIndex, 1)
+        const nextLocationIndex = mainLinks.findIndex((link) => link.type === 'location')
+        mainLinks.splice(nextLocationIndex, 0, galleryLink)
+      }
     }
 
     return mainLinks.map(rowFromLink)
@@ -478,7 +496,13 @@ export default function PublicCard() {
       if (!link?.type || !link?.url) continue
       if (link.is_visible === false) continue
       const type = link.type.toLowerCase()
-      pushItem(type, `${type}-${idx}`, idx, type, () => openByType(type, link.url))
+      pushItem(type, `${type}-${idx}`, idx, type, () => {
+        if (type === 'gallery') {
+          openGallery()
+          return
+        }
+        openByType(type, link.url)
+      })
     }
 
     return items.sort((a, b) => a.order - b.order)
@@ -489,7 +513,7 @@ export default function PublicCard() {
     return (card.services || []).filter((service) => service?.is_visible !== false && (service.title || service.description))
   }, [card])
 
-  const showAltMode = showMoreContacts || showServicesMode
+  const showAltMode = showMoreContacts || showServicesMode || showGalleryMode
 
   if (!loading && !card) {
     return (
@@ -563,6 +587,7 @@ export default function PublicCard() {
                     type="button"
                     className="dbc-more-contact"
                     onClick={() => {
+                      setShowGalleryMode(false)
                       setShowServicesMode(false)
                       setShowMoreContacts(true)
                     }}
@@ -585,6 +610,7 @@ export default function PublicCard() {
                   type="button"
                   className="dbc-action-btn"
                   onClick={() => {
+                    setShowGalleryMode(false)
                     setShowMoreContacts(false)
                     setShowServicesMode(true)
                   }}
@@ -640,6 +666,33 @@ export default function PublicCard() {
                           backgroundColor: item.color
                         } as CSSProperties}
                       />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={`dbc-gallery-mode${showGalleryMode ? ' is-active' : ''}`} aria-hidden={!showGalleryMode}>
+                <button
+                  type="button"
+                  className="dbc-social-back"
+                  onClick={() => {
+                    setShowGalleryMode(false)
+                    setGalleryPreviewUrl(null)
+                  }}
+                  aria-label="Back"
+                >
+                  ←
+                </button>
+
+                <div className="dbc-gallery-grid" aria-label="Gallery photos">
+                  {galleryImages.map((src, idx) => (
+                    <button
+                      key={`${src}-${idx}`}
+                      type="button"
+                      className="dbc-gallery-item"
+                      onClick={() => setGalleryPreviewUrl(src)}
+                    >
+                      <img src={src} alt={`Gallery ${idx + 1}`} loading="lazy" decoding="async" />
                     </button>
                   ))}
                 </div>
@@ -764,6 +817,14 @@ export default function PublicCard() {
                 Открыть в картах
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {galleryPreviewUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setGalleryPreviewUrl(null)}>
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white p-2" onClick={(e) => e.stopPropagation()}>
+            <img src={galleryPreviewUrl} alt="Gallery preview" className="h-auto w-full rounded-xl" />
           </div>
         </div>
       )}

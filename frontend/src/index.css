@@ -792,6 +792,47 @@ code {
   background: rgba(255, 255, 255, 0.95);
 }
 
+.dbc-gallery-mode {
+  position: absolute;
+  inset: 0;
+  padding: 22px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(24px);
+  transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s ease;
+  z-index: 4;
+}
+
+.dbc-gallery-mode.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(0);
+}
+
+.dbc-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  overflow: auto;
+  padding-right: 2px;
+}
+
+.dbc-gallery-item {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(17, 24, 39, 0.4);
+}
+
+.dbc-gallery-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+}
 .admin-pin-glow--right {
   right: -110px;
   bottom: -90px;
