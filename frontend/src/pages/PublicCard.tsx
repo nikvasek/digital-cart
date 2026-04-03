@@ -46,6 +46,9 @@ const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
 const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.webp')
 const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.webp')
 
+const PHONE_TYPES = ['phone', 'mobile', 'office', 'home']
+const STANDARD_CONTACT_TYPES = ['whatsapp', 'telegram', 'instagram', 'email', 'gallery', 'location']
+
 const SOCIAL_ICON_FILE: Record<string, { file: string; color: string; light?: boolean }> = {
   phone: { file: '/icons/call.svg', color: '#22c55e' },
   mobile: { file: '/icons/call.svg', color: '#22c55e' },
@@ -197,7 +200,11 @@ export default function PublicCard() {
   }
 
   const getLinkByType = (type: string) => {
-    return card?.links?.find((link) => link.is_visible && link.type.toLowerCase() === type.toLowerCase())?.url
+    return card?.links?.find((link) => link.is_visible && (link.type || '').toLowerCase() === type.toLowerCase())?.url
+  }
+
+  const getFirstLinkByTypes = (types: string[]) => {
+    return card?.links?.find((link) => link.is_visible && types.includes((link.type || '').toLowerCase()))
   }
 
   const getSocialIcon = (type: string) => {
@@ -219,15 +226,20 @@ export default function PublicCard() {
   }
 
   const openTel = () => {
-    if (!card?.phone) return
+    const phoneLink = getFirstLinkByTypes(PHONE_TYPES)
+    if (!phoneLink?.url) return
     trackEvent('click', { link_type: 'phone' })
-    window.location.href = `tel:${card.phone.replace(/\s+/g, '')}`
+    const raw = phoneLink.url.replace(/^tel:/i, '').trim()
+    const digitsOnly = raw.replace(/\D/g, '')
+    const formatted = raw.startsWith('+') ? raw.replace(/\s+/g, '') : `+${digitsOnly}`
+    window.location.href = `tel:${formatted}`
   }
 
   const openEmail = () => {
-    if (!card?.email) return
+    const emailLink = getFirstLinkByTypes(['email'])
+    if (!emailLink?.url) return
     trackEvent('click', { link_type: 'email' })
-    window.location.href = `mailto:${card.email}`
+    window.location.href = toExternalUrl(emailLink.url)
   }
 
   const openLocation = () => {
@@ -244,6 +256,11 @@ export default function PublicCard() {
 
   const openGallery = () => {
     trackEvent('click', { link_type: 'gallery' })
+    const galleryLink = getFirstLinkByTypes(['gallery'])
+    if (galleryLink?.url) {
+      window.location.href = toExternalUrl(galleryLink.url)
+      return
+    }
     if (card?.portfolio_url) {
       window.location.href = toExternalUrl(card.portfolio_url)
       return
@@ -311,77 +328,75 @@ export default function PublicCard() {
   const contactRows = useMemo<ContactRow[]>(() => {
     if (!card) return []
 
+    const phoneLink = card.links.find((link) => link.is_visible && PHONE_TYPES.includes((link.type || '').toLowerCase()))
+    const whatsappLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'whatsapp')
+    const telegramLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'telegram')
+    const instagramLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'instagram')
+    const emailLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'email')
+    const galleryLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'gallery')
+    const locationLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'location')
+
+    const phoneLabel = phoneLink
+      ? formatPhoneDisplay(phoneLink.url.replace(/^tel:/i, '').trim())
+      : ''
+
+    const emailLabel = emailLink
+      ? emailLink.url.replace(/^mailto:/i, '').trim() || 'Email'
+      : 'Email'
+
+    const locationLabel = locationLink
+      ? normalizeAddress(parseAddressField(locationLink.url).label)
+      : ''
+
     return [
       {
         id: 'phone',
-        label: formatPhoneDisplay(card.phone || ''),
+        label: phoneLabel,
         iconSrc: figmaAsset('call_1062678 1@3x.png'),
         onClick: openTel,
-        isVisible: Boolean(card.phone)
+        isVisible: Boolean(phoneLink?.url)
       },
       {
         id: 'whatsapp',
         label: 'WhatsApp',
         iconSrc: figmaAsset('whatsapp_739247 1@3x.png'),
-        onClick: () => openExternal('whatsapp', getLinkByType('whatsapp')),
-        isVisible: Boolean(getLinkByType('whatsapp'))
+        onClick: () => openExternal('whatsapp', whatsappLink?.url),
+        isVisible: Boolean(whatsappLink?.url)
       },
       {
         id: 'telegram',
         label: 'Telegram',
         iconSrc: figmaAsset('telegram 1@3x.png'),
-        onClick: () => openExternal('telegram', getLinkByType('telegram')),
-        isVisible: Boolean(getLinkByType('telegram'))
+        onClick: () => openExternal('telegram', telegramLink?.url),
+        isVisible: Boolean(telegramLink?.url)
       },
       {
         id: 'instagram',
         label: 'Instagram',
         iconSrc: figmaAsset('instagram_739244 1@3x.png'),
-        onClick: () => openExternal('instagram', getLinkByType('instagram')),
-        isVisible: Boolean(getLinkByType('instagram'))
-      },
-      {
-        id: 'viber',
-        label: 'Viber',
-        iconSrc: figmaAsset('viber_2190481 1@3x.png'),
-        onClick: () => openExternal('viber', getLinkByType('viber')),
-        isVisible: Boolean(getLinkByType('viber'))
+        onClick: () => openExternal('instagram', instagramLink?.url),
+        isVisible: Boolean(instagramLink?.url)
       },
       {
         id: 'email',
-        label: card.email || 'Email',
+        label: emailLabel,
         iconSrc: figmaAsset('email_347722 1@3x.png'),
         onClick: openEmail,
-        isVisible: Boolean(card.email)
-      },
-      {
-        id: 'tiktok',
-        label: 'Tik tok',
-        iconSrc: figmaAsset('tik-tok 1@3x.png'),
-        onClick: () => openExternal('tiktok', getLinkByType('tiktok')),
-        isVisible: Boolean(getLinkByType('tiktok'))
+        isVisible: Boolean(emailLink?.url)
       },
       {
         id: 'gallery',
         label: 'Gallery',
         iconSrc: figmaAsset('image 13@3x.png'),
         onClick: openGallery,
-        isVisible: Boolean(
-          card.portfolio_url
-          || card.media?.some((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url)
-        )
+        isVisible: Boolean(galleryLink?.url)
       },
       {
         id: 'location',
-        label: normalizeAddress(
-          (getLinkByType('location') ? parseAddressField(getLinkByType('location')!).label : null)
-          || (card.address ? parseAddressField(card.address).label : null)
-          || card.company_name
-          || 'Location'
-        ),
+        label: locationLabel,
         iconSrc: figmaAsset('placeholder_1180413 1@3x.png'),
         onClick: openLocation,
-        isVisible: Boolean(getLinkByType('location') || card.address)
+        isVisible: Boolean(locationLink?.url)
       }
     ].filter((row) => row.isVisible)
      .sort((a, b) => (a.id === 'location' ? 1 : b.id === 'location' ? -1 : 0))
@@ -403,23 +418,10 @@ export default function PublicCard() {
     for (const link of card.links) {
       if (!link?.is_visible || !link?.type || !link?.url) continue
       const type = link.type.toLowerCase()
+      const isStandardPhone = PHONE_TYPES.includes(type)
+      const isStandardDirect = STANDARD_CONTACT_TYPES.includes(type)
+      if (isStandardPhone || isStandardDirect) continue
       pushItem(type, type, () => openExternal(type, link.url))
-    }
-
-    if (card.phone && !used.has('phone')) {
-      pushItem('phone', 'phone', openTel)
-    }
-    if (card.email && !used.has('email')) {
-      pushItem('email', 'email', openEmail)
-    }
-    if ((card.address || getLinkByType('location')) && !used.has('location')) {
-      pushItem('location', 'location', openLocation)
-    }
-    if (card.website && !used.has('website')) {
-      pushItem('website', 'website', () => openExternal('website', card.website))
-    }
-    if ((card.portfolio_url || card.media?.length) && !used.has('gallery')) {
-      pushItem('gallery', 'gallery', openGallery)
     }
 
     return items

@@ -303,15 +303,15 @@ const mergeCoreContactLinks = (card: CardDetails): CardDetails => {
 const getFirstLinkValue = (links: LinkItem[], types: string[]) =>
     links.find((link) => types.includes((link.type || '').toLowerCase()))?.url ?? ''
 
-const getCoreFieldsFromLinks = (links: LinkItem[]) => {
+const getCoreFieldsFromLinks = (links: LinkItem[], current: Pick<CardDetails, 'phone' | 'email' | 'address'>) => {
     const phoneRaw = getFirstLinkValue(links, ['phone', 'mobile', 'office', 'home'])
     const emailRaw = getFirstLinkValue(links, ['email'])
     const addressRaw = getFirstLinkValue(links, ['location'])
 
     return {
-        phone: phoneRaw.replace(/^tel:/i, '').trim(),
-        email: emailRaw.replace(/^mailto:/i, '').trim(),
-        address: addressRaw.trim()
+        phone: (phoneRaw ? phoneRaw : current.phone || '').replace(/^tel:/i, '').trim(),
+        email: (emailRaw ? emailRaw : current.email || '').replace(/^mailto:/i, '').trim(),
+        address: (addressRaw ? addressRaw : current.address || '').trim()
     }
 }
 
@@ -422,7 +422,7 @@ export default function Dashboard() {
             const token = localStorage.getItem('token')
             const config = { headers: { Authorization: `Bearer ${token}` } }
             const links = normalizeLinksForSave(cardData.links)
-            const core = getCoreFieldsFromLinks(links)
+            const core = getCoreFieldsFromLinks(links, cardData)
             const payload: CardDetails = {
                 ...cardData,
                 phone: core.phone,

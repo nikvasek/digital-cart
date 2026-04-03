@@ -4,9 +4,6 @@ interface CardData {
   full_name: string
   title?: string
   company_name?: string
-  phone?: string
-  email?: string
-  website?: string
   avatar_url?: string
   bio?: string
   links?: Array<{ type: string; url: string; is_visible?: boolean }>
@@ -38,25 +35,26 @@ export async function generateVCard(card: CardData): Promise<string> {
     lines.push(`ORG:${escapeVCardValue(card.company_name)}`)
   }
 
-  // Телефон (нормализованный в E.164 формат, если возможно)
-  if (card.phone) {
-    const normalizedPhone = normalizePhone(card.phone)
-    lines.push(`TEL;TYPE=CELL:${normalizedPhone}`)
-  }
-
-  // Email
-  if (card.email) {
-    lines.push(`EMAIL;TYPE=INTERNET:${escapeVCardValue(card.email)}`)
-  }
-
-  // Website
-  if (card.website) {
-    lines.push(`URL:${escapeVCardValue(normalizeUrl(card.website))}`)
-  }
-
   const visibleLinks = (card.links || []).filter((link) => link?.url && link.is_visible !== false)
   for (const link of visibleLinks) {
-    const normalized = normalizeUrl(link.url)
+    const rawType = (link.type || 'other').toLowerCase()
+    const rawUrl = (link.url || '').trim()
+
+    if (!rawUrl) continue
+
+    if (['phone', 'mobile', 'office', 'home'].includes(rawType)) {
+      const tel = normalizePhone(rawUrl.replace(/^tel:/i, ''))
+      lines.push(`TEL;TYPE=CELL:${escapeVCardValue(tel)}`)
+      continue
+    }
+
+    if (rawType === 'email') {
+      const email = rawUrl.replace(/^mailto:/i, '').trim()
+      if (email) lines.push(`EMAIL;TYPE=INTERNET:${escapeVCardValue(email)}`)
+      continue
+    }
+
+    const normalized = normalizeUrl(rawUrl)
     const type = (link.type || 'other').toUpperCase()
     lines.push(`URL;TYPE=${escapeVCardValue(type)}:${escapeVCardValue(normalized)}`)
   }
