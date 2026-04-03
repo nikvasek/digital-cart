@@ -37,6 +37,7 @@ type ContactRow = {
 type SocialIconItem = {
   id: string
   keyId: string
+  order: number
   label: string
   icon: string
   color: string
@@ -425,9 +426,9 @@ export default function PublicCard() {
     if (!card) return []
 
     const items: SocialIconItem[] = []
-    const pushItem = (id: string, keyId: string, label: string, onClick: () => void) => {
+    const pushItem = (id: string, keyId: string, order: number, label: string, onClick: () => void) => {
       const meta = getSocialIcon(id)
-      items.push({ id, keyId, label, onClick, icon: meta.file, color: meta.color, light: meta.light })
+      items.push({ id, keyId, order, label, onClick, icon: meta.file, color: meta.color, light: meta.light })
     }
 
     for (let idx = 0; idx < (card.links || []).length; idx++) {
@@ -435,10 +436,10 @@ export default function PublicCard() {
       if (!link?.type || !link?.url) continue
       if (link.is_visible === false) continue
       const type = link.type.toLowerCase()
-      pushItem(type, `${type}-${idx}`, type, () => openByType(type, link.url))
+      pushItem(type, `${type}-${idx}`, idx, type, () => openByType(type, link.url))
     }
 
-    return items
+    return items.sort((a, b) => a.order - b.order)
   }, [card])
 
   if (!loading && !card) {
