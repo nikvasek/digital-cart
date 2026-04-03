@@ -367,6 +367,13 @@ const getCoreFieldsFromLinks = (links: LinkItem[], current: Pick<CardDetails, 'p
     }
 }
 
+const getDefaultGalleryUrl = (card: CardDetails) => {
+    const portfolio = (card.portfolio_url || '').trim()
+    if (portfolio) return portfolio
+    const firstMedia = card.media.find((item) => (item.type || 'image').toLowerCase() === 'image' && (item.file_url || '').trim())
+    return firstMedia?.file_url?.trim() || ''
+}
+
 const defaultCardDetails = (card: CardItem): CardDetails => ({
     ...card,
     company_name: '',
@@ -635,6 +642,49 @@ export default function Dashboard() {
         }
 
         updateCard({ media: cardData.media.filter((_, i) => i !== index) })
+    }
+
+    const setGalleryVisibility = (visible: boolean) => {
+        if (!cardData) return
+
+        const galleryIndexes = cardData.links
+            .map((link, index) => ({ link, index }))
+            .filter(({ link }) => (link.type || '').toLowerCase() === 'gallery')
+            .map(({ index }) => index)
+
+        if (galleryIndexes.length === 0) {
+            if (!visible) return
+
+            const defaultUrl = getDefaultGalleryUrl(cardData)
+            if (!defaultUrl) {
+                alert('Сначала добавьте фото в галерею или укажите Галерея (URL), затем включите отображение gallery.')
+                return
+            }
+
+            updateCard({
+                links: [...cardData.links, { type: 'gallery', url: defaultUrl, is_visible: true }]
+            })
+            return
+        }
+
+        const nextLinks = [...cardData.links]
+        const fallbackUrl = getDefaultGalleryUrl(cardData)
+
+        for (const index of galleryIndexes) {
+            const current = nextLinks[index]
+            nextLinks[index] = {
+                ...current,
+                url: (current.url || '').trim() || fallbackUrl || current.url,
+                is_visible: visible
+            }
+        }
+
+        if (visible && !nextLinks.some((link) => (link.type || '').toLowerCase() === 'gallery' && !!(link.url || '').trim())) {
+            alert('Для отображения gallery нужен URL. Добавьте фото в галерею или задайте Галерея (URL).')
+            return
+        }
+
+        updateCard({ links: nextLinks })
     }
 
     const logout = () => {
@@ -998,6 +1048,35 @@ export default function Dashboard() {
                                 </button>
                                 <button type="button" className={galleryView === 'grid' ? 'is-active' : ''} onClick={() => setGalleryView('grid')}>Сетка</button>
                                 <button type="button" className={galleryView === 'list' ? 'is-active' : ''} onClick={() => setGalleryView('list')}>Список</button>
+                            </div>
+                        </div>
+
+                        <div className="section-head-row">
+                            <strong>Показывать кнопку gallery в контактах</strong>
+                            <div className="view-toggle">
+                                {(() => {
+                                    const hasVisibleGallery = cardData.links.some(
+                                        (link) => (link.type || '').toLowerCase() === 'gallery' && link.is_visible !== false
+                                    )
+                                    return (
+                                        <>
+                                            <button
+                                                type="button"
+                                                className={!hasVisibleGallery ? 'is-active' : ''}
+                                                onClick={() => setGalleryVisibility(false)}
+                                            >
+                                                Выключено
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className={hasVisibleGallery ? 'is-active' : ''}
+                                                onClick={() => setGalleryVisibility(true)}
+                                            >
+                                                Включено
+                                            </button>
+                                        </>
+                                    )
+                                })()}
                             </div>
                         </div>
 
