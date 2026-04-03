@@ -279,6 +279,42 @@ const normalizeLinksForSave = (links: LinkItem[]) => links.map((link) => ({
     url: normalizeSocialInput(link.type, link.url)
 }))
 
+const hasLinkType = (links: LinkItem[], types: string[]) =>
+    links.some((link) => types.includes((link.type || '').toLowerCase()))
+
+const mergeCoreContactLinks = (card: CardDetails): CardDetails => {
+    const links = [...(card.links || [])]
+
+    if (card.phone && !hasLinkType(links, ['phone', 'mobile', 'office', 'home'])) {
+        links.unshift({ type: 'phone', url: card.phone, is_visible: true })
+    }
+
+    if (card.email && !hasLinkType(links, ['email'])) {
+        links.unshift({ type: 'email', url: card.email, is_visible: true })
+    }
+
+    if (card.address && !hasLinkType(links, ['location'])) {
+        links.unshift({ type: 'location', url: card.address, is_visible: true })
+    }
+
+    return { ...card, links }
+}
+
+const getFirstLinkValue = (links: LinkItem[], types: string[]) =>
+    links.find((link) => types.includes((link.type || '').toLowerCase()))?.url ?? ''
+
+const getCoreFieldsFromLinks = (links: LinkItem[]) => {
+    const phoneRaw = getFirstLinkValue(links, ['phone', 'mobile', 'office', 'home'])
+    const emailRaw = getFirstLinkValue(links, ['email'])
+    const addressRaw = getFirstLinkValue(links, ['location'])
+
+    return {
+        phone: phoneRaw.replace(/^tel:/i, '').trim(),
+        email: emailRaw.replace(/^mailto:/i, '').trim(),
+        address: addressRaw.trim()
+    }
+}
+
 const defaultCardDetails = (card: CardItem): CardDetails => ({
     ...card,
     company_name: '',
@@ -371,10 +407,10 @@ export default function Dashboard() {
             const token = localStorage.getItem('token')
             const config = { headers: { Authorization: `Bearer ${token}` } }
             const response = await axios.get(`/api/admin/card/${cardId}`, config)
-            setCardData(response.data)
+            setCardData(mergeCoreContactLinks(response.data))
         } catch {
             const fallback = cards.find((card) => card.id === cardId)
-            if (fallback) setCardData(defaultCardDetails(fallback))
+            if (fallback) setCardData(mergeCoreContactLinks(defaultCardDetails(fallback)))
         }
     }
 
@@ -385,9 +421,14 @@ export default function Dashboard() {
         try {
             const token = localStorage.getItem('token')
             const config = { headers: { Authorization: `Bearer ${token}` } }
+            const links = normalizeLinksForSave(cardData.links)
+            const core = getCoreFieldsFromLinks(links)
             const payload: CardDetails = {
                 ...cardData,
-                links: normalizeLinksForSave(cardData.links)
+                phone: core.phone,
+                email: core.email,
+                address: core.address,
+                links
             }
             await axios.patch(`/api/admin/card/${cardData.id}`, payload, config)
             await loadData()
@@ -539,10 +580,7 @@ export default function Dashboard() {
                             <label>Имя<input value={cardData.full_name || ''} onChange={(e) => updateCard({ full_name: e.target.value })} /></label>
                             <label>Должность<input value={cardData.title || ''} onChange={(e) => updateCard({ title: e.target.value })} /></label>
                             <label>Компания<input value={cardData.company_name || ''} onChange={(e) => updateCard({ company_name: e.target.value })} /></label>
-                            <label>Телефон<input type="tel" value={cardData.phone || ''} placeholder="+375 29 000 00 00" onChange={(e) => updateCard({ phone: e.target.value })} /></label>
-                            <label>Email<input type="email" value={cardData.email || ''} placeholder="name@example.com" onChange={(e) => updateCard({ email: e.target.value })} /></label>
                             <label>О себе<textarea rows={3} value={cardData.bio || ''} onChange={(e) => updateCard({ bio: e.target.value })}></textarea></label>
-                            <label>Адрес / Google Maps<input value={cardData.address || ''} placeholder="Kalvariyskaya 42 или https://maps.google.com/…" onChange={(e) => updateCard({ address: e.target.value })} /></label>
                             <label>Галерея (URL)<input value={cardData.portfolio_url || ''} placeholder="https://…" onChange={(e) => updateCard({ portfolio_url: e.target.value })} /></label>
                             <label>Фото (URL)<input value={cardData.avatar_url || ''} onChange={(e) => updateCard({ avatar_url: e.target.value })} /></label>
                             <label>Обложка / Лого (URL)<input value={cardData.logo_url || ''} onChange={(e) => updateCard({ logo_url: e.target.value })} /></label>
