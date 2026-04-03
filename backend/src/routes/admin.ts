@@ -55,6 +55,20 @@ const tryExtractUrlPathname = (value: string) => {
   }
 }
 
+const getCloudinaryEnv = () => {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME
+  const apiKey = process.env.CLOUDINARY_API_KEY
+  const apiSecret = process.env.CLOUDINARY_API_SECRET
+
+  const isConfigured = !!cloudName && !!apiKey && !!apiSecret
+  return { cloudName, apiKey, apiSecret, isConfigured }
+}
+
+const shouldUseCloudinaryStorage = () => {
+  const cloudinaryEnv = getCloudinaryEnv()
+  return config.storageType === 'cloudinary' || cloudinaryEnv.isConfigured
+}
+
 const getCardValidationErrors = (payload: {
   full_name: string
   title: string
@@ -170,12 +184,10 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         return reply.code(400).send({ error: 'Uploaded file is empty' })
       }
 
-      if (config.storageType === 'cloudinary') {
-        const cloudName = process.env.CLOUDINARY_CLOUD_NAME
-        const apiKey = process.env.CLOUDINARY_API_KEY
-        const apiSecret = process.env.CLOUDINARY_API_SECRET
+      if (shouldUseCloudinaryStorage()) {
+        const { cloudName, apiKey, apiSecret, isConfigured } = getCloudinaryEnv()
 
-        if (!cloudName || !apiKey || !apiSecret) {
+        if (!isConfigured || !cloudName || !apiKey || !apiSecret) {
           return reply.code(500).send({ error: 'Cloudinary is not configured' })
         }
 
@@ -233,12 +245,10 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         return reply.code(400).send({ error: 'url or public_id is required' })
       }
 
-      if (config.storageType === 'cloudinary') {
-        const cloudName = process.env.CLOUDINARY_CLOUD_NAME
-        const apiKey = process.env.CLOUDINARY_API_KEY
-        const apiSecret = process.env.CLOUDINARY_API_SECRET
+      if (shouldUseCloudinaryStorage()) {
+        const { cloudName, apiKey, apiSecret, isConfigured } = getCloudinaryEnv()
 
-        if (!cloudName || !apiKey || !apiSecret) {
+        if (!isConfigured || !cloudName || !apiKey || !apiSecret) {
           return reply.code(500).send({ error: 'Cloudinary is not configured' })
         }
 
