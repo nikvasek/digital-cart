@@ -696,7 +696,7 @@ export default function PublicCard() {
               <div className={`dbc-gallery-mode${showGalleryMode ? ' is-active' : ''}`} aria-hidden={!showGalleryMode}>
                 <button
                   type="button"
-                  className="dbc-social-back"
+                  className="dbc-social-back dbc-gallery-back"
                   onClick={() => {
                     setShowGalleryMode(false)
                     closeGalleryViewer()
@@ -722,7 +722,11 @@ export default function PublicCard() {
                 {galleryActiveIndex !== null && galleryImages[galleryActiveIndex] && (
                   <div
                     className="dbc-gallery-viewer"
-                    onClick={() => closeGalleryViewer()}
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) {
+                        closeGalleryViewer()
+                      }
+                    }}
                     onTouchStart={(e) => {
                       const touch = e.touches[0]
                       if (!touch) return
@@ -750,9 +754,8 @@ export default function PublicCard() {
                       alt={`Gallery preview ${galleryActiveIndex + 1}`}
                       className="dbc-gallery-viewer-image"
                       onClick={(e) => {
-                        e.stopPropagation()
-                        const target = e.currentTarget.getBoundingClientRect()
-                        const isRightSide = (e.clientX - target.left) > target.width / 2
+                        const rect = e.currentTarget.getBoundingClientRect()
+                        const isRightSide = (e.clientX - rect.left) > rect.width / 2
                         moveGalleryImage(isRightSide ? 'next' : 'prev')
                       }}
                     />

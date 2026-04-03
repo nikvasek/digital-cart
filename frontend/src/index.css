@@ -795,7 +795,7 @@ code {
 .dbc-gallery-mode {
   position: absolute;
   inset: 0;
-  padding: 22px 18px 18px;
+  padding: 26% 18px 18px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -813,6 +813,10 @@ code {
   transform: translateX(0);
 }
 
+.dbc-gallery-back {
+  top: calc(26% - 28px);
+}
+
 .dbc-gallery-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -824,17 +828,11 @@ code {
   margin-top: 24px;
 }
 
-.dbc-gallery-mode .dbc-social-back {
-  margin-top: -2px;
-  margin-bottom: 2px;
-  align-self: flex-start;
-}
-
 .dbc-gallery-item {
-  border: 1px solid rgba(255, 255, 255, 0.24);
+  border: 0;
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(17, 24, 39, 0.4);
+  background: transparent;
 }
 
 .dbc-gallery-item img {
