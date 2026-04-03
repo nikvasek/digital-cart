@@ -4,7 +4,7 @@ import { config } from '../config/index.js'
 import QRCode from 'qrcode'
 import { v2 as cloudinary } from 'cloudinary'
 import { randomUUID } from 'node:crypto'
-import { mkdir, writeFile } from 'node:fs/promises'
+import { mkdir, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 
 const normalizeString = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
@@ -44,6 +44,15 @@ const extractCloudinaryPublicId = (secureUrl: string) => {
   tail = tail.replace(/^v\d+\//, '')
   tail = tail.replace(/\.[^.\/]+$/, '')
   return tail
+}
+
+const tryExtractUrlPathname = (value: string) => {
+  try {
+    const parsed = new URL(value)
+    return parsed.pathname
+  } catch {
+    return value
+  }
 }
 
 const getCardValidationErrors = (payload: {
@@ -210,6 +219,64 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     } catch (error) {
       fastify.log.error(error)
       return reply.code(500).send({ error: 'Failed to upload media' })
+    }
+  })
+
+  // Delete media (Cloudinary or local uploads)
+  fastify.delete('/media', async (request, reply) => {
+    try {
+      const body = (request.body || {}) as { url?: string; public_id?: string }
+      const url = normalizeString(body.url)
+      const explicitPublicId = normalizeString(body.public_id)
+
+      if (!url && !explicitPublicId) {
+        return reply.code(400).send({ error: 'url or public_id is required' })
+      }
+
+      if (config.storageType === 'cloudinary') {
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME
+        const apiKey = process.env.CLOUDINARY_API_KEY
+        const apiSecret = process.env.CLOUDINARY_API_SECRET
+
+        if (!cloudName || !apiKey || !apiSecret) {
+          return reply.code(500).send({ error: 'Cloudinary is not configured' })
+        }
+
+        cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret })
+
+        const publicId = explicitPublicId || (url ? extractCloudinaryPublicId(url) : '')
+        if (!publicId) {
+          return reply.code(400).send({ error: 'Cannot determine media public_id' })
+        }
+
+        await cloudinary.uploader.destroy(publicId, {
+          resource_type: 'image',
+          invalidate: true
+        })
+
+        return { success: true }
+      }
+
+      const pathname = tryExtractUrlPathname(url)
+      if (!pathname.startsWith('/uploads/')) {
+        return { success: true }
+      }
+
+      const fileName = path.basename(pathname)
+      const fullPath = path.resolve(process.cwd(), 'uploads', fileName)
+
+      try {
+        await unlink(fullPath)
+      } catch (error: any) {
+        if (error?.code !== 'ENOENT') {
+          throw error
+        }
+      }
+
+      return { success: true }
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.code(500).send({ error: 'Failed to delete media' })
     }
   })
 

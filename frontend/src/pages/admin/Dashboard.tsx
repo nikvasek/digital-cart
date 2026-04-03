@@ -375,6 +375,7 @@ export default function Dashboard() {
     const navigate = useNavigate()
     const mobileNavRefs = useRef<Partial<Record<SectionId, HTMLButtonElement | null>>>({})
     const mediaInputRef = useRef<HTMLInputElement | null>(null)
+    const avatarInputRef = useRef<HTMLInputElement | null>(null)
     const [cards, setCards] = useState<CardItem[]>([])
     const [analytics, setAnalytics] = useState<Analytics | null>(null)
     const [selectedCardId, setSelectedCardId] = useState<string>('')
@@ -388,6 +389,7 @@ export default function Dashboard() {
     const [previewUrl, setPreviewUrl] = useState<string>('')
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light')
     const [uploadingMedia, setUploadingMedia] = useState(false)
+    const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
     useEffect(() => {
         void loadData()
@@ -505,27 +507,41 @@ export default function Dashboard() {
         setDragIndex(null)
     }
 
+    const uploadImageFile = async (file: File) => {
+        const token = localStorage.getItem('token')
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await axios.post('/api/admin/media/upload', formData, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+
+        return response.data?.url as string | undefined
+    }
+
+    const deleteUploadedMedia = async (url: string) => {
+        if (!url) return
+        const token = localStorage.getItem('token')
+        await axios.delete('/api/admin/media', {
+            headers: { Authorization: `Bearer ${token}` },
+            data: { url }
+        })
+    }
+
     const uploadGalleryFiles = async (fileList: FileList | null) => {
         if (!cardData || !fileList || fileList.length === 0) return
 
         setUploadingMedia(true)
         try {
-            const token = localStorage.getItem('token')
             const uploadedUrls: string[] = []
 
             for (const file of Array.from(fileList)) {
-                const formData = new FormData()
-                formData.append('file', file)
-
-                const response = await axios.post('/api/admin/media/upload', formData, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data'
-                    }
-                })
-
-                if (response.data?.url) {
-                    uploadedUrls.push(response.data.url)
+                const uploadedUrl = await uploadImageFile(file)
+                if (uploadedUrl) {
+                    uploadedUrls.push(uploadedUrl)
                 }
             }
 
@@ -548,6 +564,64 @@ export default function Dashboard() {
             if (mediaInputRef.current) mediaInputRef.current.value = ''
             setUploadingMedia(false)
         }
+    }
+
+    const uploadAvatarFile = async (fileList: FileList | null) => {
+        if (!cardData || !fileList || fileList.length === 0) return
+
+        setUploadingAvatar(true)
+        try {
+            const file = fileList[0]
+            if (!file) return
+            const uploadedUrl = await uploadImageFile(file)
+
+            if (uploadedUrl) {
+                if (cardData.avatar_url) {
+                    try {
+                        await deleteUploadedMedia(cardData.avatar_url)
+                    } catch {
+                        // Do not block avatar update when old image cleanup fails.
+                    }
+                }
+                updateCard({ avatar_url: uploadedUrl })
+            }
+        } catch (error: any) {
+            const message = error?.response?.data?.error || 'Upload failed'
+            alert(`Не удалось загрузить аватар: ${message}`)
+        } finally {
+            if (avatarInputRef.current) avatarInputRef.current.value = ''
+            setUploadingAvatar(false)
+        }
+    }
+
+    const removeAvatarFile = async () => {
+        if (!cardData?.avatar_url) return
+
+        try {
+            await deleteUploadedMedia(cardData.avatar_url)
+        } catch (error: any) {
+            const message = error?.response?.data?.error || 'Delete failed'
+            alert(`Не удалось удалить аватар: ${message}`)
+            return
+        }
+
+        updateCard({ avatar_url: '' })
+    }
+
+    const removeGalleryFile = async (index: number) => {
+        if (!cardData) return
+        const item = cardData.media[index]
+        if (!item?.file_url) return
+
+        try {
+            await deleteUploadedMedia(item.file_url)
+        } catch (error: any) {
+            const message = error?.response?.data?.error || 'Delete failed'
+            alert(`Не удалось удалить изображение: ${message}`)
+            return
+        }
+
+        updateCard({ media: cardData.media.filter((_, i) => i !== index) })
     }
 
     const logout = () => {
@@ -676,6 +750,35 @@ export default function Dashboard() {
                             <label>О себе<textarea rows={3} value={cardData.bio || ''} onChange={(e) => updateCard({ bio: e.target.value })}></textarea></label>
                             <label>Галерея (URL)<input value={cardData.portfolio_url || ''} placeholder="https://…" onChange={(e) => updateCard({ portfolio_url: e.target.value })} /></label>
                             <label>Фото (URL)<input value={cardData.avatar_url || ''} onChange={(e) => updateCard({ avatar_url: e.target.value })} /></label>
+                            <div className="avatar-actions">
+                                <input
+                                    ref={avatarInputRef}
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    onChange={(e) => {
+                                        void uploadAvatarFile(e.target.files)
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    className="admin-ghost"
+                                    disabled={uploadingAvatar}
+                                    onClick={() => avatarInputRef.current?.click()}
+                                >
+                                    {uploadingAvatar ? 'Загрузка…' : 'Загрузить аватар'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="admin-ghost danger"
+                                    disabled={uploadingAvatar || !cardData.avatar_url}
+                                    onClick={() => {
+                                        void removeAvatarFile()
+                                    }}
+                                >
+                                    Удалить аватар
+                                </button>
+                            </div>
                             <label>Обложка / Лого (URL)<input value={cardData.logo_url || ''} onChange={(e) => updateCard({ logo_url: e.target.value })} /></label>
                         </div>
 
@@ -899,6 +1002,15 @@ export default function Dashboard() {
                                     <div>
                                         <strong>{item.type || 'фото'}</strong>
                                         <small>{item.file_url.includes('video') ? 'Видео' : 'Фото'}</small>
+                                        <button
+                                            type="button"
+                                            className="admin-ghost danger media-delete"
+                                            onClick={() => {
+                                                void removeGalleryFile(index)
+                                            }}
+                                        >
+                                            Удалить
+                                        </button>
                                     </div>
                                 </article>
                             ))}

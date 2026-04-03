@@ -1275,6 +1275,12 @@ code {
   color: #4b5563;
 }
 
+.avatar-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .form-grid input,
 .form-grid textarea,
 .form-grid select,
@@ -1622,6 +1628,11 @@ code {
 
 .media-item small {
   color: #6b7280;
+}
+
+.media-delete {
+  justify-self: start;
+  margin-top: 6px;
 }
 
 .lightbox {
