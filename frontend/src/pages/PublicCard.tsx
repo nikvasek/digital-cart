@@ -208,6 +208,7 @@ export default function PublicCard() {
   const [loadError, setLoadError] = useState(false)
   const [showLeadForm, setShowLeadForm] = useState(false)
   const [showQR, setShowQR] = useState(false)
+  const [locationModal, setLocationModal] = useState<{ label: string; mapsUrl: string; embedUrl: string } | null>(null)
   const [showMoreContacts, setShowMoreContacts] = useState(false)
   const [loading, setLoading] = useState(true)
 
@@ -282,7 +283,13 @@ export default function PublicCard() {
     }
     if (t === 'location') {
       const parsed = parseAddressField(url)
-      openExternal('location', parsed.mapsUrl)
+      const compactLabel = toCompactAddress(parsed.label)
+      trackEvent('click', { link_type: 'location' })
+      setLocationModal({
+        label: compactLabel || parsed.label,
+        mapsUrl: parsed.mapsUrl,
+        embedUrl: `https://www.google.com/maps?q=${encodeURIComponent(parsed.label)}&output=embed`
+      })
       return
     }
     openExternal(t, url)
@@ -660,6 +667,43 @@ export default function PublicCard() {
             >
               Close
             </button>
+          </div>
+        </div>
+      )}
+
+      {locationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setLocationModal(null)}>
+          <div className="w-full max-w-md overflow-hidden rounded-2xl bg-white" onClick={(e) => e.stopPropagation()}>
+            <div className="border-b border-gray-200 px-4 py-3">
+              <p className="text-sm font-semibold text-gray-900">{locationModal.label || 'Location'}</p>
+            </div>
+
+            <iframe
+              title="Location map"
+              src={locationModal.embedUrl}
+              className="h-[320px] w-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+
+            <div className="flex gap-2 border-t border-gray-200 p-3">
+              <button
+                type="button"
+                className="flex-1 rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
+                onClick={() => setLocationModal(null)}
+              >
+                Закрыть
+              </button>
+              <button
+                type="button"
+                className="flex-1 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-900"
+                onClick={() => {
+                  window.location.href = locationModal.mapsUrl
+                }}
+              >
+                Открыть в картах
+              </button>
+            </div>
           </div>
         </div>
       )}
