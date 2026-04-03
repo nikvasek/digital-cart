@@ -821,6 +821,13 @@ code {
   overflow-y: auto;
   overflow-x: hidden;
   padding-right: 2px;
+  margin-top: 24px;
+}
+
+.dbc-gallery-mode .dbc-social-back {
+  margin-top: -2px;
+  margin-bottom: 2px;
+  align-self: flex-start;
 }
 
 .dbc-gallery-item {
