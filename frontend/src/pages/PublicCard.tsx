@@ -228,6 +228,7 @@ export default function PublicCard() {
   const [showGalleryMode, setShowGalleryMode] = useState(false)
   const [galleryActiveIndex, setGalleryActiveIndex] = useState<number | null>(null)
   const viewerImageRef = useRef<HTMLImageElement | null>(null)
+  const viewerPointerStartRef = useRef<{ x: number; y: number } | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -732,6 +733,11 @@ export default function PublicCard() {
                 {galleryActiveIndex !== null && galleryImages[galleryActiveIndex] && (
                   <div
                     className="dbc-gallery-viewer"
+                    onPointerDown={(e) => {
+                      if (e.target === e.currentTarget) {
+                        closeGalleryViewer()
+                      }
+                    }}
                     onClick={(e) => {
                       if (e.target === e.currentTarget) {
                         closeGalleryViewer()
@@ -743,9 +749,24 @@ export default function PublicCard() {
                       src={galleryImages[galleryActiveIndex]}
                       alt={`Gallery preview ${galleryActiveIndex + 1}`}
                       className="dbc-gallery-viewer-image"
-                      onClick={(e) => {
+                      onPointerDown={(e) => {
+                        viewerPointerStartRef.current = { x: e.clientX, y: e.clientY }
+                      }}
+                      onPointerUp={(e) => {
+                        const start = viewerPointerStartRef.current
+                        viewerPointerStartRef.current = null
+
+                        if (!start) return
+
+                        const movedX = Math.abs(e.clientX - start.x)
+                        const movedY = Math.abs(e.clientY - start.y)
+                        if (movedX > 12 || movedY > 12) return
+
                         e.stopPropagation()
                         moveByTapSide(e.clientX)
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation()
                       }}
                     />
                   </div>

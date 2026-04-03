@@ -818,10 +818,9 @@ code {
   bottom: 8%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 1px;
 }
 
 .dbc-gallery-item {
