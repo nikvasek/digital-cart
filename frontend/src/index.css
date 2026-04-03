@@ -578,6 +578,22 @@ code {
   pointer-events: auto;
 }
 
+.dbc-services-mode {
+  position: absolute;
+  inset: 0;
+  z-index: 34;
+  opacity: 0;
+  transform: translateY(12px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.dbc-services-mode.is-active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
 .dbc-social-back {
   position: absolute;
   left: 8.4%;
@@ -601,6 +617,43 @@ code {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px 12px;
   justify-items: center;
+}
+
+.dbc-services-list {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 40.5%;
+  bottom: 8%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 2px;
+}
+
+.dbc-service-item {
+  border: 1px solid rgba(224, 118, 84, 0.55);
+  border-radius: 12px;
+  background: rgba(8, 15, 30, 0.7);
+  padding: 12px 14px;
+}
+
+.dbc-service-item h4 {
+  margin: 0;
+  color: #f3f3f3;
+  font-family: 'Kantumruy Pro', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.dbc-service-item p {
+  margin: 6px 0 0;
+  color: rgba(248, 248, 248, 0.9);
+  font-family: 'Kantumruy Pro', sans-serif;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
 .dbc-social-item {

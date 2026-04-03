@@ -210,6 +210,7 @@ export default function PublicCard() {
   const [showQR, setShowQR] = useState(false)
   const [locationModal, setLocationModal] = useState<{ label: string; mapsUrl: string; embedUrl: string } | null>(null)
   const [showMoreContacts, setShowMoreContacts] = useState(false)
+  const [showServicesMode, setShowServicesMode] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -468,6 +469,13 @@ export default function PublicCard() {
     return items.sort((a, b) => a.order - b.order)
   }, [card])
 
+  const servicesList = useMemo(() => {
+    if (!card) return []
+    return (card.services || []).filter((service) => service?.is_visible !== false && (service.title || service.description))
+  }, [card])
+
+  const showAltMode = showMoreContacts || showServicesMode
+
   if (!loading && !card) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
@@ -498,7 +506,7 @@ export default function PublicCard() {
                 decoding="async"
                 draggable={false}
               />
-              <div className={`dbc-bg-left${showMoreContacts ? ' dbc-bg-left--plain' : ''}`} aria-hidden="true" />
+              <div className={`dbc-bg-left${showAltMode ? ' dbc-bg-left--plain' : ''}`} aria-hidden="true" />
 
               <div className="dbc-avatar-shell">
                 <img src={resolveAvatarSrc(card.avatar_url)} alt={card.full_name} className="dbc-avatar" fetchPriority="high" loading="eager" decoding="async" />
@@ -518,7 +526,7 @@ export default function PublicCard() {
               </div>
 
               {contactRows.length > 0 && (
-              <div className={`dbc-contacts${showMoreContacts ? ' dbc-home-mode--hidden' : ''}`} aria-label="Contacts">
+              <div className={`dbc-contacts${showAltMode ? ' dbc-home-mode--hidden' : ''}`} aria-label="Contacts">
                 {contactRows.map((row) => (
                   <button key={row.keyId} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
                     {row.iconSrc ? (
@@ -539,7 +547,10 @@ export default function PublicCard() {
                   <button
                     type="button"
                     className="dbc-more-contact"
-                    onClick={() => setShowMoreContacts(true)}
+                    onClick={() => {
+                      setShowServicesMode(false)
+                      setShowMoreContacts(true)
+                    }}
                     aria-label="More contact"
                   >
                     More contact...
@@ -548,12 +559,26 @@ export default function PublicCard() {
               </div>
               )}
 
-              <div className={`dbc-home-mode${showMoreContacts ? ' dbc-home-mode--hidden' : ''}`}>
+              <div className={`dbc-home-mode${showAltMode ? ' dbc-home-mode--hidden' : ''}`}>
                 <div className="dbc-actions" aria-label="Actions">
                 <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
                   <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
                   <span className="dbc-action-text">Save contact</span>
                 </button>
+                {servicesList.length > 0 && (
+                <button
+                  type="button"
+                  className="dbc-action-btn"
+                  onClick={() => {
+                    setShowMoreContacts(false)
+                    setShowServicesMode(true)
+                  }}
+                  aria-label="Services"
+                >
+                  <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                  <span className="dbc-action-text">Services</span>
+                </button>
+                )}
                 <button type="button" className="dbc-action-btn" onClick={() => setShowQR(true)} aria-label="Show QR">
                   <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
                   <span className="dbc-action-text">Show QR</span>
@@ -601,6 +626,26 @@ export default function PublicCard() {
                         } as CSSProperties}
                       />
                     </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className={`dbc-services-mode${showServicesMode ? ' is-active' : ''}`} aria-hidden={!showServicesMode}>
+                <button
+                  type="button"
+                  className="dbc-social-back"
+                  onClick={() => setShowServicesMode(false)}
+                  aria-label="Back"
+                >
+                  ←
+                </button>
+
+                <div className="dbc-services-list" aria-label="Services">
+                  {servicesList.map((service, idx) => (
+                    <article key={`${service.title}-${idx}`} className="dbc-service-item">
+                      <h4>{service.title || 'Service'}</h4>
+                      {service.description && <p>{service.description}</p>}
+                    </article>
                   ))}
                 </div>
               </div>
