@@ -38,7 +38,6 @@ type SocialIconItem = {
   label: string
   icon: string
   color: string
-  iconColor: string
   light?: boolean
   onClick: () => void
 }
@@ -47,29 +46,27 @@ const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
 const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.webp')
 const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.webp')
 
-const SOCIAL_ICON_FILE: Record<string, { file: string; light?: boolean; color: string; iconColor?: string }> = {
-  phone: { file: '/icons/call.svg', color: '#16a34a' },
-  mobile: { file: '/icons/call.svg', color: '#16a34a' },
-  office: { file: '/icons/call.svg', color: '#16a34a' },
-  home: { file: '/icons/call.svg', color: '#16a34a' },
-  email: { file: '/icons/email.svg', color: '#2563eb' },
+const SOCIAL_ICON_FILE: Record<string, { file: string; color: string; light?: boolean }> = {
+  phone: { file: '/icons/call.svg', color: '#22c55e' },
+  mobile: { file: '/icons/call.svg', color: '#22c55e' },
+  office: { file: '/icons/call.svg', color: '#22c55e' },
+  home: { file: '/icons/call.svg', color: '#22c55e' },
+  email: { file: '/icons/email.svg', color: '#ea4335' },
   website: { file: '/icons/website.svg', color: '#7c3aed' },
-  location: { file: '/icons/location.svg', color: '#ef4444' },
-  whatsapp: { file: '/icons/whatsapp.svg', color: '#22c55e' },
-  telegram: { file: '/icons/telegram.svg', color: '#38bdf8' },
-  instagram: { file: '/icons/instagram.svg', color: '#f97316' },
-  viber: { file: '/icons/viber.svg', color: '#7c3aed' },
-  tiktok: { file: '/icons/tiktok.svg', color: '#111827', light: true },
-  youtube: { file: '/icons/youtube.svg', color: '#ef4444' },
-  vk: { file: '/icons/vk.svg', color: '#3b82f6' },
-  twitter: { file: '/icons/twitter.svg', color: '#38bdf8' },
-  facebook: { file: '/icons/facebook.svg', color: '#2563eb' },
-  linkedin: { file: '/icons/linkedin.svg', color: '#2563eb' },
-  reddit: { file: '/icons/reddit.svg', color: '#f97316' },
-  snapchat: { file: '/icons/snapchat.svg', color: '#facc15', iconColor: '#111827', light: true },
-  gallery: { file: '/icons/gallery.svg', color: '#6b7280' },
-  appstore: { file: '/icons/appstore.svg', color: '#0ea5e9' },
-  playstore: { file: '/icons/playstore.svg', color: '#16a34a' }
+  location: { file: '/icons/location.svg', color: '#ff3b30' },
+  whatsapp: { file: '/icons/whatsapp.svg', color: '#25d366' },
+  telegram: { file: '/icons/telegram.svg', color: '#2aabee' },
+  instagram: { file: '/icons/instagram.svg', color: '#f77737' },
+  viber: { file: '/icons/viber.svg', color: '#7360f2' },
+  tiktok: { file: '/icons/tiktok.svg', color: '#00f2ea' },
+  youtube: { file: '/icons/youtube.svg', color: '#ff0000' },
+  vk: { file: '/icons/vk.svg', color: '#4a76a8' },
+  twitter: { file: '/icons/twitter.svg', color: '#1d9bf0' },
+  facebook: { file: '/icons/facebook.svg', color: '#1877f2' },
+  linkedin: { file: '/icons/linkedin.svg', color: '#0a66c2' },
+  gallery: { file: '/icons/gallery.svg', color: '#9ca3af' },
+  appstore: { file: '/icons/appstore.svg', color: '#147efb' },
+  playstore: { file: '/icons/playstore.svg', color: '#34a853' }
 }
 
 
@@ -206,9 +203,13 @@ export default function PublicCard() {
   const getSocialIcon = (type: string) => {
     const key = type.toLowerCase()
     if (SOCIAL_ICON_FILE[key]) return SOCIAL_ICON_FILE[key]
-    if (key === 'opencollective') return { file: '/icons/open-collective.svg', color: '#297adc', light: true, iconColor: '#111827' }
-    if (key === 'buymeacoffee') return { file: '/icons/buymeacoffee.svg', color: '#facc15', light: true, iconColor: '#111827' }
-    return { file: `/icons/${key}.svg`, color: '#6b7280' }
+    if (key === 'opencollective') return { file: '/icons/open-collective.svg', color: '#297adc' }
+    if (key === 'buymeacoffee') return { file: '/icons/buymeacoffee.svg', color: '#ffdd00', light: true }
+    if (key === 'cashapp') return { file: '/icons/cashapp.svg', color: '#00d632' }
+    if (key === 'yelp') return { file: '/icons/yelp.svg', color: '#d32323' }
+    if (key === 'peertube') return { file: '/icons/peertube.svg', color: '#f1680d' }
+    if (key === 'funkwhale') return { file: '/icons/funkwhale.svg', color: '#009fe3' }
+    return { file: `/icons/${key}.svg`, color: '#f8f8f8' }
   }
 
   const openExternal = (type: string, url?: string) => {
@@ -396,7 +397,7 @@ export default function PublicCard() {
       if (used.has(id)) return
       used.add(id)
       const meta = getSocialIcon(id)
-      items.push({ id, label, onClick, icon: meta.file, color: meta.color, iconColor: meta.iconColor || (meta.light ? '#111' : '#fff'), light: meta.light })
+      items.push({ id, label, onClick, icon: meta.file, color: meta.color, light: meta.light })
     }
 
     for (const link of card.links) {
@@ -533,7 +534,6 @@ export default function PublicCard() {
                       key={item.id}
                       type="button"
                       className={`dbc-social-item${item.light ? ' is-light' : ''}`}
-                      style={{ backgroundColor: item.color }}
                       onClick={item.onClick}
                       aria-label={item.label}
                     >
@@ -542,7 +542,7 @@ export default function PublicCard() {
                         style={{
                           WebkitMaskImage: `url(${item.icon})`,
                           maskImage: `url(${item.icon})`,
-                          backgroundColor: item.iconColor
+                          backgroundColor: item.color
                         } as CSSProperties}
                       />
                     </button>
