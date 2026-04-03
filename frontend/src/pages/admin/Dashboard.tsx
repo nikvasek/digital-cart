@@ -367,11 +367,23 @@ const getCoreFieldsFromLinks = (links: LinkItem[], current: Pick<CardDetails, 'p
     }
 }
 
-const getDefaultGalleryUrl = (card: CardDetails) => {
-    const portfolio = (card.portfolio_url || '').trim()
-    if (portfolio) return portfolio
-    const firstMedia = card.media.find((item) => (item.type || 'image').toLowerCase() === 'image' && (item.file_url || '').trim())
-    return firstMedia?.file_url?.trim() || ''
+const isGalleryLink = (link: LinkItem) => (link.type || '').toLowerCase() === 'gallery'
+const isLocationLink = (link: LinkItem) => (link.type || '').toLowerCase() === 'location'
+
+const ensureGalleryLinkPlacement = (links: LinkItem[]) => {
+    const gallery = links.find(isGalleryLink)
+    if (!gallery) return links
+
+    const rest = links.filter((link) => !isGalleryLink(link))
+    const locationIndex = rest.findIndex(isLocationLink)
+    if (locationIndex === -1) return [...rest, gallery]
+
+    return [...rest.slice(0, locationIndex), gallery, ...rest.slice(locationIndex)]
+}
+
+const getDefaultGalleryLinkUrl = (card: CardDetails) => {
+    const firstMedia = card.media.find((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url)?.file_url
+    return firstMedia || card.portfolio_url || 'https://res.cloudinary.com/'
 }
 
 const defaultCardDetails = (card: CardItem): CardDetails => ({
@@ -644,47 +656,35 @@ export default function Dashboard() {
         updateCard({ media: cardData.media.filter((_, i) => i !== index) })
     }
 
-    const setGalleryVisibility = (visible: boolean) => {
+    const isGalleryVisible = !!cardData?.links.some((link) => isGalleryLink(link) && link.is_visible !== false)
+
+    const toggleGalleryVisibility = (enabled: boolean) => {
         if (!cardData) return
 
-        const galleryIndexes = cardData.links
-            .map((link, index) => ({ link, index }))
-            .filter(({ link }) => (link.type || '').toLowerCase() === 'gallery')
-            .map(({ index }) => index)
+        const links = [...cardData.links]
+        const galleryIndex = links.findIndex(isGalleryLink)
 
-        if (galleryIndexes.length === 0) {
-            if (!visible) return
-
-            const defaultUrl = getDefaultGalleryUrl(cardData)
-            if (!defaultUrl) {
-                alert('Сначала добавьте фото в галерею или укажите Галерея (URL), затем включите отображение gallery.')
-                return
+        if (!enabled) {
+            if (galleryIndex !== -1) {
+                links[galleryIndex] = { ...links[galleryIndex], is_visible: false }
+                updateCard({ links })
             }
-
-            updateCard({
-                links: [...cardData.links, { type: 'gallery', url: defaultUrl, is_visible: true }]
-            })
             return
         }
 
-        const nextLinks = [...cardData.links]
-        const fallbackUrl = getDefaultGalleryUrl(cardData)
-
-        for (const index of galleryIndexes) {
-            const current = nextLinks[index]
-            nextLinks[index] = {
+        if (galleryIndex !== -1) {
+            const current = links[galleryIndex]
+            links[galleryIndex] = {
                 ...current,
-                url: (current.url || '').trim() || fallbackUrl || current.url,
-                is_visible: visible
+                is_visible: true,
+                url: (current.url || '').trim() || getDefaultGalleryLinkUrl(cardData)
             }
-        }
-
-        if (visible && !nextLinks.some((link) => (link.type || '').toLowerCase() === 'gallery' && !!(link.url || '').trim())) {
-            alert('Для отображения gallery нужен URL. Добавьте фото в галерею или задайте Галерея (URL).')
+            updateCard({ links: ensureGalleryLinkPlacement(links) })
             return
         }
 
-        updateCard({ links: nextLinks })
+        const nextLinks = [...links, { type: 'gallery', url: getDefaultGalleryLinkUrl(cardData), is_visible: true }]
+        updateCard({ links: ensureGalleryLinkPlacement(nextLinks) })
     }
 
     const logout = () => {
@@ -812,7 +812,7 @@ export default function Dashboard() {
                             <label>Компания<input value={cardData.company_name || ''} onChange={(e) => updateCard({ company_name: e.target.value })} /></label>
                             <label>О себе<textarea rows={3} value={cardData.bio || ''} onChange={(e) => updateCard({ bio: e.target.value })}></textarea></label>
                             <label>Галерея (URL)<input value={cardData.portfolio_url || ''} placeholder="https://…" onChange={(e) => updateCard({ portfolio_url: e.target.value })} /></label>
-                            <label>Фото (URL)<input value={cardData.avatar_url || ''} onChange={(e) => updateCard({ avatar_url: e.target.value })} /></label>
+                            <label>Фото (Cloudinary URL)<input value={cardData.avatar_url || ''} readOnly /></label>
                             <div className="avatar-actions">
                                 <input
                                     ref={avatarInputRef}
@@ -1051,34 +1051,14 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="section-head-row">
-                            <strong>Показывать кнопку gallery в контактах</strong>
-                            <div className="view-toggle">
-                                {(() => {
-                                    const hasVisibleGallery = cardData.links.some(
-                                        (link) => (link.type || '').toLowerCase() === 'gallery' && link.is_visible !== false
-                                    )
-                                    return (
-                                        <>
-                                            <button
-                                                type="button"
-                                                className={!hasVisibleGallery ? 'is-active' : ''}
-                                                onClick={() => setGalleryVisibility(false)}
-                                            >
-                                                Выключено
-                                            </button>
-                                            <button
-                                                type="button"
-                                                className={hasVisibleGallery ? 'is-active' : ''}
-                                                onClick={() => setGalleryVisibility(true)}
-                                            >
-                                                Включено
-                                            </button>
-                                        </>
-                                    )
-                                })()}
-                            </div>
-                        </div>
+                        <label className="gallery-toggle">
+                            <input
+                                type="checkbox"
+                                checked={isGalleryVisible}
+                                onChange={(e) => toggleGalleryVisibility(e.target.checked)}
+                            />
+                            <span>Показывать Gallery в основной секции контактов</span>
+                        </label>
 
                         <div className={galleryView === 'grid' ? 'media-grid' : 'media-list'}>
                             {cardData.media.map((item, index) => (

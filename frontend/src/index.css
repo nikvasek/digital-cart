@@ -1596,6 +1596,14 @@ code {
   gap: 10px;
 }
 
+.gallery-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
 .media-list {
   display: grid;
   gap: 8px;
