@@ -27,10 +27,11 @@ interface CardData {
 
 type ContactRow = {
   id: string
+  keyId: string
   label: string
-  iconSrc: string
+  iconSrc?: string
+  iconMask?: string
   onClick: () => void
-  isVisible: boolean
 }
 
 type SocialIconItem = {
@@ -47,7 +48,34 @@ const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15
 const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.webp')
 
 const PHONE_TYPES = ['phone', 'mobile', 'office', 'home']
-const STANDARD_CONTACT_TYPES = ['whatsapp', 'telegram', 'instagram', 'email', 'gallery', 'location']
+
+const CONTACT_ICON_FIGMA: Record<string, string> = {
+  phone: figmaAsset('call_1062678 1@3x.png'),
+  mobile: figmaAsset('call_1062678 1@3x.png'),
+  office: figmaAsset('call_1062678 1@3x.png'),
+  home: figmaAsset('call_1062678 1@3x.png'),
+  whatsapp: figmaAsset('whatsapp_739247 1@3x.png'),
+  telegram: figmaAsset('telegram 1@3x.png'),
+  instagram: figmaAsset('instagram_739244 1@3x.png'),
+  viber: figmaAsset('viber_2190481 1@3x.png'),
+  email: figmaAsset('email_347722 1@3x.png'),
+  tiktok: figmaAsset('tik-tok 1@3x.png'),
+  gallery: figmaAsset('image 13@3x.png'),
+  location: figmaAsset('placeholder_1180413 1@3x.png')
+}
+
+const CONTACT_LABELS: Record<string, string> = {
+  phone: 'Mobile',
+  mobile: 'Mobile',
+  office: 'Office',
+  home: 'Home',
+  whatsapp: 'WhatsApp',
+  telegram: 'Telegram',
+  instagram: 'Instagram',
+  email: 'Email',
+  gallery: 'Gallery',
+  location: 'Location'
+}
 
 const SOCIAL_ICON_FILE: Record<string, { file: string; color: string; light?: boolean }> = {
   phone: { file: '/icons/call.svg', color: '#22c55e' },
@@ -199,10 +227,6 @@ export default function PublicCard() {
     }
   }
 
-  const getLinkByType = (type: string) => {
-    return card?.links?.find((link) => link.is_visible && (link.type || '').toLowerCase() === type.toLowerCase())?.url
-  }
-
   const getFirstLinkByTypes = (types: string[]) => {
     return card?.links?.find((link) => link.is_visible && types.includes((link.type || '').toLowerCase()))
   }
@@ -225,33 +249,22 @@ export default function PublicCard() {
     window.location.href = toExternalUrl(url)
   }
 
-  const openTel = () => {
-    const phoneLink = getFirstLinkByTypes(PHONE_TYPES)
-    if (!phoneLink?.url) return
-    trackEvent('click', { link_type: 'phone' })
-    const raw = phoneLink.url.replace(/^tel:/i, '').trim()
-    const digitsOnly = raw.replace(/\D/g, '')
-    const formatted = raw.startsWith('+') ? raw.replace(/\s+/g, '') : `+${digitsOnly}`
-    window.location.href = `tel:${formatted}`
-  }
-
-  const openEmail = () => {
-    const emailLink = getFirstLinkByTypes(['email'])
-    if (!emailLink?.url) return
-    trackEvent('click', { link_type: 'email' })
-    window.location.href = toExternalUrl(emailLink.url)
-  }
-
-  const openLocation = () => {
-    const locationLink = getLinkByType('location')
-    if (locationLink) {
-      trackEvent('click', { link_type: 'location' })
-      window.location.href = toExternalUrl(locationLink)
+  const openByType = (type: string, url: string) => {
+    if (!url) return
+    const t = type.toLowerCase()
+    if (PHONE_TYPES.includes(t)) {
+      const raw = url.replace(/^tel:/i, '').trim()
+      const digitsOnly = raw.replace(/\D/g, '')
+      const formatted = raw.startsWith('+') ? raw.replace(/\s+/g, '') : `+${digitsOnly}`
+      openExternal('phone', `tel:${formatted}`)
       return
     }
-    if (!card?.address) return
-    trackEvent('click', { link_type: 'location' })
-    window.location.href = parseAddressField(card.address).mapsUrl
+    if (t === 'location') {
+      const parsed = parseAddressField(url)
+      openExternal('location', parsed.mapsUrl)
+      return
+    }
+    openExternal(t, url)
   }
 
   const openGallery = () => {
@@ -325,81 +338,90 @@ export default function PublicCard() {
     }
   }
 
-  const contactRows = useMemo<ContactRow[]>(() => {
-    if (!card) return []
+  const { contactRows, overflowLinks } = useMemo(() => {
+    if (!card) return { contactRows: [] as ContactRow[], overflowLinks: [] as Array<{ type: string; url: string; _idx: number }> }
+    const visibleLinks = (card.links || []).filter((link) => link?.is_visible && link?.url)
+      .map((link, index) => ({ ...link, type: (link.type || '').toLowerCase(), _idx: index }))
 
-    const phoneLink = card.links.find((link) => link.is_visible && PHONE_TYPES.includes((link.type || '').toLowerCase()))
-    const whatsappLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'whatsapp')
-    const telegramLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'telegram')
-    const instagramLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'instagram')
-    const emailLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'email')
-    const galleryLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'gallery')
-    const locationLink = card.links.find((link) => link.is_visible && (link.type || '').toLowerCase() === 'location')
+    const consumed = new Set<number>()
 
-    const phoneLabel = phoneLink
-      ? formatPhoneDisplay(phoneLink.url.replace(/^tel:/i, '').trim())
-      : ''
+    const rowFromLink = (link: { type: string; url: string; _idx: number }): ContactRow => {
+      let label = CONTACT_LABELS[link.type] || link.type.charAt(0).toUpperCase() + link.type.slice(1)
 
-    const emailLabel = emailLink
-      ? emailLink.url.replace(/^mailto:/i, '').trim() || 'Email'
-      : 'Email'
-
-    const locationLabel = locationLink
-      ? normalizeAddress(parseAddressField(locationLink.url).label)
-      : ''
-
-    return [
-      {
-        id: 'phone',
-        label: phoneLabel,
-        iconSrc: figmaAsset('call_1062678 1@3x.png'),
-        onClick: openTel,
-        isVisible: Boolean(phoneLink?.url)
-      },
-      {
-        id: 'whatsapp',
-        label: 'WhatsApp',
-        iconSrc: figmaAsset('whatsapp_739247 1@3x.png'),
-        onClick: () => openExternal('whatsapp', whatsappLink?.url),
-        isVisible: Boolean(whatsappLink?.url)
-      },
-      {
-        id: 'telegram',
-        label: 'Telegram',
-        iconSrc: figmaAsset('telegram 1@3x.png'),
-        onClick: () => openExternal('telegram', telegramLink?.url),
-        isVisible: Boolean(telegramLink?.url)
-      },
-      {
-        id: 'instagram',
-        label: 'Instagram',
-        iconSrc: figmaAsset('instagram_739244 1@3x.png'),
-        onClick: () => openExternal('instagram', instagramLink?.url),
-        isVisible: Boolean(instagramLink?.url)
-      },
-      {
-        id: 'email',
-        label: emailLabel,
-        iconSrc: figmaAsset('email_347722 1@3x.png'),
-        onClick: openEmail,
-        isVisible: Boolean(emailLink?.url)
-      },
-      {
-        id: 'gallery',
-        label: 'Gallery',
-        iconSrc: figmaAsset('image 13@3x.png'),
-        onClick: openGallery,
-        isVisible: Boolean(galleryLink?.url)
-      },
-      {
-        id: 'location',
-        label: locationLabel,
-        iconSrc: figmaAsset('placeholder_1180413 1@3x.png'),
-        onClick: openLocation,
-        isVisible: Boolean(locationLink?.url)
+      if (PHONE_TYPES.includes(link.type)) {
+        label = formatPhoneDisplay(link.url.replace(/^tel:/i, '').trim())
+      } else if (link.type === 'email') {
+        label = link.url.replace(/^mailto:/i, '').trim() || 'Email'
+      } else if (link.type === 'location') {
+        label = normalizeAddress(parseAddressField(link.url).label)
       }
-    ].filter((row) => row.isVisible)
-     .sort((a, b) => (a.id === 'location' ? 1 : b.id === 'location' ? -1 : 0))
+
+      const onClick = () => {
+        if (link.type === 'gallery') {
+          openGallery()
+          return
+        }
+        openByType(link.type, link.url)
+      }
+
+      const iconSrc = CONTACT_ICON_FIGMA[link.type]
+      return {
+        id: link.type,
+        keyId: `${link.type}-${link._idx}`,
+        label,
+        iconSrc,
+        iconMask: iconSrc ? undefined : `/icons/${link.type}.svg`,
+        onClick
+      }
+    }
+
+    const phones: Array<{ type: string; url: string; _idx: number }> = []
+    for (const type of PHONE_TYPES) {
+      for (const link of visibleLinks) {
+        if (link.type === type) {
+          consumed.add(link._idx)
+          phones.push(link)
+        }
+      }
+    }
+
+    const takeFirst = (type: string) => {
+      const found = visibleLinks.find((link) => !consumed.has(link._idx) && link.type === type)
+      if (!found) return null
+      consumed.add(found._idx)
+      return found
+    }
+
+    const gallery = takeFirst('gallery')
+    const whatsapp = takeFirst('whatsapp')
+    const telegram = takeFirst('telegram')
+    const email = takeFirst('email')
+    const instagram = takeFirst('instagram')
+    const location = takeFirst('location')
+
+    const additional = visibleLinks.filter((link) => !consumed.has(link._idx))
+
+    const orderedWithoutLocation = [
+      ...phones,
+      ...(gallery ? [gallery] : []),
+      ...(whatsapp ? [whatsapp] : []),
+      ...(telegram ? [telegram] : []),
+      ...(email ? [email] : []),
+      ...(instagram ? [instagram] : []),
+      ...additional
+    ]
+
+    const maxMain = location ? 6 : 7
+    const mainLinks = orderedWithoutLocation.slice(0, maxMain)
+    const overflow = orderedWithoutLocation.slice(maxMain)
+    if (location) {
+      mainLinks.push(location)
+    }
+
+    return {
+      contactRows: mainLinks.map(rowFromLink),
+      overflowLinks: overflow
+    }
   }, [card])
 
   const socialIconItems = useMemo<SocialIconItem[]>(() => {
@@ -415,17 +437,14 @@ export default function PublicCard() {
       items.push({ id, label, onClick, icon: meta.file, color: meta.color, light: meta.light })
     }
 
-    for (const link of card.links) {
-      if (!link?.is_visible || !link?.type || !link?.url) continue
+    for (const link of overflowLinks) {
+      if (!link?.type || !link?.url) continue
       const type = link.type.toLowerCase()
-      const isStandardPhone = PHONE_TYPES.includes(type)
-      const isStandardDirect = STANDARD_CONTACT_TYPES.includes(type)
-      if (isStandardPhone || isStandardDirect) continue
-      pushItem(type, type, () => openExternal(type, link.url))
+      pushItem(type, type, () => openByType(type, link.url))
     }
 
     return items
-  }, [card])
+  }, [card, overflowLinks])
 
   if (!loading && !card) {
     return (
@@ -476,10 +495,21 @@ export default function PublicCard() {
                 </button>
               </div>
 
+              {contactRows.length > 0 && (
               <div className={`dbc-contacts${showMoreContacts ? ' dbc-home-mode--hidden' : ''}`} aria-label="Contacts">
                 {contactRows.map((row) => (
-                  <button key={row.id} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
-                    <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
+                  <button key={row.keyId} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
+                    {row.iconSrc ? (
+                      <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
+                    ) : (
+                      <span
+                        className="dbc-contact-icon dbc-contact-icon-mask"
+                        style={{
+                          WebkitMaskImage: `url(${row.iconMask})`,
+                          maskImage: `url(${row.iconMask})`
+                        } as CSSProperties}
+                      />
+                    )}
                     <span className={`dbc-contact-label${row.id === 'location' ? ' dbc-contact-label--wrap' : ''}`}>{row.label}</span>
                   </button>
                 ))}
@@ -494,6 +524,7 @@ export default function PublicCard() {
                   </button>
                 )}
               </div>
+              )}
 
               <div className={`dbc-home-mode${showMoreContacts ? ' dbc-home-mode--hidden' : ''}`}>
                 <div className="dbc-actions" aria-label="Actions">

@@ -486,6 +486,17 @@ code {
   flex: 0 0 auto;
 }
 
+.dbc-contact-icon-mask {
+  display: inline-block;
+  background-color: #f8f8f8;
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+}
+
 .dbc-contact-label {
   margin-left: 12px;
   color: #f8f8f8;
