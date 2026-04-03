@@ -37,6 +37,8 @@ type SocialIconItem = {
   id: string
   label: string
   icon: string
+  color: string
+  iconColor: string
   light?: boolean
   onClick: () => void
 }
@@ -45,27 +47,29 @@ const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
 const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.webp')
 const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.webp')
 
-const SOCIAL_ICON_FILE: Record<string, { file: string; light?: boolean }> = {
-  phone: { file: '/icons/call.svg' },
-  mobile: { file: '/icons/call.svg' },
-  office: { file: '/icons/call.svg' },
-  home: { file: '/icons/call.svg' },
-  email: { file: '/icons/email.svg' },
-  website: { file: '/icons/website.svg' },
-  location: { file: '/icons/location.svg' },
-  whatsapp: { file: '/icons/whatsapp.svg' },
-  telegram: { file: '/icons/telegram.svg' },
-  instagram: { file: '/icons/instagram.svg' },
-  viber: { file: '/icons/viber.svg' },
-  tiktok: { file: '/icons/tiktok.svg', light: true },
-  youtube: { file: '/icons/youtube.svg' },
-  vk: { file: '/icons/vk.svg' },
-  twitter: { file: '/icons/twitter.svg' },
-  facebook: { file: '/icons/facebook.svg' },
-  linkedin: { file: '/icons/linkedin.svg' },
-  gallery: { file: '/icons/gallery.svg' },
-  appstore: { file: '/icons/appstore.svg' },
-  playstore: { file: '/icons/playstore.svg' }
+const SOCIAL_ICON_FILE: Record<string, { file: string; light?: boolean; color: string; iconColor?: string }> = {
+  phone: { file: '/icons/call.svg', color: '#16a34a' },
+  mobile: { file: '/icons/call.svg', color: '#16a34a' },
+  office: { file: '/icons/call.svg', color: '#16a34a' },
+  home: { file: '/icons/call.svg', color: '#16a34a' },
+  email: { file: '/icons/email.svg', color: '#2563eb' },
+  website: { file: '/icons/website.svg', color: '#7c3aed' },
+  location: { file: '/icons/location.svg', color: '#ef4444' },
+  whatsapp: { file: '/icons/whatsapp.svg', color: '#22c55e' },
+  telegram: { file: '/icons/telegram.svg', color: '#38bdf8' },
+  instagram: { file: '/icons/instagram.svg', color: '#f97316' },
+  viber: { file: '/icons/viber.svg', color: '#7c3aed' },
+  tiktok: { file: '/icons/tiktok.svg', color: '#111827', light: true },
+  youtube: { file: '/icons/youtube.svg', color: '#ef4444' },
+  vk: { file: '/icons/vk.svg', color: '#3b82f6' },
+  twitter: { file: '/icons/twitter.svg', color: '#38bdf8' },
+  facebook: { file: '/icons/facebook.svg', color: '#2563eb' },
+  linkedin: { file: '/icons/linkedin.svg', color: '#2563eb' },
+  reddit: { file: '/icons/reddit.svg', color: '#f97316' },
+  snapchat: { file: '/icons/snapchat.svg', color: '#facc15', iconColor: '#111827', light: true },
+  gallery: { file: '/icons/gallery.svg', color: '#6b7280' },
+  appstore: { file: '/icons/appstore.svg', color: '#0ea5e9' },
+  playstore: { file: '/icons/playstore.svg', color: '#16a34a' }
 }
 
 
@@ -202,9 +206,9 @@ export default function PublicCard() {
   const getSocialIcon = (type: string) => {
     const key = type.toLowerCase()
     if (SOCIAL_ICON_FILE[key]) return SOCIAL_ICON_FILE[key]
-    if (key === 'opencollective') return { file: '/icons/open-collective.svg', light: true }
-    if (key === 'buymeacoffee') return { file: '/icons/buymeacoffee.svg', light: true }
-    return { file: `/icons/${key}.svg` }
+    if (key === 'opencollective') return { file: '/icons/open-collective.svg', color: '#297adc', light: true, iconColor: '#111827' }
+    if (key === 'buymeacoffee') return { file: '/icons/buymeacoffee.svg', color: '#facc15', light: true, iconColor: '#111827' }
+    return { file: `/icons/${key}.svg`, color: '#6b7280' }
   }
 
   const openExternal = (type: string, url?: string) => {
@@ -392,7 +396,7 @@ export default function PublicCard() {
       if (used.has(id)) return
       used.add(id)
       const meta = getSocialIcon(id)
-      items.push({ id, label, onClick, icon: meta.file, light: meta.light })
+      items.push({ id, label, onClick, icon: meta.file, color: meta.color, iconColor: meta.iconColor || (meta.light ? '#111' : '#fff'), light: meta.light })
     }
 
     for (const link of card.links) {
@@ -529,6 +533,7 @@ export default function PublicCard() {
                       key={item.id}
                       type="button"
                       className={`dbc-social-item${item.light ? ' is-light' : ''}`}
+                      style={{ backgroundColor: item.color }}
                       onClick={item.onClick}
                       aria-label={item.label}
                     >
@@ -537,7 +542,7 @@ export default function PublicCard() {
                         style={{
                           WebkitMaskImage: `url(${item.icon})`,
                           maskImage: `url(${item.icon})`,
-                          backgroundColor: item.light ? '#111' : '#fff'
+                          backgroundColor: item.iconColor
                         } as CSSProperties}
                       />
                     </button>
