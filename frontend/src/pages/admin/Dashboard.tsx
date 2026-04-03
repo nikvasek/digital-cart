@@ -303,6 +303,24 @@ const mergeCoreContactLinks = (card: CardDetails): CardDetails => {
 const getFirstLinkValue = (links: LinkItem[], types: string[]) =>
     links.find((link) => types.includes((link.type || '').toLowerCase()))?.url ?? ''
 
+const compactAddress = (value: string) => {
+    const normalized = value.replace(/\s+/g, ' ').trim()
+    if (!normalized) return ''
+
+    const parts = normalized
+        .split(',')
+        .map((part) => part.replace(/\s+/g, ' ').trim())
+        .filter(Boolean)
+
+    if (parts.length <= 2) return parts.join(', ')
+
+    const street = parts[0]
+    const country = parts[parts.length - 1]
+    const cityOrVillage = parts.slice(1, -1)[0] || ''
+
+    return [street, cityOrVillage, country].filter(Boolean).join(', ')
+}
+
 const toAddressLabel = (value: string) => {
     const trimmed = value.trim()
     if (!trimmed) return ''
@@ -312,16 +330,16 @@ const toAddressLabel = (value: string) => {
             const u = new URL(trimmed)
             const placeMatch = u.pathname.match(/\/maps\/place\/([^/@]+)/)
             if (placeMatch?.[1]) {
-                return decodeURIComponent(placeMatch[1].replace(/\+/g, ' ')).trim().slice(0, 255)
+                return compactAddress(decodeURIComponent(placeMatch[1].replace(/\+/g, ' '))).slice(0, 255)
             }
             const q = u.searchParams.get('q')
-            if (q) return q.trim().slice(0, 255)
+            if (q) return compactAddress(q).slice(0, 255)
         } catch {
             // ignore malformed url and fallback to raw value
         }
     }
 
-    return trimmed.slice(0, 255)
+    return compactAddress(trimmed).slice(0, 255)
 }
 
 const getCoreFieldsFromLinks = (links: LinkItem[], current: Pick<CardDetails, 'phone' | 'email' | 'address'>) => {

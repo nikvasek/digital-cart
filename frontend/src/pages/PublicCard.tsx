@@ -135,6 +135,25 @@ const formatPhoneDisplay = (value: string) => {
 
 const normalizeAddress = (value: string) => value.replace(/\s+/g, ' ').trim()
 
+const toCompactAddress = (value: string) => {
+  const raw = normalizeAddress(value)
+  if (!raw) return ''
+
+  const parts = raw
+    .split(',')
+    .map((part) => normalizeAddress(part))
+    .filter(Boolean)
+
+  if (parts.length <= 2) return parts.join(', ')
+
+  const street = parts[0]
+  const country = parts[parts.length - 1]
+  const middle = parts.slice(1, -1)
+  const cityOrVillage = middle[0] || ''
+
+  return [street, cityOrVillage, country].filter(Boolean).join(', ')
+}
+
 const parseAddressField = (value: string): { label: string; mapsUrl: string } => {
   const trimmed = value.trim()
   if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
@@ -355,7 +374,7 @@ export default function PublicCard() {
       } else if (link.type === 'email') {
         label = link.url.replace(/^mailto:/i, '').trim() || 'Email'
       } else if (link.type === 'location') {
-        label = normalizeAddress(parseAddressField(link.url).label)
+        label = toCompactAddress(parseAddressField(link.url).label)
       }
 
       const onClick = () => {
