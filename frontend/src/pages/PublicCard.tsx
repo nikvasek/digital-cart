@@ -722,11 +722,7 @@ export default function PublicCard() {
                 {galleryActiveIndex !== null && galleryImages[galleryActiveIndex] && (
                   <div
                     className="dbc-gallery-viewer"
-                    onClick={(e) => {
-                      if (e.target === e.currentTarget) {
-                        closeGalleryViewer()
-                      }
-                    }}
+                    onClick={() => closeGalleryViewer()}
                     onTouchStart={(e) => {
                       const touch = e.touches[0]
                       if (!touch) return
@@ -746,18 +742,19 @@ export default function PublicCard() {
 
                       if (Math.abs(dx) > 20) {
                         moveGalleryImage(dx > 0 ? 'next' : 'prev')
+                        return
                       }
+
+                      closeGalleryViewer()
                     }}
                   >
                     <img
                       src={galleryImages[galleryActiveIndex]}
                       alt={`Gallery preview ${galleryActiveIndex + 1}`}
                       className="dbc-gallery-viewer-image"
-                      onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect()
-                        const isRightSide = (e.clientX - rect.left) > rect.width / 2
-                        moveGalleryImage(isRightSide ? 'next' : 'prev')
-                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onTouchStart={(e) => e.stopPropagation()}
+                      onTouchEnd={(e) => e.stopPropagation()}
                     />
                   </div>
                 )}
