@@ -801,7 +801,7 @@ code {
   visibility: hidden;
   transform: translateX(24px);
   transition: opacity 0.28s ease, transform 0.28s ease, visibility 0.28s ease;
-  z-index: 4;
+  z-index: 34;
 }
 
 .dbc-gallery-mode.is-active {
@@ -818,26 +818,38 @@ code {
   bottom: 8%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: row;
   gap: 10px;
   overflow-y: auto;
   overflow-x: hidden;
+  align-content: start;
 }
 
 .dbc-gallery-item {
+  position: relative;
+  display: block;
+  width: 100%;
   border: 0;
   border-radius: 0;
   overflow: hidden;
   background: transparent;
   padding: 0;
-  aspect-ratio: 1 / 1;
+}
+
+.dbc-gallery-item::before {
+  content: '';
+  display: block;
+  padding-top: 100%;
 }
 
 .dbc-gallery-item img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  aspect-ratio: 1 / 1;
   object-fit: cover;
   display: block;
+  pointer-events: auto;
 }
 
 .dbc-gallery-mode .dbc-social-back {
@@ -847,7 +859,7 @@ code {
 .dbc-gallery-viewer {
   position: absolute;
   inset: 0;
-  z-index: 6;
+  z-index: 60;
   background: rgba(0, 0, 0, 0.82);
   display: flex;
   align-items: center;
@@ -855,11 +867,13 @@ code {
   padding: 12px;
 }
 
-.dbc-gallery-viewer-image {
+.dbc-gallery-viewer .dbc-gallery-viewer-image {
   max-width: 100%;
   max-height: 88%;
   border-radius: 12px;
   object-fit: contain;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
 .admin-pin-glow--right {
   right: -110px;
