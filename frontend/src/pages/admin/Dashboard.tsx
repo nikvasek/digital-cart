@@ -303,6 +303,27 @@ const mergeCoreContactLinks = (card: CardDetails): CardDetails => {
 const getFirstLinkValue = (links: LinkItem[], types: string[]) =>
     links.find((link) => types.includes((link.type || '').toLowerCase()))?.url ?? ''
 
+const toAddressLabel = (value: string) => {
+    const trimmed = value.trim()
+    if (!trimmed) return ''
+
+    if (/^https?:\/\//i.test(trimmed)) {
+        try {
+            const u = new URL(trimmed)
+            const placeMatch = u.pathname.match(/\/maps\/place\/([^/@]+)/)
+            if (placeMatch?.[1]) {
+                return decodeURIComponent(placeMatch[1].replace(/\+/g, ' ')).trim().slice(0, 255)
+            }
+            const q = u.searchParams.get('q')
+            if (q) return q.trim().slice(0, 255)
+        } catch {
+            // ignore malformed url and fallback to raw value
+        }
+    }
+
+    return trimmed.slice(0, 255)
+}
+
 const getCoreFieldsFromLinks = (links: LinkItem[], current: Pick<CardDetails, 'phone' | 'email' | 'address'>) => {
     const phoneRaw = getFirstLinkValue(links, ['phone', 'mobile', 'office', 'home'])
     const emailRaw = getFirstLinkValue(links, ['email'])
@@ -311,7 +332,7 @@ const getCoreFieldsFromLinks = (links: LinkItem[], current: Pick<CardDetails, 'p
     return {
         phone: (phoneRaw ? phoneRaw : current.phone || '').replace(/^tel:/i, '').trim(),
         email: (emailRaw ? emailRaw : current.email || '').replace(/^mailto:/i, '').trim(),
-        address: (addressRaw ? addressRaw : current.address || '').trim()
+        address: toAddressLabel(addressRaw ? addressRaw : current.address || '')
     }
 }
 
@@ -433,8 +454,15 @@ export default function Dashboard() {
             await axios.patch(`/api/admin/card/${cardData.id}`, payload, config)
             await loadData()
             alert('Card saved')
-        } catch {
-            alert('Failed to save')
+        } catch (error: any) {
+            const details = error?.response?.data?.details
+            if (Array.isArray(details) && details.length > 0) {
+                alert(`Failed to save:\n${details.join('\n')}`)
+            } else if (error?.response?.data?.error) {
+                alert(`Failed to save: ${error.response.data.error}`)
+            } else {
+                alert('Failed to save')
+            }
         } finally {
             setSaving(false)
         }
