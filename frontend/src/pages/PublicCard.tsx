@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { CSSProperties } from 'react'
 import { useParams } from 'react-router-dom'
@@ -227,7 +227,7 @@ export default function PublicCard() {
   const [showServicesMode, setShowServicesMode] = useState(false)
   const [showGalleryMode, setShowGalleryMode] = useState(false)
   const [galleryActiveIndex, setGalleryActiveIndex] = useState<number | null>(null)
-  const [viewerTouchStart, setViewerTouchStart] = useState<{ x: number; y: number } | null>(null)
+  const viewerImageRef = useRef<HTMLImageElement | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -534,7 +534,17 @@ export default function PublicCard() {
 
   const closeGalleryViewer = () => {
     setGalleryActiveIndex(null)
-    setViewerTouchStart(null)
+  }
+
+  const moveByTapSide = (clientX: number) => {
+    const image = viewerImageRef.current
+    if (!image) return
+
+    const bounds = image.getBoundingClientRect()
+    if (bounds.width <= 0) return
+
+    const isRightSide = (clientX - bounds.left) > bounds.width / 2
+    moveGalleryImage(isRightSide ? 'next' : 'prev')
   }
 
   if (!loading && !card) {
@@ -696,7 +706,7 @@ export default function PublicCard() {
               <div className={`dbc-gallery-mode${showGalleryMode ? ' is-active' : ''}`} aria-hidden={!showGalleryMode}>
                 <button
                   type="button"
-                  className="dbc-social-back dbc-gallery-back"
+                  className="dbc-social-back"
                   onClick={() => {
                     setShowGalleryMode(false)
                     closeGalleryViewer()
@@ -722,39 +732,21 @@ export default function PublicCard() {
                 {galleryActiveIndex !== null && galleryImages[galleryActiveIndex] && (
                   <div
                     className="dbc-gallery-viewer"
-                    onClick={() => closeGalleryViewer()}
-                    onTouchStart={(e) => {
-                      const touch = e.touches[0]
-                      if (!touch) return
-                      setViewerTouchStart({ x: touch.clientX, y: touch.clientY })
-                    }}
-                    onTouchEnd={(e) => {
-                      const touch = e.changedTouches[0]
-                      if (!touch || !viewerTouchStart) return
-
-                      const dx = touch.clientX - viewerTouchStart.x
-                      const dy = touch.clientY - viewerTouchStart.y
-
-                      if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) {
+                    onClick={(e) => {
+                      if (e.target === e.currentTarget) {
                         closeGalleryViewer()
-                        return
                       }
-
-                      if (Math.abs(dx) > 20) {
-                        moveGalleryImage(dx > 0 ? 'next' : 'prev')
-                        return
-                      }
-
-                      closeGalleryViewer()
                     }}
                   >
                     <img
+                      ref={viewerImageRef}
                       src={galleryImages[galleryActiveIndex]}
                       alt={`Gallery preview ${galleryActiveIndex + 1}`}
                       className="dbc-gallery-viewer-image"
-                      onClick={(e) => e.stopPropagation()}
-                      onTouchStart={(e) => e.stopPropagation()}
-                      onTouchEnd={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        moveByTapSide(e.clientX)
+                      }}
                     />
                   </div>
                 )}

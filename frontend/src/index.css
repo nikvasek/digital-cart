@@ -796,7 +796,7 @@ code {
   position: absolute;
   inset: 0;
   padding: 0;
-  overflow: hidden;
+  overflow: visible;
   opacity: 0;
   visibility: hidden;
   transform: translateX(24px);
@@ -814,14 +814,14 @@ code {
   position: absolute;
   left: 6%;
   right: 6%;
-  top: 27.8%;
-  bottom: 7%;
+  top: 29.8%;
+  bottom: 8%;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 2px;
+  padding-right: 1px;
 }
 
 .dbc-gallery-item {
@@ -830,14 +830,19 @@ code {
   overflow: hidden;
   background: transparent;
   padding: 0;
-  cursor: pointer;
+  aspect-ratio: 1 / 1;
 }
 
 .dbc-gallery-item img {
   width: 100%;
+  height: 100%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   display: block;
+}
+
+.dbc-gallery-mode .dbc-social-back {
+  top: 25.2%;
 }
 
 .dbc-gallery-viewer {
@@ -856,10 +861,6 @@ code {
   max-height: 88%;
   border-radius: 12px;
   object-fit: contain;
-}
-
-.dbc-gallery-back {
-  top: 23.9%;
 }
 .admin-pin-glow--right {
   right: -110px;
