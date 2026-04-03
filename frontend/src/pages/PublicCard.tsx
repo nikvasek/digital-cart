@@ -36,6 +36,7 @@ type ContactRow = {
 
 type SocialIconItem = {
   id: string
+  keyId: string
   label: string
   icon: string
   color: string
@@ -338,8 +339,8 @@ export default function PublicCard() {
     }
   }
 
-  const { contactRows, overflowLinks } = useMemo(() => {
-    if (!card) return { contactRows: [] as ContactRow[], overflowLinks: [] as Array<{ type: string; url: string; _idx: number }> }
+  const contactRows = useMemo(() => {
+    if (!card) return [] as ContactRow[]
     const visibleLinks = (card.links || []).filter((link) => link?.is_visible && link?.url)
       .map((link, index) => ({ ...link, type: (link.type || '').toLowerCase(), _idx: index }))
 
@@ -413,38 +414,32 @@ export default function PublicCard() {
 
     const maxMain = location ? 6 : 7
     const mainLinks = orderedWithoutLocation.slice(0, maxMain)
-    const overflow = orderedWithoutLocation.slice(maxMain)
     if (location) {
       mainLinks.push(location)
     }
 
-    return {
-      contactRows: mainLinks.map(rowFromLink),
-      overflowLinks: overflow
-    }
+    return mainLinks.map(rowFromLink)
   }, [card])
 
   const socialIconItems = useMemo<SocialIconItem[]>(() => {
     if (!card) return []
 
     const items: SocialIconItem[] = []
-    const used = new Set<string>()
-
-    const pushItem = (id: string, label: string, onClick: () => void) => {
-      if (used.has(id)) return
-      used.add(id)
+    const pushItem = (id: string, keyId: string, label: string, onClick: () => void) => {
       const meta = getSocialIcon(id)
-      items.push({ id, label, onClick, icon: meta.file, color: meta.color, light: meta.light })
+      items.push({ id, keyId, label, onClick, icon: meta.file, color: meta.color, light: meta.light })
     }
 
-    for (const link of overflowLinks) {
+    for (let idx = 0; idx < (card.links || []).length; idx++) {
+      const link = card.links[idx]
       if (!link?.type || !link?.url) continue
+      if (link.is_visible === false) continue
       const type = link.type.toLowerCase()
-      pushItem(type, type, () => openByType(type, link.url))
+      pushItem(type, `${type}-${idx}`, type, () => openByType(type, link.url))
     }
 
     return items
-  }, [card, overflowLinks])
+  }, [card])
 
   if (!loading && !card) {
     return (
@@ -564,7 +559,7 @@ export default function PublicCard() {
                 <div className="dbc-social-grid" aria-label="Social links">
                   {socialIconItems.map((item) => (
                     <button
-                      key={item.id}
+                      key={item.keyId}
                       type="button"
                       className={`dbc-social-item${item.light ? ' is-light' : ''}`}
                       onClick={item.onClick}
