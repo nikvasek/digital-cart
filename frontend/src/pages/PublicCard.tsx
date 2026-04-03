@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
+import type { CSSProperties } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
@@ -32,10 +33,11 @@ type ContactRow = {
   isVisible: boolean
 }
 
-type ChannelItem = {
+type SocialIconItem = {
   id: string
   label: string
   icon: string
+  light?: boolean
   onClick: () => void
 }
 
@@ -43,13 +45,27 @@ const figmaAsset = (name: string) => encodeURI(`/figma/${name}`)
 const avatarFallbackSrc = figmaAsset('Снимок экрана 2026-03-26 в 15.46.46 1@3x.webp')
 const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_2026-03-28_19-51-14 1@3x.webp')
 
-const ICON_ALIASES: Record<string, string> = {
-  mobile: 'phone',
-  office: 'phone',
-  home: 'phone',
-  website: 'website',
-  appstore: 'appstore',
-  playstore: 'playstore'
+const SOCIAL_ICON_FILE: Record<string, { file: string; light?: boolean }> = {
+  phone: { file: '/icons/call.svg' },
+  mobile: { file: '/icons/call.svg' },
+  office: { file: '/icons/call.svg' },
+  home: { file: '/icons/call.svg' },
+  email: { file: '/icons/email.svg' },
+  website: { file: '/icons/website.svg' },
+  location: { file: '/icons/location.svg' },
+  whatsapp: { file: '/icons/whatsapp.svg' },
+  telegram: { file: '/icons/telegram.svg' },
+  instagram: { file: '/icons/instagram.svg' },
+  viber: { file: '/icons/viber.svg' },
+  tiktok: { file: '/icons/tiktok.svg', light: true },
+  youtube: { file: '/icons/youtube.svg' },
+  vk: { file: '/icons/vk.svg' },
+  twitter: { file: '/icons/twitter.svg' },
+  facebook: { file: '/icons/facebook.svg' },
+  linkedin: { file: '/icons/linkedin.svg' },
+  gallery: { file: '/icons/gallery.svg' },
+  appstore: { file: '/icons/appstore.svg' },
+  playstore: { file: '/icons/playstore.svg' }
 }
 
 
@@ -69,12 +85,6 @@ const resolveAvatarSrc = (value?: string) => {
 const toExternalUrl = (url: string) => {
   if (!url) return url
   return /^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`
-}
-
-const formatChannelLabel = (value: string) => {
-  const normalized = value.replace(/[_-]+/g, ' ').trim().toLowerCase()
-  if (!normalized) return value
-  return normalized.charAt(0).toUpperCase() + normalized.slice(1)
 }
 
 const formatPhoneDisplay = (value: string) => {
@@ -189,6 +199,14 @@ export default function PublicCard() {
     return card?.links?.find((link) => link.is_visible && link.type.toLowerCase() === type.toLowerCase())?.url
   }
 
+  const getSocialIcon = (type: string) => {
+    const key = type.toLowerCase()
+    if (SOCIAL_ICON_FILE[key]) return SOCIAL_ICON_FILE[key]
+    if (key === 'opencollective') return { file: '/icons/open-collective.svg', light: true }
+    if (key === 'buymeacoffee') return { file: '/icons/buymeacoffee.svg', light: true }
+    return { file: `/icons/${key}.svg` }
+  }
+
   const openExternal = (type: string, url?: string) => {
     if (!url) return
     trackEvent('click', { link_type: type })
@@ -230,29 +248,6 @@ export default function PublicCard() {
     if (firstImage) {
       window.location.href = toExternalUrl(firstImage)
     }
-  }
-
-  const resolveChannelIcon = (type: string) => {
-    const key = type.toLowerCase().trim()
-    return `/icons/${ICON_ALIASES[key] || key}.svg`
-  }
-
-  const openChannelByType = (type: string, url: string) => {
-    const key = type.toLowerCase()
-    trackEvent('click', { link_type: key })
-
-    if (key === 'email') {
-      window.location.href = /^mailto:/i.test(url) ? url : `mailto:${url}`
-      return
-    }
-
-    if (key === 'phone' || key === 'mobile' || key === 'office' || key === 'home') {
-      const digits = url.replace(/\s+/g, '')
-      window.location.href = /^tel:/i.test(digits) ? digits : `tel:${digits}`
-      return
-    }
-
-    window.location.href = toExternalUrl(url)
   }
 
   const handleSaveContact = () => {
@@ -387,63 +382,39 @@ export default function PublicCard() {
      .sort((a, b) => (a.id === 'location' ? 1 : b.id === 'location' ? -1 : 0))
   }, [card])
 
-  const moreChannelItems = useMemo<ChannelItem[]>(() => {
+  const socialIconItems = useMemo<SocialIconItem[]>(() => {
     if (!card) return []
 
-    const items: ChannelItem[] = []
-    const pushUnique = (next: ChannelItem) => {
-      if (!items.some((item) => item.id === next.id)) items.push(next)
+    const items: SocialIconItem[] = []
+    const used = new Set<string>()
+
+    const pushItem = (id: string, label: string, onClick: () => void) => {
+      if (used.has(id)) return
+      used.add(id)
+      const meta = getSocialIcon(id)
+      items.push({ id, label, onClick, icon: meta.file, light: meta.light })
     }
 
-    for (const link of card.links || []) {
-      if (!link?.is_visible || !link?.url) continue
-      const id = link.type.toLowerCase()
-      pushUnique({
-        id,
-        label: formatChannelLabel(id),
-        icon: resolveChannelIcon(id),
-        onClick: () => openChannelByType(id, link.url)
-      })
+    for (const link of card.links) {
+      if (!link?.is_visible || !link?.type || !link?.url) continue
+      const type = link.type.toLowerCase()
+      pushItem(type, type, () => openExternal(type, link.url))
     }
 
-    if (card.phone && !items.some((item) => ['phone', 'mobile', 'office', 'home'].includes(item.id))) {
-      pushUnique({
-        id: 'phone',
-        label: 'Phone',
-        icon: resolveChannelIcon('phone'),
-        onClick: openTel
-      })
+    if (card.phone && !used.has('phone')) {
+      pushItem('phone', 'phone', openTel)
     }
-
-    if (card.email && !items.some((item) => item.id === 'email')) {
-      pushUnique({
-        id: 'email',
-        label: 'Email',
-        icon: resolveChannelIcon('email'),
-        onClick: openEmail
-      })
+    if (card.email && !used.has('email')) {
+      pushItem('email', 'email', openEmail)
     }
-
-    if ((getLinkByType('location') || card.address) && !items.some((item) => item.id === 'location')) {
-      pushUnique({
-        id: 'location',
-        label: 'Location',
-        icon: resolveChannelIcon('location'),
-        onClick: openLocation
-      })
+    if ((card.address || getLinkByType('location')) && !used.has('location')) {
+      pushItem('location', 'location', openLocation)
     }
-
-    if (
-      (card.portfolio_url
-      || card.media?.some((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url))
-      && !items.some((item) => item.id === 'gallery')
-    ) {
-      pushUnique({
-        id: 'gallery',
-        label: 'Gallery',
-        icon: resolveChannelIcon('gallery'),
-        onClick: openGallery
-      })
+    if (card.website && !used.has('website')) {
+      pushItem('website', 'website', () => openExternal('website', card.website))
+    }
+    if ((card.portfolio_url || card.media?.length) && !used.has('gallery')) {
+      pushItem('gallery', 'gallery', openGallery)
     }
 
     return items
@@ -498,20 +469,26 @@ export default function PublicCard() {
                 </button>
               </div>
 
-              <div className={`dbc-main-view${showMoreContacts ? ' is-hidden' : ''}`} aria-hidden={showMoreContacts}>
-                <div className="dbc-contacts" aria-label="Contacts">
+              <div className={`dbc-contacts${showMoreContacts ? ' dbc-home-mode--hidden' : ''}`} aria-label="Contacts">
                 {contactRows.map((row) => (
                   <button key={row.id} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
                     <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
                     <span className={`dbc-contact-label${row.id === 'location' ? ' dbc-contact-label--wrap' : ''}`}>{row.label}</span>
                   </button>
                 ))}
+                {socialIconItems.length > 0 && (
+                  <button
+                    type="button"
+                    className="dbc-more-contact"
+                    onClick={() => setShowMoreContacts(true)}
+                    aria-label="More contact"
+                  >
+                    More contact...
+                  </button>
+                )}
               </div>
 
-                <button type="button" className="dbc-more-toggle" onClick={() => setShowMoreContacts(true)}>
-                  More contact...
-                </button>
-
+              <div className={`dbc-home-mode${showMoreContacts ? ' dbc-home-mode--hidden' : ''}`}>
                 <div className="dbc-actions" aria-label="Actions">
                 <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
                   <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
@@ -533,36 +510,36 @@ export default function PublicCard() {
                   <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
                   <span className="dbc-action-text">SHARE</span>
                 </button>
-              </div>
+                </div>
               </div>
 
-              <div className={`dbc-more-view${showMoreContacts ? ' is-active' : ''}`} aria-hidden={!showMoreContacts}>
+              <div className={`dbc-social-mode${showMoreContacts ? ' is-active' : ''}`} aria-hidden={!showMoreContacts}>
                 <button
                   type="button"
-                  className="dbc-more-back"
+                  className="dbc-social-back"
                   onClick={() => setShowMoreContacts(false)}
                   aria-label="Back"
                 >
-                  ← Назад
+                  ←
                 </button>
 
-                <div className="dbc-more-grid" aria-label="More contacts">
-                  {moreChannelItems.map((item) => (
+                <div className="dbc-social-grid" aria-label="Social links">
+                  {socialIconItems.map((item) => (
                     <button
                       key={item.id}
                       type="button"
-                      className="dbc-more-item"
+                      className={`dbc-social-item${item.light ? ' is-light' : ''}`}
                       onClick={item.onClick}
                       aria-label={item.label}
                     >
                       <span
-                        className="dbc-more-icon"
+                        className="dbc-social-icon-mask"
                         style={{
                           WebkitMaskImage: `url(${item.icon})`,
-                          maskImage: `url(${item.icon})`
-                        }}
+                          maskImage: `url(${item.icon})`,
+                          backgroundColor: item.light ? '#111' : '#fff'
+                        } as CSSProperties}
                       />
-                      <span className="dbc-more-label">{item.label}</span>
                     </button>
                   ))}
                 </div>
