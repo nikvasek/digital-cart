@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import Cropper, { type Area } from 'react-easy-crop'
+import 'react-easy-crop/react-easy-crop.css'
 
 // ── Platform definitions ──────────────────────────────────
 const PLATFORMS: Array<{
@@ -386,6 +388,40 @@ const getDefaultGalleryLinkUrl = (card: CardDetails) => {
     return firstMedia || card.portfolio_url || 'https://res.cloudinary.com/'
 }
 
+const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error('Failed to load image'))
+    img.src = src
+})
+
+const getCroppedAvatarBlob = async (src: string, crop: Area) => {
+    const image = await loadImage(src)
+    const size = 800
+
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Canvas is not available')
+
+    ctx.imageSmoothingEnabled = true
+    ctx.imageSmoothingQuality = 'high'
+    ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, size, size)
+
+    return await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+            if (!blob) {
+                reject(new Error('Failed to create cropped image'))
+                return
+            }
+            resolve(blob)
+        }, 'image/jpeg', 0.92)
+    })
+}
+
 const defaultCardDetails = (card: CardItem): CardDetails => ({
     ...card,
     company_name: '',
@@ -422,6 +458,12 @@ export default function Dashboard() {
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light')
     const [uploadingMedia, setUploadingMedia] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
+    const [avatarEditorOpen, setAvatarEditorOpen] = useState(false)
+    const [avatarCropSource, setAvatarCropSource] = useState('')
+    const [avatarCropObjectUrl, setAvatarCropObjectUrl] = useState<string | null>(null)
+    const [avatarCrop, setAvatarCrop] = useState({ x: 0, y: 0 })
+    const [avatarZoom, setAvatarZoom] = useState(1)
+    const [avatarCroppedAreaPixels, setAvatarCroppedAreaPixels] = useState<Area | null>(null)
 
     useEffect(() => {
         void loadData()
@@ -437,6 +479,14 @@ export default function Dashboard() {
         if (!el) return
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
     }, [selectedSection])
+
+    useEffect(() => {
+        return () => {
+            if (avatarCropObjectUrl) {
+                URL.revokeObjectURL(avatarCropObjectUrl)
+            }
+        }
+    }, [avatarCropObjectUrl])
 
     const dashboardStats = useMemo(() => {
         return [
@@ -598,13 +648,59 @@ export default function Dashboard() {
         }
     }
 
-    const uploadAvatarFile = async (fileList: FileList | null) => {
-        if (!cardData || !fileList || fileList.length === 0) return
+    const resetAvatarEditor = () => {
+        if (avatarCropObjectUrl) {
+            URL.revokeObjectURL(avatarCropObjectUrl)
+        }
+        setAvatarEditorOpen(false)
+        setAvatarCropSource('')
+        setAvatarCropObjectUrl(null)
+        setAvatarCrop({ x: 0, y: 0 })
+        setAvatarZoom(1)
+        setAvatarCroppedAreaPixels(null)
+        if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
+
+    const openAvatarEditor = (src: string, objectUrl?: string) => {
+        if (!src) {
+            alert('Сначала выберите фото аватара')
+            return
+        }
+
+        if (avatarCropObjectUrl) {
+            URL.revokeObjectURL(avatarCropObjectUrl)
+        }
+
+        setAvatarCropObjectUrl(objectUrl || null)
+        setAvatarCropSource(src)
+        setAvatarCrop({ x: 0, y: 0 })
+        setAvatarZoom(1)
+        setAvatarCroppedAreaPixels(null)
+        setAvatarEditorOpen(true)
+    }
+
+    const handleAvatarFilePick = (e: ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image/')) {
+            alert('Поддерживаются только изображения')
+            return
+        }
+
+        const objectUrl = URL.createObjectURL(file)
+        openAvatarEditor(objectUrl, objectUrl)
+    }
+
+    const applyAvatarCrop = async () => {
+        if (!cardData || !avatarCropSource || !avatarCroppedAreaPixels) {
+            alert('Выберите область кадрирования')
+            return
+        }
 
         setUploadingAvatar(true)
         try {
-            const file = fileList[0]
-            if (!file) return
+            const croppedBlob = await getCroppedAvatarBlob(avatarCropSource, avatarCroppedAreaPixels)
+            const file = new File([croppedBlob], `avatar-${cardData.id}.jpg`, { type: 'image/jpeg' })
             const uploadedUrl = await uploadImageFile(file)
 
             if (uploadedUrl) {
@@ -617,11 +713,12 @@ export default function Dashboard() {
                 }
                 updateCard({ avatar_url: uploadedUrl })
             }
+
+            resetAvatarEditor()
         } catch (error: any) {
-            const message = error?.response?.data?.error || 'Upload failed'
-            alert(`Не удалось загрузить аватар: ${message}`)
+            const message = error?.response?.data?.error || error?.message || 'Crop/upload failed'
+            alert(`Не удалось применить кроп: ${message}`)
         } finally {
-            if (avatarInputRef.current) avatarInputRef.current.value = ''
             setUploadingAvatar(false)
         }
     }
@@ -819,9 +916,7 @@ export default function Dashboard() {
                                     type="file"
                                     accept="image/*"
                                     style={{ display: 'none' }}
-                                    onChange={(e) => {
-                                        void uploadAvatarFile(e.target.files)
-                                    }}
+                                    onChange={handleAvatarFilePick}
                                 />
                                 <button
                                     type="button"
@@ -829,7 +924,15 @@ export default function Dashboard() {
                                     disabled={uploadingAvatar}
                                     onClick={() => avatarInputRef.current?.click()}
                                 >
-                                    {uploadingAvatar ? 'Загрузка…' : 'Загрузить аватар'}
+                                    {uploadingAvatar ? 'Обработка…' : 'Загрузить аватар'}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="admin-ghost"
+                                    disabled={uploadingAvatar || !cardData.avatar_url}
+                                    onClick={() => openAvatarEditor(resolveMediaUrl(cardData.avatar_url))}
+                                >
+                                    Редактировать аватар
                                 </button>
                                 <button
                                     type="button"
@@ -1138,6 +1241,64 @@ export default function Dashboard() {
                             <article><h4>Лиды</h4><p>{analytics?.leads ?? 0} лидов</p></article>
                         </div>
                     </section>
+                )}
+
+                {avatarEditorOpen && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4">
+                        <div className="w-full max-w-xl rounded-xl bg-white p-4 shadow-2xl">
+                            <h3 className="text-lg font-semibold">Редактор аватара</h3>
+                            <p className="mt-1 text-sm text-gray-600">Перетаскивайте фото и меняйте масштаб. Будет сохранен квадрат.</p>
+
+                            <div className="relative mt-4 h-[360px] w-full overflow-hidden rounded-lg bg-black">
+                                <Cropper
+                                    image={avatarCropSource}
+                                    crop={avatarCrop}
+                                    zoom={avatarZoom}
+                                    aspect={1}
+                                    cropShape="rect"
+                                    showGrid
+                                    objectFit="contain"
+                                    onCropChange={setAvatarCrop}
+                                    onZoomChange={setAvatarZoom}
+                                    onCropComplete={(_, croppedAreaPixels) => setAvatarCroppedAreaPixels(croppedAreaPixels)}
+                                />
+                            </div>
+
+                            <div className="mt-4">
+                                <label className="block text-sm font-medium text-gray-700">Масштаб</label>
+                                <input
+                                    type="range"
+                                    min={1}
+                                    max={3}
+                                    step={0.01}
+                                    value={avatarZoom}
+                                    onChange={(e) => setAvatarZoom(Number(e.target.value))}
+                                    className="mt-2 w-full"
+                                />
+                            </div>
+
+                            <div className="mt-4 flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    className="admin-ghost"
+                                    onClick={resetAvatarEditor}
+                                    disabled={uploadingAvatar}
+                                >
+                                    Отмена
+                                </button>
+                                <button
+                                    type="button"
+                                    className="admin-save"
+                                    onClick={() => {
+                                        void applyAvatarCrop()
+                                    }}
+                                    disabled={uploadingAvatar}
+                                >
+                                    {uploadingAvatar ? 'Сохранение…' : 'Применить'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </main>
         </div>
