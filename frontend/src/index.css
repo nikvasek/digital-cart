@@ -1381,6 +1381,29 @@ code {
   flex-wrap: wrap;
 }
 
+.avatar-actions .avatar-action-btn {
+  border: 0;
+  color: #fff;
+  box-shadow: none;
+}
+
+.avatar-actions .avatar-action-btn.is-primary {
+  background: #1d4ed8;
+}
+
+.avatar-actions .avatar-action-btn.is-primary:hover {
+  background: #1e40af;
+}
+
+.avatar-actions .avatar-action-btn.is-danger {
+  background: #dc2626;
+  margin-top: 0;
+}
+
+.avatar-actions .avatar-action-btn.is-danger:hover {
+  background: #b91c1c;
+}
+
 .form-grid input,
 .form-grid textarea,
 .form-grid select,

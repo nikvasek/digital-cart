@@ -464,7 +464,6 @@ export default function Dashboard() {
     const [avatarCrop, setAvatarCrop] = useState({ x: 0, y: 0 })
     const [avatarZoom, setAvatarZoom] = useState(1)
     const [avatarCroppedAreaPixels, setAvatarCroppedAreaPixels] = useState<Area | null>(null)
-    const [avatarCropPreviewUrl, setAvatarCropPreviewUrl] = useState<string>('')
 
     useEffect(() => {
         void loadData()
@@ -488,36 +487,6 @@ export default function Dashboard() {
             }
         }
     }, [avatarCropObjectUrl])
-
-    useEffect(() => {
-        if (!avatarEditorOpen || !avatarCropSource || !avatarCroppedAreaPixels) {
-            return
-        }
-
-        let cancelled = false
-        let timeoutId: ReturnType<typeof setTimeout> | null = null
-
-        timeoutId = setTimeout(() => {
-            void (async () => {
-                try {
-                    const blob = await getCroppedAvatarBlob(avatarCropSource, avatarCroppedAreaPixels)
-                    if (cancelled) return
-                    const nextUrl = URL.createObjectURL(blob)
-                    setAvatarCropPreviewUrl((prev) => {
-                        if (prev) URL.revokeObjectURL(prev)
-                        return nextUrl
-                    })
-                } catch {
-                    // keep previous preview
-                }
-            })()
-        }, 80)
-
-        return () => {
-            cancelled = true
-            if (timeoutId) clearTimeout(timeoutId)
-        }
-    }, [avatarEditorOpen, avatarCropSource, avatarCroppedAreaPixels])
 
     const dashboardStats = useMemo(() => {
         return [
@@ -683,16 +652,12 @@ export default function Dashboard() {
         if (avatarCropObjectUrl) {
             URL.revokeObjectURL(avatarCropObjectUrl)
         }
-        if (avatarCropPreviewUrl) {
-            URL.revokeObjectURL(avatarCropPreviewUrl)
-        }
         setAvatarEditorOpen(false)
         setAvatarCropSource('')
         setAvatarCropObjectUrl(null)
         setAvatarCrop({ x: 0, y: 0 })
         setAvatarZoom(1)
         setAvatarCroppedAreaPixels(null)
-        setAvatarCropPreviewUrl('')
         if (avatarInputRef.current) avatarInputRef.current.value = ''
     }
 
@@ -711,7 +676,6 @@ export default function Dashboard() {
         setAvatarCrop({ x: 0, y: 0 })
         setAvatarZoom(1)
         setAvatarCroppedAreaPixels(null)
-        setAvatarCropPreviewUrl('')
         setAvatarEditorOpen(true)
     }
 
@@ -943,9 +907,7 @@ export default function Dashboard() {
                             <label>Имя<input value={cardData.full_name || ''} onChange={(e) => updateCard({ full_name: e.target.value })} /></label>
                             <label>Должность<input value={cardData.title || ''} onChange={(e) => updateCard({ title: e.target.value })} /></label>
                             <label>Компания<input value={cardData.company_name || ''} onChange={(e) => updateCard({ company_name: e.target.value })} /></label>
-                            <label>О себе<textarea rows={3} value={cardData.bio || ''} onChange={(e) => updateCard({ bio: e.target.value })}></textarea></label>
-                            <label>Галерея (URL)<input value={cardData.portfolio_url || ''} placeholder="https://…" onChange={(e) => updateCard({ portfolio_url: e.target.value })} /></label>
-                            <label>Фото (Cloudinary URL)<input value={cardData.avatar_url || ''} readOnly /></label>
+                            <label>Слоган<textarea rows={3} value={cardData.bio || ''} onChange={(e) => updateCard({ bio: e.target.value })}></textarea></label>
                             <div className="avatar-actions">
                                 <input
                                     ref={avatarInputRef}
@@ -956,7 +918,7 @@ export default function Dashboard() {
                                 />
                                 <button
                                     type="button"
-                                    className="admin-ghost"
+                                    className="admin-ghost avatar-action-btn is-primary"
                                     disabled={uploadingAvatar}
                                     onClick={() => avatarInputRef.current?.click()}
                                 >
@@ -964,7 +926,7 @@ export default function Dashboard() {
                                 </button>
                                 <button
                                     type="button"
-                                    className="admin-ghost"
+                                    className="admin-ghost avatar-action-btn is-primary"
                                     disabled={uploadingAvatar || !cardData.avatar_url}
                                     onClick={() => openAvatarEditor(resolveMediaUrl(cardData.avatar_url))}
                                 >
@@ -972,7 +934,7 @@ export default function Dashboard() {
                                 </button>
                                 <button
                                     type="button"
-                                    className="admin-ghost danger"
+                                    className="admin-ghost avatar-action-btn is-danger"
                                     disabled={uploadingAvatar || !cardData.avatar_url}
                                     onClick={() => {
                                         void removeAvatarFile()
@@ -981,7 +943,6 @@ export default function Dashboard() {
                                     Удалить аватар
                                 </button>
                             </div>
-                            <label>Обложка / Лого (URL)<input value={cardData.logo_url || ''} onChange={(e) => updateCard({ logo_url: e.target.value })} /></label>
                         </div>
 
                         <div className="glass-card live-preview">
@@ -1285,32 +1246,19 @@ export default function Dashboard() {
                             <h3 className="text-lg font-semibold">Редактор аватара</h3>
                             <p className="mt-1 text-sm text-gray-600">Перетаскивайте фото и меняйте масштаб. Будет сохранен квадрат.</p>
 
-                            <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px] items-start">
-                                <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-black">
-                                    <Cropper
-                                        image={avatarCropSource}
-                                        crop={avatarCrop}
-                                        zoom={avatarZoom}
-                                        aspect={1}
-                                        cropShape="rect"
-                                        showGrid
-                                        objectFit="contain"
-                                        onCropChange={setAvatarCrop}
-                                        onZoomChange={setAvatarZoom}
-                                        onCropComplete={(_, croppedAreaPixels) => setAvatarCroppedAreaPixels(croppedAreaPixels)}
-                                    />
-                                </div>
-
-                                <div className="rounded-lg border border-gray-200 p-3">
-                                    <p className="text-sm font-medium text-gray-700">Превью аватара</p>
-                                    <div className="mt-2 aspect-square overflow-hidden rounded-lg bg-black">
-                                        <img
-                                            src={avatarCropPreviewUrl || avatarCropSource}
-                                            alt="Avatar crop preview"
-                                            className="h-full w-full object-cover"
-                                        />
-                                    </div>
-                                </div>
+                            <div className="relative mt-4 w-full aspect-square overflow-hidden rounded-lg bg-black">
+                                <Cropper
+                                    image={avatarCropSource}
+                                    crop={avatarCrop}
+                                    zoom={avatarZoom}
+                                    aspect={1}
+                                    cropShape="rect"
+                                    showGrid
+                                    objectFit="contain"
+                                    onCropChange={setAvatarCrop}
+                                    onZoomChange={setAvatarZoom}
+                                    onCropComplete={(_, croppedAreaPixels) => setAvatarCroppedAreaPixels(croppedAreaPixels)}
+                                />
                             </div>
 
                             <div className="mt-4">
