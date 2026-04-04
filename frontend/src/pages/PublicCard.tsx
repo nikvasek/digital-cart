@@ -227,6 +227,8 @@ export default function PublicCard() {
   const [showServicesMode, setShowServicesMode] = useState(false)
   const [showGalleryMode, setShowGalleryMode] = useState(false)
   const [galleryActiveIndex, setGalleryActiveIndex] = useState<number | null>(null)
+  const [galleryBlobUrls, setGalleryBlobUrls] = useState<Record<string, string>>({})
+  const galleryBlobCacheRef = useRef<Record<string, string>>({})
   const viewerImageRef = useRef<HTMLImageElement | null>(null)
   const viewerPointerStartRef = useRef<{ x: number; y: number } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -392,6 +394,54 @@ export default function PublicCard() {
       .filter((item) => (item.type || 'image').toLowerCase() === 'image' && item.file_url)
       .map((item) => resolveMediaUrl(item.file_url))
       .filter(Boolean)
+  }, [card])
+
+  // Cache gallery images as blob URLs so the browser never re-fetches on scroll
+  useEffect(() => {
+    if (!showGalleryMode || galleryImages.length === 0) return
+
+    let cancelled = false
+    const cache = galleryBlobCacheRef.current
+
+    const fetchBlobs = async () => {
+      const newEntries: Record<string, string> = {}
+
+      await Promise.allSettled(
+        galleryImages.map(async (src) => {
+          if (!src || cache[src]) return
+          try {
+            const resp = await fetch(src)
+            if (!resp.ok) return
+            const blob = await resp.blob()
+            if (cancelled) return
+            const blobUrl = URL.createObjectURL(blob)
+            cache[src] = blobUrl
+            newEntries[src] = blobUrl
+          } catch { /* network error – keep original src */ }
+        })
+      )
+
+      if (!cancelled && Object.keys(newEntries).length > 0) {
+        setGalleryBlobUrls((prev) => ({ ...prev, ...newEntries }))
+      }
+    }
+
+    void fetchBlobs()
+
+    return () => {
+      cancelled = true
+    }
+  }, [showGalleryMode, galleryImages])
+
+  // Clean up blob URLs when card changes
+  useEffect(() => {
+    return () => {
+      const cache = galleryBlobCacheRef.current
+      for (const url of Object.values(cache)) {
+        URL.revokeObjectURL(url)
+      }
+      galleryBlobCacheRef.current = {}
+    }
   }, [card])
 
   const contactRows = useMemo(() => {
@@ -727,7 +777,7 @@ export default function PublicCard() {
                     >
                       <span className="dbc-gallery-thumb">
                         <img
-                          src={src}
+                          src={galleryBlobUrls[src] || src}
                           alt={`Gallery ${idx + 1}`}
                           loading="eager"
                           decoding="sync"
@@ -753,7 +803,7 @@ export default function PublicCard() {
                   >
                     <img
                       ref={viewerImageRef}
-                      src={galleryImages[galleryActiveIndex]}
+                      src={galleryBlobUrls[galleryImages[galleryActiveIndex]] || galleryImages[galleryActiveIndex]}
                       alt={`Gallery preview ${galleryActiveIndex + 1}`}
                       className="dbc-gallery-viewer-image"
                       onPointerDown={(e) => {
