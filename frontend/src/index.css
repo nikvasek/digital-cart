@@ -621,6 +621,15 @@ code {
   justify-items: center;
 }
 
+.dbc-social-mode .dbc-social-back,
+.dbc-services-mode .dbc-social-back {
+  top: calc(34.6% - 20px);
+}
+
+.dbc-social-mode .dbc-social-grid {
+  top: calc(42% - 20px);
+}
+
 .dbc-services-list {
   position: absolute;
   left: 6%;
@@ -632,6 +641,10 @@ code {
   flex-direction: column;
   gap: 10px;
   padding-right: 2px;
+}
+
+.dbc-services-mode .dbc-services-list {
+  top: calc(40.5% - 20px);
 }
 
 .dbc-service-item {
@@ -878,6 +891,7 @@ code {
   pointer-events: auto;
   touch-action: manipulation;
 }
+
 .admin-pin-glow--right {
   right: -110px;
   bottom: -90px;

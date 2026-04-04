@@ -43,7 +43,21 @@ interface CardData {
   services: ServiceItem[]
 }
 
-const SOCIAL_TYPES = ['instagram', 'telegram', 'whatsapp', 'viber', 'tiktok', 'facebook', 'linkedin', 'youtube']
+const SOCIAL_TYPES = [
+  'phone',
+  'email',
+  'website',
+  'gallery',
+  'location',
+  'instagram',
+  'telegram',
+  'whatsapp',
+  'viber',
+  'tiktok',
+  'facebook',
+  'linkedin',
+  'youtube'
+]
 
 const normalizeString = (value: unknown) => (typeof value === 'string' ? value.trim() : '')
 
