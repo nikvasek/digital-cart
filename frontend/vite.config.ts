@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Digital Business Card',
-        short_name: 'Business Card',
+        name: 'Card',
+        short_name: 'Card',
         description: 'Modern digital business card platform',
         theme_color: '#000000',
         background_color: '#ffffff',
