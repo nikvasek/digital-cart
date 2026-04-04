@@ -229,6 +229,7 @@ export default function PublicCard() {
   const [galleryActiveIndex, setGalleryActiveIndex] = useState<number | null>(null)
   const [galleryBlobUrls, setGalleryBlobUrls] = useState<Record<string, string>>({})
   const galleryBlobCacheRef = useRef<Record<string, string>>({})
+  const manifestObjectUrlRef = useRef<string | null>(null)
   const viewerImageRef = useRef<HTMLImageElement | null>(null)
   const viewerPointerStartRef = useRef<{ x: number; y: number } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -237,6 +238,73 @@ export default function PublicCard() {
     void loadCard()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
+
+  useEffect(() => {
+    if (!card) return
+
+    const appName = (card.company_name || card.full_name || 'DigiCard').trim()
+    const iconUrl = resolveAvatarSrc(card.avatar_url)
+
+    document.title = appName
+
+    const ensureMeta = (name: string) => {
+      let meta = document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)
+      if (!meta) {
+        meta = document.createElement('meta')
+        meta.setAttribute('name', name)
+        document.head.appendChild(meta)
+      }
+      return meta
+    }
+
+    const ensureLink = (rel: string) => {
+      let link = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`)
+      if (!link) {
+        link = document.createElement('link')
+        link.rel = rel
+        document.head.appendChild(link)
+      }
+      return link
+    }
+
+    ensureMeta('apple-mobile-web-app-title').setAttribute('content', appName)
+    ensureMeta('application-name').setAttribute('content', appName)
+
+    const appleTouchIcon = ensureLink('apple-touch-icon')
+    appleTouchIcon.setAttribute('href', iconUrl)
+
+    const manifest = {
+      name: appName,
+      short_name: appName.length > 12 ? appName.slice(0, 12) : appName,
+      display: 'standalone',
+      start_url: window.location.pathname,
+      scope: '/',
+      background_color: '#0f0f0f',
+      theme_color: '#0f0f0f',
+      icons: [
+        { src: iconUrl, sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'any' }
+      ]
+    }
+
+    if (manifestObjectUrlRef.current) {
+      URL.revokeObjectURL(manifestObjectUrlRef.current)
+      manifestObjectUrlRef.current = null
+    }
+
+    const manifestLink = ensureLink('manifest')
+    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' })
+    const manifestUrl = URL.createObjectURL(manifestBlob)
+    manifestObjectUrlRef.current = manifestUrl
+    manifestLink.setAttribute('href', manifestUrl)
+
+    return () => {
+      if (manifestObjectUrlRef.current) {
+        URL.revokeObjectURL(manifestObjectUrlRef.current)
+        manifestObjectUrlRef.current = null
+      }
+    }
+  }, [card])
 
   const trackEvent = (event_type: string, metadata?: Record<string, unknown>) => {
     axios
@@ -364,7 +432,7 @@ export default function PublicCard() {
 
   const addToHomeHint = async () => {
     await navigator.clipboard.writeText(window.location.href)
-    alert('Open browser menu and tap “Add to Home Screen”. Link copied.')
+    alert('iPhone: Share -> Add to Home Screen. Android: menu -> Install app/Add to Home screen. Link copied.')
   }
 
   const submitLead = async (e: FormEvent<HTMLFormElement>) => {
@@ -648,77 +716,77 @@ export default function PublicCard() {
               </div>
 
               {contactRows.length > 0 && (
-              <div className={`dbc-contacts${showAltMode ? ' dbc-home-mode--hidden' : ''}`} aria-label="Contacts">
-                {contactRows.map((row) => (
-                  <button key={row.keyId} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
-                    {row.iconSrc ? (
-                      <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
-                    ) : (
-                      <span
-                        className="dbc-contact-icon dbc-contact-icon-mask"
-                        style={{
-                          WebkitMaskImage: `url(${row.iconMask})`,
-                          maskImage: `url(${row.iconMask})`
-                        } as CSSProperties}
-                      />
-                    )}
-                    <span className={`dbc-contact-label${row.id === 'location' ? ' dbc-contact-label--wrap' : ''}`}>{row.label}</span>
-                  </button>
-                ))}
-                {socialIconItems.length > 0 && (
-                  <button
-                    type="button"
-                    className="dbc-more-contact"
-                    onClick={() => {
-                      setShowGalleryMode(false)
-                      setShowServicesMode(false)
-                      setShowMoreContacts(true)
-                    }}
-                    aria-label="More contact"
-                  >
-                    More contact...
-                  </button>
-                )}
-              </div>
+                <div className={`dbc-contacts${showAltMode ? ' dbc-home-mode--hidden' : ''}`} aria-label="Contacts">
+                  {contactRows.map((row) => (
+                    <button key={row.keyId} type="button" className="dbc-contact-row" onClick={row.onClick} aria-label={row.label}>
+                      {row.iconSrc ? (
+                        <img src={row.iconSrc} alt="" aria-hidden="true" className="dbc-contact-icon" loading="lazy" decoding="async" />
+                      ) : (
+                        <span
+                          className="dbc-contact-icon dbc-contact-icon-mask"
+                          style={{
+                            WebkitMaskImage: `url(${row.iconMask})`,
+                            maskImage: `url(${row.iconMask})`
+                          } as CSSProperties}
+                        />
+                      )}
+                      <span className={`dbc-contact-label${row.id === 'location' ? ' dbc-contact-label--wrap' : ''}`}>{row.label}</span>
+                    </button>
+                  ))}
+                  {socialIconItems.length > 0 && (
+                    <button
+                      type="button"
+                      className="dbc-more-contact"
+                      onClick={() => {
+                        setShowGalleryMode(false)
+                        setShowServicesMode(false)
+                        setShowMoreContacts(true)
+                      }}
+                      aria-label="More contact"
+                    >
+                      More contact...
+                    </button>
+                  )}
+                </div>
               )}
 
               <div className={`dbc-home-mode${showAltMode ? ' dbc-home-mode--hidden' : ''}`}>
                 <div className="dbc-actions" aria-label="Actions">
-                <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
-                  <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                  <span className="dbc-action-text">Save contact</span>
-                </button>
-                {servicesList.length > 0 && (
-                <button
-                  type="button"
-                  className="dbc-action-btn"
-                  onClick={() => {
-                    setShowGalleryMode(false)
-                    setShowMoreContacts(false)
-                    setShowServicesMode(true)
-                  }}
-                  aria-label="Services"
-                >
-                  <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                  <span className="dbc-action-text">Services</span>
-                </button>
-                )}
-                <button type="button" className="dbc-action-btn" onClick={() => setShowQR(true)} aria-label="Show QR">
-                  <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                  <span className="dbc-action-text">Show QR</span>
-                </button>
-                <button type="button" className="dbc-action-btn dbc-action-btn--gold" onClick={() => setShowLeadForm((prev) => !prev)} aria-label="Book now">
-                  <img src={figmaAsset('Rectangle 66@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                  <span className="dbc-action-text dbc-action-text--gold">BOOK NOW</span>
-                </button>
-                <button type="button" className="dbc-action-btn" onClick={() => void addToHomeHint()} aria-label="Add to Home">
-                  <img src={figmaAsset('Rectangle 72@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                  <span className="dbc-action-text">Add to Home</span>
-                </button>
-                <button type="button" className="dbc-action-btn" onClick={() => void handleShare()} aria-label="Share">
-                  <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                  <span className="dbc-action-text">SHARE</span>
-                </button>
+                  <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
+                    <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                    <span className="dbc-action-text">Save contact</span>
+                  </button>
+                  {servicesList.length > 0 && (
+                    <button
+                      type="button"
+                      className="dbc-action-btn"
+                      onClick={() => {
+                        setShowGalleryMode(false)
+                        setShowMoreContacts(false)
+                        setShowServicesMode(true)
+                      }}
+                      aria-label="Services"
+                    >
+                      <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                      <span className="dbc-action-text">Services</span>
+                    </button>
+                  )}
+                  <button type="button" className="dbc-action-btn" onClick={() => setShowQR(true)} aria-label="Show QR">
+                    <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                    <span className="dbc-action-text">Show QR</span>
+                  </button>
+                  <button type="button" className="dbc-action-btn dbc-action-btn--gold" onClick={() => setShowLeadForm((prev) => !prev)} aria-label="Book now">
+                    <img src={figmaAsset('Rectangle 66@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                    <span className="dbc-action-text dbc-action-text--gold">BOOK NOW</span>
+                  </button>
+                  <button type="button" className="dbc-action-btn" onClick={() => void addToHomeHint()} aria-label="Add to Home">
+                    <img src={figmaAsset('Rectangle 72@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                    <span className="dbc-action-text">Add to Home</span>
+                  </button>
+                  <button type="button" className="dbc-action-btn" onClick={() => void handleShare()} aria-label="Share">
+                    <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
+                    <span className="dbc-action-text">SHARE</span>
+                  </button>
                 </div>
               </div>
 
