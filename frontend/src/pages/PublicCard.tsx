@@ -215,48 +215,6 @@ const preloadCriticalAssets = async (avatarUrl?: string) => {
   await Promise.allSettled(criticalImages.map((src) => preloadImage(src)))
 }
 
-const createSquareIcon = async (src: string, size = 512) => {
-  if (!src) return src
-
-  try {
-    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.decoding = 'async'
-      img.onload = () => resolve(img)
-      img.onerror = () => reject(new Error('Failed to load icon image'))
-      img.src = src
-    })
-
-    const canvas = document.createElement('canvas')
-    canvas.width = size
-    canvas.height = size
-
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return src
-
-    // Keep avatar proportions and center it to avoid stretch artifacts.
-    ctx.fillStyle = '#0f0f0f'
-    ctx.fillRect(0, 0, size, size)
-
-    const scale = Math.min(size / image.width, size / image.height)
-    const drawWidth = image.width * scale
-    const drawHeight = image.height * scale
-    const dx = (size - drawWidth) / 2
-    const dy = (size - drawHeight) / 2
-    ctx.drawImage(image, dx, dy, drawWidth, drawHeight)
-
-    const blob = await new Promise<Blob | null>((resolve) => {
-      canvas.toBlob((b) => resolve(b), 'image/png')
-    })
-
-    if (!blob) return src
-    return URL.createObjectURL(blob)
-  } catch {
-    return src
-  }
-}
-
 export default function PublicCard() {
   const { slug } = useParams<{ slug: string }>()
   const { t, i18n } = useTranslation()
@@ -272,7 +230,6 @@ export default function PublicCard() {
   const [galleryBlobUrls, setGalleryBlobUrls] = useState<Record<string, string>>({})
   const galleryBlobCacheRef = useRef<Record<string, string>>({})
   const manifestObjectUrlRef = useRef<string | null>(null)
-  const iconObjectUrlRef = useRef<string | null>(null)
   const viewerImageRef = useRef<HTMLImageElement | null>(null)
   const viewerPointerStartRef = useRef<{ x: number; y: number } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -286,8 +243,7 @@ export default function PublicCard() {
     if (!card) return
 
     const appName = (card.company_name || card.full_name || 'DigiCard').trim()
-    const sourceIconUrl = resolveAvatarSrc(card.avatar_url)
-    let cancelled = false
+    const iconUrl = resolveAvatarSrc(card.avatar_url)
 
     document.title = appName
 
@@ -314,61 +270,38 @@ export default function PublicCard() {
     ensureMeta('apple-mobile-web-app-title').setAttribute('content', appName)
     ensureMeta('application-name').setAttribute('content', appName)
 
-    const setupHomeScreenAssets = async () => {
-      const iconUrl = await createSquareIcon(sourceIconUrl, 512)
-      if (cancelled) {
-        if (iconUrl.startsWith('blob:')) URL.revokeObjectURL(iconUrl)
-        return
-      }
+    const appleTouchIcon = ensureLink('apple-touch-icon')
+    appleTouchIcon.setAttribute('href', iconUrl)
 
-      if (iconObjectUrlRef.current) {
-        URL.revokeObjectURL(iconObjectUrlRef.current)
-        iconObjectUrlRef.current = null
-      }
-      if (iconUrl.startsWith('blob:')) {
-        iconObjectUrlRef.current = iconUrl
-      }
-
-      const appleTouchIcon = ensureLink('apple-touch-icon')
-      appleTouchIcon.setAttribute('href', iconUrl)
-
-      const manifest = {
-        name: appName,
-        short_name: appName.length > 12 ? appName.slice(0, 12) : appName,
-        display: 'standalone',
-        start_url: window.location.pathname,
-        scope: '/',
-        background_color: '#0f0f0f',
-        theme_color: '#0f0f0f',
-        icons: [
-          { src: iconUrl, sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'any' }
-        ]
-      }
-
-      if (manifestObjectUrlRef.current) {
-        URL.revokeObjectURL(manifestObjectUrlRef.current)
-        manifestObjectUrlRef.current = null
-      }
-
-      const manifestLink = ensureLink('manifest')
-      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' })
-      const manifestUrl = URL.createObjectURL(manifestBlob)
-      manifestObjectUrlRef.current = manifestUrl
-      manifestLink.setAttribute('href', manifestUrl)
+    const manifest = {
+      name: appName,
+      short_name: appName.length > 12 ? appName.slice(0, 12) : appName,
+      display: 'standalone',
+      start_url: window.location.pathname,
+      scope: '/',
+      background_color: '#0f0f0f',
+      theme_color: '#0f0f0f',
+      icons: [
+        { src: iconUrl, sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'any' }
+      ]
     }
 
-    void setupHomeScreenAssets()
+    if (manifestObjectUrlRef.current) {
+      URL.revokeObjectURL(manifestObjectUrlRef.current)
+      manifestObjectUrlRef.current = null
+    }
+
+    const manifestLink = ensureLink('manifest')
+    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' })
+    const manifestUrl = URL.createObjectURL(manifestBlob)
+    manifestObjectUrlRef.current = manifestUrl
+    manifestLink.setAttribute('href', manifestUrl)
 
     return () => {
-      cancelled = true
       if (manifestObjectUrlRef.current) {
         URL.revokeObjectURL(manifestObjectUrlRef.current)
         manifestObjectUrlRef.current = null
-      }
-      if (iconObjectUrlRef.current) {
-        URL.revokeObjectURL(iconObjectUrlRef.current)
-        iconObjectUrlRef.current = null
       }
     }
   }, [card])
