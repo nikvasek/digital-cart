@@ -10,7 +10,7 @@ export default defineConfig({
       includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       manifest: {
         name: 'Digital Business Card',
-        short_name: 'DigiCard',
+        short_name: 'Business Card',
         description: 'Modern digital business card platform',
         theme_color: '#000000',
         background_color: '#ffffff',

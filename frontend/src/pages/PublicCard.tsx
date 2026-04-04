@@ -278,7 +278,7 @@ export default function PublicCard() {
   useEffect(() => {
     if (!card) return
 
-    const appName = (card.company_name || '').trim() || (card.full_name || '').trim() || 'DigiCard'
+    const appName = (card.company_name || '').trim() || (card.full_name || '').trim() || 'Business Card'
     const sourceIconUrl = resolveAvatarSrc(card.avatar_url)
     let cancelled = false
 
