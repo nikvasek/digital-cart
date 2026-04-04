@@ -215,6 +215,42 @@ const preloadCriticalAssets = async (avatarUrl?: string) => {
   await Promise.allSettled(criticalImages.map((src) => preloadImage(src)))
 }
 
+const createSquareIconDataUrl = async (src: string, size = 180) => {
+  if (!src) return src
+
+  try {
+    const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.decoding = 'async'
+      img.onload = () => resolve(img)
+      img.onerror = () => reject(new Error('Failed to load avatar icon'))
+      img.src = src
+    })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return src
+
+    // Draw avatar without stretching: preserve aspect ratio and center.
+    ctx.fillStyle = '#0f0f0f'
+    ctx.fillRect(0, 0, size, size)
+
+    const scale = Math.min(size / image.width, size / image.height)
+    const drawWidth = image.width * scale
+    const drawHeight = image.height * scale
+    const dx = (size - drawWidth) / 2
+    const dy = (size - drawHeight) / 2
+    ctx.drawImage(image, dx, dy, drawWidth, drawHeight)
+
+    return canvas.toDataURL('image/png')
+  } catch {
+    return src
+  }
+}
+
 export default function PublicCard() {
   const { slug } = useParams<{ slug: string }>()
   const { t, i18n } = useTranslation()
@@ -242,8 +278,9 @@ export default function PublicCard() {
   useEffect(() => {
     if (!card) return
 
-    const appName = (card.company_name || card.full_name || 'DigiCard').trim()
-    const iconUrl = resolveAvatarSrc(card.avatar_url)
+    const appName = (card.company_name || '').trim() || (card.full_name || '').trim() || 'DigiCard'
+    const sourceIconUrl = resolveAvatarSrc(card.avatar_url)
+    let cancelled = false
 
     document.title = appName
 
@@ -270,35 +307,48 @@ export default function PublicCard() {
     ensureMeta('apple-mobile-web-app-title').setAttribute('content', appName)
     ensureMeta('application-name').setAttribute('content', appName)
 
-    const appleTouchIcon = ensureLink('apple-touch-icon')
-    appleTouchIcon.setAttribute('href', iconUrl)
+    const applyHomeScreenMeta = async () => {
+      const appleIconUrl = await createSquareIconDataUrl(sourceIconUrl, 180)
+      if (cancelled) return
 
-    const manifest = {
-      name: appName,
-      short_name: appName.length > 12 ? appName.slice(0, 12) : appName,
-      display: 'standalone',
-      start_url: window.location.pathname,
-      scope: '/',
-      background_color: '#0f0f0f',
-      theme_color: '#0f0f0f',
-      icons: [
-        { src: iconUrl, sizes: '192x192', type: 'image/png', purpose: 'any' },
-        { src: iconUrl, sizes: '512x512', type: 'image/png', purpose: 'any' }
-      ]
+      const appleTouchIcon = ensureLink('apple-touch-icon')
+      appleTouchIcon.setAttribute('sizes', '180x180')
+      appleTouchIcon.setAttribute('href', appleIconUrl)
+
+      const appleTouchIconPrecomposed = ensureLink('apple-touch-icon-precomposed')
+      appleTouchIconPrecomposed.setAttribute('sizes', '180x180')
+      appleTouchIconPrecomposed.setAttribute('href', appleIconUrl)
+
+      const manifest = {
+        name: appName,
+        short_name: appName,
+        display: 'standalone',
+        start_url: window.location.pathname,
+        scope: '/',
+        background_color: '#0f0f0f',
+        theme_color: '#0f0f0f',
+        icons: [
+          { src: sourceIconUrl, sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: sourceIconUrl, sizes: '512x512', type: 'image/png', purpose: 'any' }
+        ]
+      }
+
+      if (manifestObjectUrlRef.current) {
+        URL.revokeObjectURL(manifestObjectUrlRef.current)
+        manifestObjectUrlRef.current = null
+      }
+
+      const manifestLink = ensureLink('manifest')
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' })
+      const manifestUrl = URL.createObjectURL(manifestBlob)
+      manifestObjectUrlRef.current = manifestUrl
+      manifestLink.setAttribute('href', manifestUrl)
     }
 
-    if (manifestObjectUrlRef.current) {
-      URL.revokeObjectURL(manifestObjectUrlRef.current)
-      manifestObjectUrlRef.current = null
-    }
-
-    const manifestLink = ensureLink('manifest')
-    const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' })
-    const manifestUrl = URL.createObjectURL(manifestBlob)
-    manifestObjectUrlRef.current = manifestUrl
-    manifestLink.setAttribute('href', manifestUrl)
+    void applyHomeScreenMeta()
 
     return () => {
+      cancelled = true
       if (manifestObjectUrlRef.current) {
         URL.revokeObjectURL(manifestObjectUrlRef.current)
         manifestObjectUrlRef.current = null
