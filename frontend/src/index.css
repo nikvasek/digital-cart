@@ -1102,9 +1102,10 @@ code {
 }
 
 .admin-sidebar-head p {
-  margin: 6px 0 0;
-  color: #6b7280;
-  font-size: 0.9rem;
+  margin: 0;
+  color: #111827;
+  font-size: 1.5rem;
+  line-height: 1.15;
 }
 
 .admin-sidebar-label {
@@ -1383,25 +1384,33 @@ code {
 
 .avatar-actions .avatar-action-btn {
   border: 0;
-  color: #fff;
+  background: transparent;
+  padding: 0;
+  color: #1d4ed8;
   box-shadow: none;
 }
 
 .avatar-actions .avatar-action-btn.is-primary {
-  background: #1d4ed8;
+  color: #1d4ed8;
 }
 
 .avatar-actions .avatar-action-btn.is-primary:hover {
-  background: #1e40af;
+  background: transparent;
+  color: #1e40af;
 }
 
 .avatar-actions .avatar-action-btn.is-danger {
-  background: #dc2626;
+  color: #dc2626;
   margin-top: 0;
 }
 
 .avatar-actions .avatar-action-btn.is-danger:hover {
-  background: #b91c1c;
+  background: transparent;
+  color: #b91c1c;
+}
+
+.avatar-actions .avatar-action-btn:hover {
+  transform: none;
 }
 
 .form-grid input,

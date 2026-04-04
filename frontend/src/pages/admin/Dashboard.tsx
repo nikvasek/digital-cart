@@ -801,7 +801,6 @@ export default function Dashboard() {
         <div className={`admin-shell ${themeMode === 'dark' ? 'admin-shell-dark' : ''}`}>
             <aside className="admin-sidebar">
                 <div className="admin-sidebar-head">
-                    <h1>Apple Admin</h1>
                     <p>Панель управления</p>
                 </div>
 
@@ -1242,7 +1241,7 @@ export default function Dashboard() {
 
                 {avatarEditorOpen && (
                     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4">
-                        <div className="w-full max-w-3xl rounded-xl bg-white p-4 shadow-2xl">
+                        <div className="w-full max-w-[24rem] rounded-xl bg-white p-4 shadow-2xl md:max-w-[24rem]">
                             <h3 className="text-lg font-semibold">Редактор аватара</h3>
                             <p className="mt-1 text-sm text-gray-600">Перетаскивайте фото и меняйте масштаб. Будет сохранен квадрат.</p>
 
