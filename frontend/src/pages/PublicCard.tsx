@@ -754,10 +754,16 @@ export default function PublicCard() {
                         <img
                           src={src}
                           alt={`Gallery ${idx + 1}`}
-                          loading={showGalleryMode ? 'eager' : 'lazy'}
+                          loading="eager"
                           decoding="async"
-                          className={loadedGalleryThumbs[src] ? 'is-loaded' : ''}
+                          className={loadedGalleryThumbs[src] ? 'is-loaded' : 'is-loading'}
+                          ref={(node) => {
+                            if (node?.complete) {
+                              markGalleryThumbLoaded(src)
+                            }
+                          }}
                           onLoad={() => markGalleryThumbLoaded(src)}
+                          onError={() => markGalleryThumbLoaded(src)}
                         />
                       </span>
                     </button>

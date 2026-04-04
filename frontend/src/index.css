@@ -853,13 +853,19 @@ code {
   object-fit: cover;
   display: block;
   pointer-events: auto;
-  opacity: 0;
-  transition: opacity 0.26s ease;
+  opacity: 1;
+  transition: opacity 0.22s ease, filter 0.22s ease;
   will-change: opacity;
+}
+
+.dbc-gallery-thumb img.is-loading {
+  opacity: 0.38;
+  filter: saturate(0.9);
 }
 
 .dbc-gallery-thumb img.is-loaded {
   opacity: 1;
+  filter: none;
 }
 
 .dbc-gallery-mode .dbc-social-back {
