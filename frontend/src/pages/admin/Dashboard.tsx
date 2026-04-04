@@ -464,6 +464,7 @@ export default function Dashboard() {
     const [avatarCrop, setAvatarCrop] = useState({ x: 0, y: 0 })
     const [avatarZoom, setAvatarZoom] = useState(1)
     const [avatarCroppedAreaPixels, setAvatarCroppedAreaPixels] = useState<Area | null>(null)
+    const [avatarCropPreviewUrl, setAvatarCropPreviewUrl] = useState<string>('')
 
     useEffect(() => {
         void loadData()
@@ -487,6 +488,36 @@ export default function Dashboard() {
             }
         }
     }, [avatarCropObjectUrl])
+
+    useEffect(() => {
+        if (!avatarEditorOpen || !avatarCropSource || !avatarCroppedAreaPixels) {
+            return
+        }
+
+        let cancelled = false
+        let timeoutId: ReturnType<typeof setTimeout> | null = null
+
+        timeoutId = setTimeout(() => {
+            void (async () => {
+                try {
+                    const blob = await getCroppedAvatarBlob(avatarCropSource, avatarCroppedAreaPixels)
+                    if (cancelled) return
+                    const nextUrl = URL.createObjectURL(blob)
+                    setAvatarCropPreviewUrl((prev) => {
+                        if (prev) URL.revokeObjectURL(prev)
+                        return nextUrl
+                    })
+                } catch {
+                    // keep previous preview
+                }
+            })()
+        }, 80)
+
+        return () => {
+            cancelled = true
+            if (timeoutId) clearTimeout(timeoutId)
+        }
+    }, [avatarEditorOpen, avatarCropSource, avatarCroppedAreaPixels])
 
     const dashboardStats = useMemo(() => {
         return [
@@ -652,12 +683,16 @@ export default function Dashboard() {
         if (avatarCropObjectUrl) {
             URL.revokeObjectURL(avatarCropObjectUrl)
         }
+        if (avatarCropPreviewUrl) {
+            URL.revokeObjectURL(avatarCropPreviewUrl)
+        }
         setAvatarEditorOpen(false)
         setAvatarCropSource('')
         setAvatarCropObjectUrl(null)
         setAvatarCrop({ x: 0, y: 0 })
         setAvatarZoom(1)
         setAvatarCroppedAreaPixels(null)
+        setAvatarCropPreviewUrl('')
         if (avatarInputRef.current) avatarInputRef.current.value = ''
     }
 
@@ -676,6 +711,7 @@ export default function Dashboard() {
         setAvatarCrop({ x: 0, y: 0 })
         setAvatarZoom(1)
         setAvatarCroppedAreaPixels(null)
+        setAvatarCropPreviewUrl('')
         setAvatarEditorOpen(true)
     }
 
@@ -1245,23 +1281,36 @@ export default function Dashboard() {
 
                 {avatarEditorOpen && (
                     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4">
-                        <div className="w-full max-w-xl rounded-xl bg-white p-4 shadow-2xl">
+                        <div className="w-full max-w-3xl rounded-xl bg-white p-4 shadow-2xl">
                             <h3 className="text-lg font-semibold">Редактор аватара</h3>
                             <p className="mt-1 text-sm text-gray-600">Перетаскивайте фото и меняйте масштаб. Будет сохранен квадрат.</p>
 
-                            <div className="relative mt-4 h-[360px] w-full overflow-hidden rounded-lg bg-black">
-                                <Cropper
-                                    image={avatarCropSource}
-                                    crop={avatarCrop}
-                                    zoom={avatarZoom}
-                                    aspect={1}
-                                    cropShape="rect"
-                                    showGrid
-                                    objectFit="contain"
-                                    onCropChange={setAvatarCrop}
-                                    onZoomChange={setAvatarZoom}
-                                    onCropComplete={(_, croppedAreaPixels) => setAvatarCroppedAreaPixels(croppedAreaPixels)}
-                                />
+                            <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px] items-start">
+                                <div className="relative w-full aspect-square overflow-hidden rounded-lg bg-black">
+                                    <Cropper
+                                        image={avatarCropSource}
+                                        crop={avatarCrop}
+                                        zoom={avatarZoom}
+                                        aspect={1}
+                                        cropShape="rect"
+                                        showGrid
+                                        objectFit="contain"
+                                        onCropChange={setAvatarCrop}
+                                        onZoomChange={setAvatarZoom}
+                                        onCropComplete={(_, croppedAreaPixels) => setAvatarCroppedAreaPixels(croppedAreaPixels)}
+                                    />
+                                </div>
+
+                                <div className="rounded-lg border border-gray-200 p-3">
+                                    <p className="text-sm font-medium text-gray-700">Превью аватара</p>
+                                    <div className="mt-2 aspect-square overflow-hidden rounded-lg bg-black">
+                                        <img
+                                            src={avatarCropPreviewUrl || avatarCropSource}
+                                            alt="Avatar crop preview"
+                                            className="h-full w-full object-cover"
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div className="mt-4">
