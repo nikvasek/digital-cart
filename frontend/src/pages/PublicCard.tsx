@@ -743,7 +743,9 @@ export default function PublicCard() {
                 </button>
 
                 <div className="dbc-gallery-grid" aria-label="Gallery photos">
-                  {galleryImages.map((src, idx) => (
+                  {galleryImages.map((src, idx) => {
+                    const alreadyLoaded = !!loadedGalleryThumbs[src]
+                    return (
                     <button
                       key={`${src}-${idx}`}
                       type="button"
@@ -755,19 +757,15 @@ export default function PublicCard() {
                           src={src}
                           alt={`Gallery ${idx + 1}`}
                           loading="eager"
-                          decoding="async"
-                          className={loadedGalleryThumbs[src] ? 'is-loaded' : 'is-loading'}
-                          ref={(node) => {
-                            if (node?.complete) {
-                              markGalleryThumbLoaded(src)
-                            }
-                          }}
+                          decoding={alreadyLoaded ? 'sync' : 'async'}
+                          className={alreadyLoaded ? 'is-loaded' : 'is-loading'}
                           onLoad={() => markGalleryThumbLoaded(src)}
                           onError={() => markGalleryThumbLoaded(src)}
                         />
                       </span>
                     </button>
-                  ))}
+                    )
+                  })}
                 </div>
 
                 {galleryActiveIndex !== null && galleryImages[galleryActiveIndex] && (

@@ -843,6 +843,7 @@ code {
   width: 100%;
   padding-top: 100%;
   overflow: hidden;
+  background: #1a1a1a;
 }
 
 .dbc-gallery-thumb img {
@@ -854,18 +855,18 @@ code {
   display: block;
   pointer-events: auto;
   opacity: 1;
-  transition: opacity 0.22s ease, filter 0.22s ease;
-  will-change: opacity;
 }
 
 .dbc-gallery-thumb img.is-loading {
-  opacity: 0.38;
+  opacity: 0;
   filter: saturate(0.9);
+  transition: opacity 0.22s ease, filter 0.22s ease;
 }
 
 .dbc-gallery-thumb img.is-loaded {
   opacity: 1;
   filter: none;
+  transition: opacity 0.22s ease, filter 0.22s ease;
 }
 
 .dbc-gallery-mode .dbc-social-back {
