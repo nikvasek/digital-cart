@@ -227,7 +227,6 @@ export default function PublicCard() {
   const [showServicesMode, setShowServicesMode] = useState(false)
   const [showGalleryMode, setShowGalleryMode] = useState(false)
   const [galleryActiveIndex, setGalleryActiveIndex] = useState<number | null>(null)
-  const [loadedGalleryThumbs, setLoadedGalleryThumbs] = useState<Record<string, true>>({})
   const viewerImageRef = useRef<HTMLImageElement | null>(null)
   const viewerPointerStartRef = useRef<{ x: number; y: number } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -394,30 +393,6 @@ export default function PublicCard() {
       .map((item) => resolveMediaUrl(item.file_url))
       .filter(Boolean)
   }, [card])
-
-  useEffect(() => {
-    if (!showGalleryMode || galleryImages.length === 0) return
-
-    let cancelled = false
-
-    for (const src of galleryImages) {
-      if (!src) continue
-
-      void preloadImage(src).then(() => {
-        if (cancelled) return
-        setLoadedGalleryThumbs((prev) => (prev[src] ? prev : { ...prev, [src]: true }))
-      })
-    }
-
-    return () => {
-      cancelled = true
-    }
-  }, [showGalleryMode, galleryImages])
-
-  const markGalleryThumbLoaded = (src: string) => {
-    if (!src) return
-    setLoadedGalleryThumbs((prev) => (prev[src] ? prev : { ...prev, [src]: true }))
-  }
 
   const contactRows = useMemo(() => {
     if (!card) return [] as ContactRow[]
@@ -743,9 +718,7 @@ export default function PublicCard() {
                 </button>
 
                 <div className="dbc-gallery-grid" aria-label="Gallery photos">
-                  {galleryImages.map((src, idx) => {
-                    const alreadyLoaded = !!loadedGalleryThumbs[src]
-                    return (
+                  {galleryImages.map((src, idx) => (
                     <button
                       key={`${src}-${idx}`}
                       type="button"
@@ -757,15 +730,11 @@ export default function PublicCard() {
                           src={src}
                           alt={`Gallery ${idx + 1}`}
                           loading="eager"
-                          decoding={alreadyLoaded ? 'sync' : 'async'}
-                          className={alreadyLoaded ? 'is-loaded' : 'is-loading'}
-                          onLoad={() => markGalleryThumbLoaded(src)}
-                          onError={() => markGalleryThumbLoaded(src)}
+                          decoding="sync"
                         />
                       </span>
                     </button>
-                    )
-                  })}
+                  ))}
                 </div>
 
                 {galleryActiveIndex !== null && galleryImages[galleryActiveIndex] && (
