@@ -1,6 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import Cropper, { type Area } from 'react-easy-crop'
+import 'react-easy-crop/react-easy-crop.css'
 
 interface LinkItem {
   id?: string
@@ -76,12 +78,64 @@ const isValidUrl = (value: string) => {
   }
 }
 
+const loadImage = (src: string) => new Promise<HTMLImageElement>((resolve, reject) => {
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
+  img.onload = () => resolve(img)
+  img.onerror = () => reject(new Error('Failed to load image'))
+  img.src = src
+})
+
+const getCroppedAvatarBlob = async (src: string, crop: Area) => {
+  const image = await loadImage(src)
+  const outputSize = 800
+
+  const canvas = document.createElement('canvas')
+  canvas.width = outputSize
+  canvas.height = outputSize
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('Canvas is not available')
+
+  ctx.imageSmoothingEnabled = true
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(
+    image,
+    crop.x,
+    crop.y,
+    crop.width,
+    crop.height,
+    0,
+    0,
+    outputSize,
+    outputSize
+  )
+
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Failed to create cropped image'))
+        return
+      }
+      resolve(blob)
+    }, 'image/jpeg', 0.92)
+  })
+}
+
 export default function Editor() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [card, setCard] = useState<CardData | null>(null)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [avatarEditorOpen, setAvatarEditorOpen] = useState(false)
+  const [avatarCropSource, setAvatarCropSource] = useState('')
+  const [avatarCropObjectUrl, setAvatarCropObjectUrl] = useState<string | null>(null)
+  const [avatarCrop, setAvatarCrop] = useState({ x: 0, y: 0 })
+  const [avatarZoom, setAvatarZoom] = useState(1)
+  const [avatarCroppedAreaPixels, setAvatarCroppedAreaPixels] = useState<Area | null>(null)
+  const [avatarCropUploading, setAvatarCropUploading] = useState(false)
+  const [avatarFileInputKey, setAvatarFileInputKey] = useState(0)
 
   useEffect(() => {
     loadCard()
@@ -265,6 +319,90 @@ export default function Editor() {
     setCard({ ...card, media: card.media.filter((_, i) => i !== index) })
   }
 
+  const resetAvatarEditor = () => {
+    if (avatarCropObjectUrl) {
+      URL.revokeObjectURL(avatarCropObjectUrl)
+    }
+    setAvatarEditorOpen(false)
+    setAvatarCropSource('')
+    setAvatarCropObjectUrl(null)
+    setAvatarCrop({ x: 0, y: 0 })
+    setAvatarZoom(1)
+    setAvatarCroppedAreaPixels(null)
+    setAvatarCropUploading(false)
+    setAvatarFileInputKey((prev) => prev + 1)
+  }
+
+  const openAvatarEditor = (sourceUrl: string, objectUrl?: string) => {
+    if (!sourceUrl) {
+      alert('Set Avatar URL or upload image first')
+      return
+    }
+
+    if (avatarCropObjectUrl) {
+      URL.revokeObjectURL(avatarCropObjectUrl)
+    }
+
+    setAvatarCropObjectUrl(objectUrl || null)
+    setAvatarCropSource(sourceUrl)
+    setAvatarCrop({ x: 0, y: 0 })
+    setAvatarZoom(1)
+    setAvatarCroppedAreaPixels(null)
+    setAvatarEditorOpen(true)
+  }
+
+  const handleAvatarFilePick = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      alert('Only image files are supported')
+      return
+    }
+
+    const objectUrl = URL.createObjectURL(file)
+    openAvatarEditor(objectUrl, objectUrl)
+  }
+
+  const applyAvatarCrop = async () => {
+    if (!card || !avatarCropSource || !avatarCroppedAreaPixels) {
+      alert('Select crop area first')
+      return
+    }
+
+    try {
+      setAvatarCropUploading(true)
+      const token = localStorage.getItem('token')
+      if (!token) {
+        navigate('/admin/login')
+        return
+      }
+
+      const croppedBlob = await getCroppedAvatarBlob(avatarCropSource, avatarCroppedAreaPixels)
+      const file = new File([croppedBlob], `avatar-${card.id}.jpg`, { type: 'image/jpeg' })
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const response = await axios.post('/api/admin/media/upload', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      const uploadedUrl = normalizeString(response?.data?.url)
+      if (!uploadedUrl) {
+        throw new Error('Upload did not return URL')
+      }
+
+      setCard({ ...card, avatar_url: uploadedUrl })
+      resetAvatarEditor()
+    } catch (error) {
+      console.error('Failed to crop and upload avatar:', error)
+      alert('Failed to save cropped avatar')
+      setAvatarCropUploading(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -276,6 +414,7 @@ export default function Editor() {
   if (!card) return null
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50">
       {/* Навигация */}
       <nav className="bg-white shadow-sm">
@@ -446,6 +585,32 @@ export default function Editor() {
                 placeholder="https://example.com/avatar.jpg"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <label className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 cursor-pointer">
+                  Upload + crop avatar
+                  <input
+                    key={avatarFileInputKey}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarFilePick}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => openAvatarEditor(card.avatar_url)}
+                  className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Edit current avatar
+                </button>
+              </div>
+              {normalizeString(card.avatar_url) && (
+                <img
+                  src={card.avatar_url}
+                  alt="Avatar preview"
+                  className="mt-3 h-20 w-20 rounded-lg object-cover border border-gray-200"
+                />
+              )}
             </div>
 
             <div>
@@ -665,5 +830,62 @@ export default function Editor() {
         </div>
       </div>
     </div>
+
+      {avatarEditorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-xl rounded-xl bg-white p-4 shadow-2xl">
+            <h3 className="text-lg font-semibold">Avatar editor</h3>
+            <p className="mt-1 text-sm text-gray-600">Drag photo and set zoom. Square area will be used for icon and avatar.</p>
+
+            <div className="relative mt-4 h-[360px] w-full overflow-hidden rounded-lg bg-black">
+              <Cropper
+                image={avatarCropSource}
+                crop={avatarCrop}
+                zoom={avatarZoom}
+                aspect={1}
+                cropShape="rect"
+                showGrid
+                objectFit="contain"
+                onCropChange={setAvatarCrop}
+                onZoomChange={setAvatarZoom}
+                onCropComplete={(_, croppedAreaPixels) => setAvatarCroppedAreaPixels(croppedAreaPixels)}
+              />
+            </div>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700">Zoom</label>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.01}
+                value={avatarZoom}
+                onChange={(e) => setAvatarZoom(Number(e.target.value))}
+                className="mt-2 w-full"
+              />
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={resetAvatarEditor}
+                className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                disabled={avatarCropUploading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void applyAvatarCrop()}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                disabled={avatarCropUploading}
+              >
+                {avatarCropUploading ? 'Saving...' : 'Apply crop'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
