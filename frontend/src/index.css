@@ -623,11 +623,11 @@ code {
 
 .dbc-social-mode .dbc-social-back,
 .dbc-services-mode .dbc-social-back {
-  top: calc(34.6% - 20px);
+  top: calc(34.6% - 40px);
 }
 
 .dbc-social-mode .dbc-social-grid {
-  top: calc(42% - 20px);
+  top: calc(42% - 40px);
 }
 
 .dbc-services-list {
@@ -644,7 +644,7 @@ code {
 }
 
 .dbc-services-mode .dbc-services-list {
-  top: calc(40.5% - 20px);
+  top: calc(40.5% - 40px);
 }
 
 .dbc-service-item {
