@@ -1180,6 +1180,10 @@ code {
   padding: 10px 14px;
 }
 
+.admin-mobile-logout {
+  display: none;
+}
+
 .admin-mobile-nav-wrap {
   display: none;
   position: relative;
@@ -1906,6 +1910,13 @@ code {
     display: block;
   }
 
+  .admin-mobile-logout {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+  }
+
   .admin-two-col {
     grid-template-columns: 1fr;
   }
@@ -1924,6 +1935,10 @@ code {
     flex-direction: column;
     align-items: stretch;
     gap: 10px;
+  }
+
+  .admin-mobile-logout {
+    width: 100%;
   }
 
   .sortable-item {

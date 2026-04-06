@@ -587,18 +587,22 @@ export default function Dashboard() {
     }, [selectedCardId])
 
     useEffect(() => {
+        if (!selectedCardId) return
+        if (selectedSection !== 'analytics') return
         void fetchAnalytics()
-    }, [selectedCardId, analyticsPeriod, analyticsFrom, analyticsTo])
+    }, [selectedCardId, analyticsPeriod, analyticsFrom, analyticsTo, selectedSection])
 
     useEffect(() => {
         if (!analyticsAutoRefreshSec || analyticsAutoRefreshSec <= 0) return
+        if (!selectedCardId) return
+        if (selectedSection !== 'analytics') return
 
         const id = setInterval(() => {
             void fetchAnalytics()
         }, analyticsAutoRefreshSec * 1000)
 
         return () => clearInterval(id)
-    }, [analyticsAutoRefreshSec, selectedCardId, analyticsPeriod, analyticsFrom, analyticsTo])
+    }, [analyticsAutoRefreshSec, selectedCardId, analyticsPeriod, analyticsFrom, analyticsTo, selectedSection])
 
     useEffect(() => {
         const el = mobileNavRefs.current[selectedSection]
@@ -1124,6 +1128,10 @@ export default function Dashboard() {
 
                     <button type="button" className="admin-primary admin-save-top" onClick={saveCard} disabled={saving || !cardData}>
                         {saving ? 'Сохранение...' : 'Сохранить изменения'}
+                    </button>
+
+                    <button type="button" className="admin-ghost danger admin-mobile-logout" onClick={logout}>
+                        Выйти
                     </button>
                 </section>
 
