@@ -557,6 +557,54 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     }
   })
 
+  // Сбросить аналитику (по выбранной карточке или по всем карточкам пользователя)
+  fastify.post('/analytics/reset', async (request, reply) => {
+    const user = request.user as any
+    const body = (request.body || {}) as { card_id?: string }
+    const cardId = normalizeString(body.card_id)
+
+    try {
+      let targetCardIds: string[] = []
+
+      if (cardId) {
+        const ownerCheck = await db.query(
+          `SELECT id FROM cards WHERE id = $1 AND user_id = $2`,
+          [cardId, user.id]
+        )
+
+        if (ownerCheck.rows.length === 0) {
+          return reply.code(404).send({ error: 'Card not found' })
+        }
+
+        targetCardIds = [cardId]
+      } else {
+        const cardsResult = await db.query(
+          `SELECT id FROM cards WHERE user_id = $1`,
+          [user.id]
+        )
+        targetCardIds = cardsResult.rows.map((row) => row.id)
+      }
+
+      if (targetCardIds.length === 0) {
+        return { success: true, deleted: 0 }
+      }
+
+      const deletedResult = await db.query(
+        `DELETE FROM events
+         WHERE card_id = ANY($1::uuid[])`,
+        [targetCardIds]
+      )
+
+      return {
+        success: true,
+        deleted: deletedResult.rowCount || 0
+      }
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.code(500).send({ error: 'Failed to reset analytics' })
+    }
+  })
+
   // Получить аналитику конкретной визитки
   fastify.get('/card/:id/analytics', async (request, reply) => {
     const user = request.user as any

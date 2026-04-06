@@ -458,6 +458,7 @@ export default function Dashboard() {
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light')
     const [uploadingMedia, setUploadingMedia] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
+    const [resettingAnalytics, setResettingAnalytics] = useState(false)
     const [avatarEditorOpen, setAvatarEditorOpen] = useState(false)
     const [avatarCropSource, setAvatarCropSource] = useState('')
     const [avatarCropObjectUrl, setAvatarCropObjectUrl] = useState<string | null>(null)
@@ -753,6 +754,33 @@ export default function Dashboard() {
         updateCard({ media: cardData.media.filter((_, i) => i !== index) })
     }
 
+    const resetAnalytics = async () => {
+        const token = localStorage.getItem('token')
+        if (!token) {
+            navigate('/admin/login')
+            return
+        }
+
+        const confirmed = window.confirm('Сбросить статистику для выбранной карточки? Это действие необратимо.')
+        if (!confirmed) return
+
+        try {
+            setResettingAnalytics(true)
+            await axios.post(
+                '/api/admin/analytics/reset',
+                { card_id: selectedCardId || undefined },
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+
+            await loadData()
+        } catch (error: any) {
+            const message = error?.response?.data?.error || 'Reset failed'
+            alert(`Не удалось сбросить статистику: ${message}`)
+        } finally {
+            setResettingAnalytics(false)
+        }
+    }
+
     const isGalleryVisible = !!cardData?.links.some((link) => isGalleryLink(link) && link.is_visible !== false)
 
     const toggleGalleryVisibility = (enabled: boolean) => {
@@ -864,6 +892,20 @@ export default function Dashboard() {
 
                 {selectedSection === 'dashboard' && (
                     <section className="admin-grid">
+                        <div className="glass-card section-head-row admin-dashboard-head">
+                            <h3>Панель</h3>
+                            <button
+                                type="button"
+                                className="admin-ghost danger"
+                                onClick={() => {
+                                    void resetAnalytics()
+                                }}
+                                disabled={resettingAnalytics || !selectedCardId}
+                            >
+                                {resettingAnalytics ? 'Сброс…' : 'Сбросить статистику'}
+                            </button>
+                        </div>
+
                         <div className="glass-card stat-grid">
                             {dashboardStats.map((item) => (
                                 <article key={item.label} className="stat-card" style={{ ['--accent' as any]: item.accent }}>
@@ -886,15 +928,6 @@ export default function Dashboard() {
                                 <li><b>Скачан QR</b><span>21 мин назад</span></li>
                                 <li><b>Язык переключён</b><span>1 ч назад</span></li>
                             </ul>
-                        </div>
-
-                        <div className="glass-card quick-actions">
-                            <h3>Быстрые действия</h3>
-                            <div>
-                                <button type="button" className="admin-ghost" onClick={() => setSelectedSection('edit-card')}>Редактировать</button>
-                                <button type="button" className="admin-ghost" onClick={() => setSelectedSection('social-links')}>Ссылки</button>
-                                <button type="button" className="admin-ghost" onClick={() => setSelectedSection('analytics')}>Аналитика</button>
-                            </div>
                         </div>
                     </section>
                 )}
@@ -1170,19 +1203,16 @@ export default function Dashboard() {
                                     onDrop={() => handleDropMedia(index)}
                                 >
                                     <img src={resolveMediaUrl(item.file_url)} alt="media" loading="lazy" onClick={() => setPreviewUrl(resolveMediaUrl(item.file_url))} />
-                                    <div>
-                                        <strong>{item.type || 'фото'}</strong>
-                                        <small>{item.file_url.includes('video') ? 'Видео' : 'Фото'}</small>
-                                        <button
-                                            type="button"
-                                            className="admin-ghost danger media-delete"
-                                            onClick={() => {
-                                                void removeGalleryFile(index)
-                                            }}
-                                        >
-                                            Удалить
-                                        </button>
-                                    </div>
+                                    <button
+                                        type="button"
+                                        className="media-delete-x"
+                                        aria-label="Удалить фото"
+                                        onClick={() => {
+                                            void removeGalleryFile(index)
+                                        }}
+                                    >
+                                        ×
+                                    </button>
                                 </article>
                             ))}
                         </div>
