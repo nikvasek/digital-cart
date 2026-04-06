@@ -1,6 +1,61 @@
 import { FastifyInstance } from 'fastify'
 import { db } from '../db/index.js'
 import { generateVCard } from '../utils/vcard.js'
+import { createHash } from 'node:crypto'
+
+const getClientIp = (request: any) => {
+  const xff = (request.headers['x-forwarded-for'] || '').toString()
+  if (xff) {
+    const first = xff.split(',')[0]?.trim()
+    if (first) return first
+  }
+
+  return request.ip || request.socket?.remoteAddress || ''
+}
+
+const toDeviceLabel = (userAgent: string) => {
+  const ua = userAgent.toLowerCase()
+  if (/ipad|tablet/.test(ua)) return 'tablet'
+  if (/mobile|iphone|android/.test(ua)) return 'mobile'
+  return 'desktop'
+}
+
+const getGeoFromHeaders = (request: any) => {
+  const country =
+    (request.headers['cf-ipcountry'] ||
+      request.headers['x-vercel-ip-country'] ||
+      request.headers['x-country-code'] ||
+      '')
+      .toString()
+      .trim()
+      .toUpperCase()
+
+  const region =
+    (request.headers['x-vercel-ip-country-region'] ||
+      request.headers['x-region-code'] ||
+      '')
+      .toString()
+      .trim()
+
+  const city =
+    (request.headers['x-vercel-ip-city'] ||
+      request.headers['cf-ipcity'] ||
+      '')
+      .toString()
+      .trim()
+
+  return { country, region, city }
+}
+
+const buildVisitorKey = (request: any, metadata: any) => {
+  const metaVisitorId = (metadata?.visitor_id || metadata?.visitor_key || '').toString().trim()
+  if (metaVisitorId) return metaVisitorId
+
+  const ip = getClientIp(request)
+  const userAgent = (request.headers['user-agent'] || '').toString()
+  const raw = `${ip}|${userAgent}`
+  return createHash('sha256').update(raw).digest('hex').slice(0, 24)
+}
 
 export default async function publicRoutes(fastify: FastifyInstance) {
   // Получить публичную визитку по slug
@@ -94,9 +149,25 @@ export default async function publicRoutes(fastify: FastifyInstance) {
         : `attachment; filename="${slug}.vcf"`
 
       // Логируем событие сохранения ДО отправки ответа
+      const ua = (request.headers['user-agent'] || '').toString()
+      const geo = getGeoFromHeaders(request)
+      const visitorKey = buildVisitorKey(request, null)
       await db.query(
-        `INSERT INTO events (card_id, event_type) VALUES ($1, $2)`,
-        [card.id, 'save_vcard']
+        `INSERT INTO events (card_id, event_type, referrer, device, country, metadata)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          card.id,
+          'save_vcard',
+          request.headers.referer || null,
+          toDeviceLabel(ua),
+          geo.country || null,
+          {
+            visitor_key: visitorKey,
+            region: geo.region || null,
+            city: geo.city || null,
+            user_agent: ua || null
+          }
+        ]
       ).catch(err => fastify.log.error('Failed to log save_vcard event:', err))
 
       return reply
@@ -140,9 +211,25 @@ export default async function publicRoutes(fastify: FastifyInstance) {
       )
 
       // Логируем событие
+      const ua = (request.headers['user-agent'] || '').toString()
+      const geo = getGeoFromHeaders(request)
+      const visitorKey = buildVisitorKey(request, null)
       await db.query(
-        `INSERT INTO events (card_id, event_type) VALUES ($1, $2)`,
-        [card.id, 'lead_submit']
+        `INSERT INTO events (card_id, event_type, referrer, device, country, metadata)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          card.id,
+          'lead_submit',
+          request.headers.referer || null,
+          toDeviceLabel(ua),
+          geo.country || null,
+          {
+            visitor_key: visitorKey,
+            region: geo.region || null,
+            city: geo.city || null,
+            user_agent: ua || null
+          }
+        ]
       )
 
       // TODO: Отправить уведомление владельцу (email/telegram)
@@ -179,10 +266,39 @@ export default async function publicRoutes(fastify: FastifyInstance) {
         return reply.code(404).send({ error: 'Card not found' })
       }
 
+      const ua = (request.headers['user-agent'] || '').toString()
+      const geo = getGeoFromHeaders(request)
+      const visitorKey = buildVisitorKey(request, metadata)
+      const referrer = request.headers.referer || null
+      const eventMetadata = {
+        ...(metadata || {}),
+        visitor_key: visitorKey,
+        region: geo.region || null,
+        city: geo.city || null,
+        user_agent: ua || null
+      }
+
+      // Дедупликация burst-событий: отсекаем одинаковые события посетителя в коротком окне.
+      const dedupeCheck = await db.query(
+        `SELECT id
+         FROM events
+         WHERE card_id = $1
+           AND event_type = $2
+           AND COALESCE(metadata->>'visitor_key', '') = $3
+           AND COALESCE(metadata->>'link_type', '') = $4
+           AND created_at >= NOW() - INTERVAL '8 seconds'
+         LIMIT 1`,
+        [card_id, event_type, visitorKey, (metadata?.link_type || '').toString()]
+      )
+
+      if (dedupeCheck.rows.length > 0) {
+        return { success: true, deduped: true }
+      }
+
       await db.query(
-        `INSERT INTO events (card_id, event_type, referrer, metadata)
-         VALUES ($1, $2, $3, $4)`,
-        [card_id, event_type, request.headers.referer || null, metadata || null]
+        `INSERT INTO events (card_id, event_type, referrer, device, country, metadata)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [card_id, event_type, referrer, toDeviceLabel(ua), geo.country || null, eventMetadata]
       )
 
       return { success: true }

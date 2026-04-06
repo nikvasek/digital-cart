@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import Cropper, { type Area } from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
+import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
+import { scaleQuantize } from 'd3-scale'
 
 // ── Platform definitions ──────────────────────────────────
 const PLATFORMS: Array<{
@@ -82,11 +84,54 @@ const PLATFORMS: Array<{
 const getPlatform = (id: string) =>
     PLATFORMS.find((p) => p.id === id) ?? { id, label: id, color: '#555', icon: '', placeholder: '', category: 'social' as const }
 
-interface Analytics {
+const WORLD_GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+
+interface AnalyticsTotals {
     views: number
-    clicks: number
+    unique_visitors: number
+    returning_visitors: number
     saves: number
+    save_rate_percent: number
+    clicks: number
+    shares: number
     leads: number
+}
+
+interface AnalyticsSeriesPoint {
+    day: string
+    views: number
+    saves: number
+    unique_visitors: number
+}
+
+interface AnalyticsSharePoint {
+    share_method: string
+    platform: string
+    count: number
+}
+
+interface AnalyticsGeoPoint {
+    country: string
+    region: string
+    city: string
+    views: number
+}
+
+interface AnalyticsSourcePoint {
+    referrer: string
+    views: number
+}
+
+interface AnalyticsReport {
+    period: string
+    from: string
+    to: string
+    card_id: string | null
+    totals: AnalyticsTotals
+    timeseries: AnalyticsSeriesPoint[]
+    share_breakdown: AnalyticsSharePoint[]
+    geo: AnalyticsGeoPoint[]
+    sources: AnalyticsSourcePoint[]
 }
 
 interface CardItem {
@@ -445,7 +490,7 @@ export default function Dashboard() {
     const mediaInputRef = useRef<HTMLInputElement | null>(null)
     const avatarInputRef = useRef<HTMLInputElement | null>(null)
     const [cards, setCards] = useState<CardItem[]>([])
-    const [analytics, setAnalytics] = useState<Analytics | null>(null)
+    const [analytics, setAnalytics] = useState<AnalyticsReport | null>(null)
     const [selectedCardId, setSelectedCardId] = useState<string>('')
     const [selectedSection, setSelectedSection] = useState<SectionId>('dashboard')
     const [cardData, setCardData] = useState<CardDetails | null>(null)
@@ -459,6 +504,12 @@ export default function Dashboard() {
     const [uploadingMedia, setUploadingMedia] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [resettingAnalytics, setResettingAnalytics] = useState(false)
+    const [analyticsLoading, setAnalyticsLoading] = useState(false)
+    const [analyticsPeriod, setAnalyticsPeriod] = useState<'day' | 'week' | 'month' | 'custom'>('month')
+    const [analyticsFrom, setAnalyticsFrom] = useState('')
+    const [analyticsTo, setAnalyticsTo] = useState('')
+    const [analyticsAutoRefreshSec, setAnalyticsAutoRefreshSec] = useState<number>(30)
+    const [selectedGeoCountry, setSelectedGeoCountry] = useState<string>('')
     const [avatarEditorOpen, setAvatarEditorOpen] = useState(false)
     const [avatarCropSource, setAvatarCropSource] = useState('')
     const [avatarCropObjectUrl, setAvatarCropObjectUrl] = useState<string | null>(null)
@@ -476,6 +527,20 @@ export default function Dashboard() {
     }, [selectedCardId])
 
     useEffect(() => {
+        void fetchAnalytics()
+    }, [selectedCardId, analyticsPeriod, analyticsFrom, analyticsTo])
+
+    useEffect(() => {
+        if (!analyticsAutoRefreshSec || analyticsAutoRefreshSec <= 0) return
+
+        const id = setInterval(() => {
+            void fetchAnalytics()
+        }, analyticsAutoRefreshSec * 1000)
+
+        return () => clearInterval(id)
+    }, [analyticsAutoRefreshSec, selectedCardId, analyticsPeriod, analyticsFrom, analyticsTo])
+
+    useEffect(() => {
         const el = mobileNavRefs.current[selectedSection]
         if (!el) return
         el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })
@@ -491,10 +556,10 @@ export default function Dashboard() {
 
     const dashboardStats = useMemo(() => {
         return [
-            { label: 'Просмотры', value: analytics?.views ?? 0, accent: '#1f2937' },
-            { label: 'Клики', value: analytics?.clicks ?? 0, accent: '#374151' },
-            { label: 'Сохранения', value: analytics?.saves ?? 0, accent: '#4b5563' },
-            { label: 'Лиды', value: analytics?.leads ?? 0, accent: '#111827' }
+            { label: 'Просмотры', value: analytics?.totals.views ?? 0, accent: '#1f2937' },
+            { label: 'Уникальные', value: analytics?.totals.unique_visitors ?? 0, accent: '#374151' },
+            { label: 'Сохранения', value: analytics?.totals.saves ?? 0, accent: '#4b5563' },
+            { label: 'Лиды', value: analytics?.totals.leads ?? 0, accent: '#111827' }
         ]
     }, [analytics])
 
@@ -507,14 +572,10 @@ export default function Dashboard() {
             }
 
             const config = { headers: { Authorization: `Bearer ${token}` } }
-            const [cardsResponse, analyticsResponse] = await Promise.all([
-                axios.get('/api/admin/cards', config),
-                axios.get('/api/admin/analytics', config)
-            ])
+            const cardsResponse = await axios.get('/api/admin/cards', config)
 
             const nextCards: CardItem[] = cardsResponse.data
             setCards(nextCards)
-            setAnalytics(analyticsResponse.data)
 
             if (nextCards.length > 0) {
                 setSelectedCardId(nextCards[0].id)
@@ -525,6 +586,76 @@ export default function Dashboard() {
             }
         } finally {
             setLoading(false)
+        }
+    }
+
+    const fetchAnalytics = async (overrideCardId?: string) => {
+        try {
+            const token = localStorage.getItem('token')
+            if (!token) return
+
+            setAnalyticsLoading(true)
+            const params: Record<string, string> = {
+                period: analyticsPeriod
+            }
+
+            const targetCardId = overrideCardId ?? selectedCardId
+            if (targetCardId) params.card_id = targetCardId
+
+            if (analyticsPeriod === 'custom') {
+                if (analyticsFrom) params.from = analyticsFrom
+                if (analyticsTo) params.to = analyticsTo
+            }
+
+            const response = await axios.get('/api/admin/analytics', {
+                headers: { Authorization: `Bearer ${token}` },
+                params
+            })
+
+            setAnalytics(response.data)
+        } catch (error: any) {
+            const message = error?.response?.data?.error || 'Failed to load analytics'
+            alert(message)
+        } finally {
+            setAnalyticsLoading(false)
+        }
+    }
+
+    const exportAnalyticsCsv = async () => {
+        try {
+            const token = localStorage.getItem('token')
+            if (!token) {
+                navigate('/admin/login')
+                return
+            }
+
+            const params: Record<string, string> = {
+                period: analyticsPeriod
+            }
+
+            if (selectedCardId) params.card_id = selectedCardId
+            if (analyticsPeriod === 'custom') {
+                if (analyticsFrom) params.from = analyticsFrom
+                if (analyticsTo) params.to = analyticsTo
+            }
+
+            const response = await axios.get('/api/admin/analytics/export', {
+                headers: { Authorization: `Bearer ${token}` },
+                params,
+                responseType: 'blob'
+            })
+
+            const blobUrl = URL.createObjectURL(response.data)
+            const a = document.createElement('a')
+            a.href = blobUrl
+            a.download = 'analytics.csv'
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(blobUrl)
+        } catch (error: any) {
+            const message = error?.response?.data?.error || 'Failed to export analytics'
+            alert(message)
         }
     }
 
@@ -771,8 +902,7 @@ export default function Dashboard() {
                 { card_id: selectedCardId || undefined },
                 { headers: { Authorization: `Bearer ${token}` } }
             )
-
-            await loadData()
+            await fetchAnalytics()
         } catch (error: any) {
             const message = error?.response?.data?.error || 'Reset failed'
             alert(`Не удалось сбросить статистику: ${message}`)
@@ -780,6 +910,60 @@ export default function Dashboard() {
             setResettingAnalytics(false)
         }
     }
+
+    const geoCountryRows = useMemo(() => {
+        const byCountry = new Map<string, number>()
+        for (const item of analytics?.geo || []) {
+            const key = (item.country || 'Unknown').toUpperCase()
+            byCountry.set(key, (byCountry.get(key) || 0) + (item.views || 0))
+        }
+        return Array.from(byCountry.entries())
+            .map(([country, views]) => ({ country, views }))
+            .sort((a, b) => b.views - a.views)
+    }, [analytics])
+
+    const geoSelectedRegions = useMemo(() => {
+        if (!selectedGeoCountry) return [] as Array<{ region: string; views: number }>
+        const byRegion = new Map<string, number>()
+        for (const item of analytics?.geo || []) {
+            if ((item.country || 'Unknown').toUpperCase() !== selectedGeoCountry.toUpperCase()) continue
+            const region = item.region || 'Unknown'
+            byRegion.set(region, (byRegion.get(region) || 0) + (item.views || 0))
+        }
+        return Array.from(byRegion.entries())
+            .map(([region, views]) => ({ region, views }))
+            .sort((a, b) => b.views - a.views)
+    }, [analytics, selectedGeoCountry])
+
+    const geoSelectedCities = useMemo(() => {
+        if (!selectedGeoCountry) return [] as Array<{ city: string; views: number }>
+        const byCity = new Map<string, number>()
+        for (const item of analytics?.geo || []) {
+            if ((item.country || 'Unknown').toUpperCase() !== selectedGeoCountry.toUpperCase()) continue
+            const city = item.city || 'Unknown'
+            byCity.set(city, (byCity.get(city) || 0) + (item.views || 0))
+        }
+        return Array.from(byCity.entries())
+            .map(([city, views]) => ({ city, views }))
+            .sort((a, b) => b.views - a.views)
+            .slice(0, 10)
+    }, [analytics, selectedGeoCountry])
+
+    const geoMaxViews = useMemo(
+        () => Math.max(1, ...geoCountryRows.map((item) => item.views)),
+        [geoCountryRows]
+    )
+
+    const geoColorScale = useMemo(
+        () => scaleQuantize<string>().domain([0, geoMaxViews]).range(['#eef2ff', '#c7d2fe', '#a5b4fc', '#6366f1', '#3730a3']),
+        [geoMaxViews]
+    )
+
+    const geoViewsByCountry = useMemo(() => {
+        const map = new Map<string, number>()
+        geoCountryRows.forEach((item) => map.set(item.country.toUpperCase(), item.views))
+        return map
+    }, [geoCountryRows])
 
     const isGalleryVisible = !!cardData?.links.some((link) => isGalleryLink(link) && link.is_visible !== false)
 
@@ -1252,20 +1436,164 @@ export default function Dashboard() {
                         <div className="section-head-row">
                             <h3>Аналитика</h3>
                             <div className="date-filters">
-                                <input type="date" />
-                                <input type="date" />
-                                <button type="button" className="admin-ghost">Экспорт CSV</button>
+                                <select
+                                    value={analyticsPeriod}
+                                    onChange={(e) => setAnalyticsPeriod(e.target.value as 'day' | 'week' | 'month' | 'custom')}
+                                    title="Период"
+                                >
+                                    <option value="day">День</option>
+                                    <option value="week">Неделя</option>
+                                    <option value="month">Месяц</option>
+                                    <option value="custom">Произвольный</option>
+                                </select>
+                                {analyticsPeriod === 'custom' && (
+                                    <>
+                                        <input
+                                            type="date"
+                                            value={analyticsFrom}
+                                            onChange={(e) => setAnalyticsFrom(e.target.value)}
+                                            title="Дата начала"
+                                        />
+                                        <input
+                                            type="date"
+                                            value={analyticsTo}
+                                            onChange={(e) => setAnalyticsTo(e.target.value)}
+                                            title="Дата окончания"
+                                        />
+                                    </>
+                                )}
+                                <select
+                                    value={analyticsAutoRefreshSec}
+                                    onChange={(e) => setAnalyticsAutoRefreshSec(Number(e.target.value))}
+                                    title="Автообновление"
+                                >
+                                    <option value={0}>Без автообновления</option>
+                                    <option value={15}>Обновлять: 15с</option>
+                                    <option value={30}>Обновлять: 30с</option>
+                                    <option value={60}>Обновлять: 60с</option>
+                                </select>
+                                <button type="button" className="admin-ghost" onClick={() => void fetchAnalytics()}>
+                                    Обновить
+                                </button>
+                                <button type="button" className="admin-ghost" onClick={() => void exportAnalyticsCsv()}>
+                                    Экспорт CSV
+                                </button>
                             </div>
                         </div>
 
                         <div className="analytics-grid">
-                            <article><h4>Просмотры</h4><p>{analytics?.views ?? 0} всего</p></article>
-                            <article><h4>Клики по ссылкам</h4><p>{analytics?.clicks ?? 0} всего</p></article>
-                            <article><h4>География</h4><p>EU 46% · US 33% · Другие 21%</p></article>
-                            <article><h4>Устройства</h4><p>Мобильные 68% · ПК 32%</p></article>
-                            <article><h4>Источники</h4><p>Прямые 51% · Соцсети 27% · Поиск 22%</p></article>
-                            <article><h4>Лиды</h4><p>{analytics?.leads ?? 0} лидов</p></article>
+                            <article><h4>Просмотры</h4><p>{analytics?.totals.views ?? 0} всего</p></article>
+                            <article><h4>Уникальные посетители</h4><p>{analytics?.totals.unique_visitors ?? 0}</p></article>
+                            <article><h4>Повторные визиты</h4><p>{analytics?.totals.returning_visitors ?? 0}</p></article>
+                            <article><h4>Сохранить контакт</h4><p>{analytics?.totals.saves ?? 0} ({analytics?.totals.save_rate_percent ?? 0}%)</p></article>
+                            <article><h4>Поделиться</h4><p>{analytics?.totals.shares ?? 0}</p></article>
+                            <article><h4>Лиды</h4><p>{analytics?.totals.leads ?? 0}</p></article>
                         </div>
+
+                        <div className="analytics-grid" style={{ marginTop: 10 }}>
+                            <article style={{ gridColumn: 'span 2' }}>
+                                <h4>Динамика Save contact по дням</h4>
+                                <div className="analytics-series-table">
+                                    {(analytics?.timeseries || []).map((point) => (
+                                        <div key={point.day} className="analytics-series-row">
+                                            <span>{new Date(point.day).toLocaleDateString()}</span>
+                                            <span>Views: {point.views}</span>
+                                            <span>Saves: {point.saves}</span>
+                                            <span>Unique: {point.unique_visitors}</span>
+                                        </div>
+                                    ))}
+                                    {(analytics?.timeseries || []).length === 0 && <p>Нет данных за выбранный период</p>}
+                                </div>
+                            </article>
+
+                            <article>
+                                <h4>Поделиться по платформам</h4>
+                                <div className="analytics-series-table">
+                                    {(analytics?.share_breakdown || []).map((row, idx) => (
+                                        <div key={`${row.share_method}-${row.platform}-${idx}`} className="analytics-series-row">
+                                            <span>{row.share_method}</span>
+                                            <span>{row.platform}</span>
+                                            <span>{row.count}</span>
+                                        </div>
+                                    ))}
+                                    {(analytics?.share_breakdown || []).length === 0 && <p>Нет событий share</p>}
+                                </div>
+                            </article>
+                        </div>
+
+                        <div className="analytics-grid" style={{ marginTop: 10 }}>
+                            <article style={{ gridColumn: 'span 2' }}>
+                                <h4>Карта просмотров</h4>
+                                <ComposableMap projectionConfig={{ scale: 130 }}>
+                                    <Geographies geography={WORLD_GEO_URL}>
+                                        {({ geographies }: { geographies: any[] }) =>
+                                            geographies.map((geo: any) => {
+                                                const code = ((geo.properties as any).ISO_A2 || (geo.properties as any).iso_a2 || '').toUpperCase()
+                                                const views = geoViewsByCountry.get(code) || 0
+                                                return (
+                                                    <Geography
+                                                        key={geo.rsmKey}
+                                                        geography={geo}
+                                                        onClick={() => {
+                                                            if (code) setSelectedGeoCountry(code)
+                                                        }}
+                                                        style={{
+                                                            default: { fill: views > 0 ? geoColorScale(views) : '#f3f4f6', stroke: '#d1d5db', outline: 'none' },
+                                                            hover: { fill: '#93c5fd', stroke: '#9ca3af', outline: 'none' },
+                                                            pressed: { fill: '#60a5fa', stroke: '#6b7280', outline: 'none' }
+                                                        }}
+                                                    />
+                                                )
+                                            })
+                                        }
+                                    </Geographies>
+                                </ComposableMap>
+                            </article>
+
+                            <article>
+                                <h4>Гео детализация</h4>
+                                <div className="analytics-series-table">
+                                    {!selectedGeoCountry && geoCountryRows.slice(0, 10).map((row) => (
+                                        <div key={row.country} className="analytics-series-row">
+                                            <button
+                                                type="button"
+                                                className="admin-ghost"
+                                                onClick={() => setSelectedGeoCountry(row.country)}
+                                            >
+                                                {row.country}
+                                            </button>
+                                            <span>{row.views}</span>
+                                        </div>
+                                    ))}
+
+                                    {!!selectedGeoCountry && (
+                                        <>
+                                            <div className="analytics-series-row">
+                                                <button type="button" className="admin-ghost" onClick={() => setSelectedGeoCountry('')}>
+                                                    ← Назад к странам
+                                                </button>
+                                            </div>
+                                            {geoSelectedRegions.map((row) => (
+                                                <div key={row.region} className="analytics-series-row">
+                                                    <span>{row.region}</span>
+                                                    <span>{row.views}</span>
+                                                </div>
+                                            ))}
+                                            {geoSelectedCities.map((row) => (
+                                                <div key={row.city} className="analytics-series-row">
+                                                    <small>{row.city}</small>
+                                                    <small>{row.views}</small>
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
+
+                                    {geoCountryRows.length === 0 && <p>Нет геоданных</p>}
+                                </div>
+                            </article>
+                        </div>
+
+                        {analyticsLoading && <p>Обновление аналитики…</p>}
                     </section>
                 )}
 

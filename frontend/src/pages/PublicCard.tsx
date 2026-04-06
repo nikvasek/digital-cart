@@ -215,6 +215,18 @@ const preloadCriticalAssets = async (avatarUrl?: string) => {
   await Promise.allSettled(criticalImages.map((src) => preloadImage(src)))
 }
 
+const getOrCreateVisitorId = () => {
+  if (typeof window === 'undefined') return ''
+
+  const key = 'dc_visitor_id'
+  const existing = window.localStorage.getItem(key)
+  if (existing) return existing
+
+  const next = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
+  window.localStorage.setItem(key, next)
+  return next
+}
+
 const createSquareIconDataUrl = async (src: string, size = 180) => {
   if (!src) return src
 
@@ -266,6 +278,7 @@ export default function PublicCard() {
   const [galleryBlobUrls, setGalleryBlobUrls] = useState<Record<string, string>>({})
   const galleryBlobCacheRef = useRef<Record<string, string>>({})
   const manifestObjectUrlRef = useRef<string | null>(null)
+  const visitorIdRef = useRef<string>('')
   const viewerImageRef = useRef<HTMLImageElement | null>(null)
   const viewerPointerStartRef = useRef<{ x: number; y: number } | null>(null)
   const [loading, setLoading] = useState(true)
@@ -274,6 +287,10 @@ export default function PublicCard() {
     void loadCard()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
+
+  useEffect(() => {
+    visitorIdRef.current = getOrCreateVisitorId()
+  }, [])
 
   useEffect(() => {
     if (!card) return
@@ -357,11 +374,19 @@ export default function PublicCard() {
   }, [card])
 
   const trackEvent = (event_type: string, metadata?: Record<string, unknown>) => {
+    const baseMetadata = {
+      visitor_id: visitorIdRef.current || getOrCreateVisitorId(),
+      platform: navigator.platform || 'unknown'
+    }
+
     axios
       .post('/api/public/events', {
         card_id: card?.id,
         event_type,
-        metadata
+        metadata: {
+          ...baseMetadata,
+          ...(metadata || {})
+        }
       })
       .catch(() => undefined)
   }
@@ -377,7 +402,11 @@ export default function PublicCard() {
 
       void axios.post('/api/public/events', {
         card_id: response.data.id,
-        event_type: 'view'
+        event_type: 'view',
+        metadata: {
+          visitor_id: visitorIdRef.current || getOrCreateVisitorId(),
+          source: 'page_load'
+        }
       })
     } catch (error) {
       console.error('Failed to load card:', error)
@@ -477,7 +506,10 @@ export default function PublicCard() {
       alert('Link copied to clipboard')
     }
 
-    trackEvent('share')
+    trackEvent('share', {
+      share_method: ('share' in navigator) ? 'web_share' : 'clipboard',
+      platform: navigator.platform || 'unknown'
+    })
   }
 
   const addToHomeHint = async () => {

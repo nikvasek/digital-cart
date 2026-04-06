@@ -1827,6 +1827,27 @@ code {
   padding: 12px;
 }
 
+.analytics-series-table {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+}
+
+.analytics-series-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.analytics-series-row small {
+  color: #6b7280;
+}
+
 .analytics-grid h4 {
   margin: 0 0 6px;
 }

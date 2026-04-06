@@ -148,6 +148,201 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   const authGuard = (fastify as any).authenticate
   fastify.addHook('onRequest', authGuard)
 
+  const getTimeRange = (query: any) => {
+    const period = normalizeString(query?.period).toLowerCase() || 'month'
+    const now = new Date()
+    let from = new Date(now)
+    let to = new Date(now)
+
+    if (period === 'day') {
+      from.setDate(now.getDate() - 1)
+    } else if (period === 'week') {
+      from.setDate(now.getDate() - 7)
+    } else if (period === 'month') {
+      from.setMonth(now.getMonth() - 1)
+    } else if (period === 'custom') {
+      const fromRaw = normalizeString(query?.from)
+      const toRaw = normalizeString(query?.to)
+      const fromDate = fromRaw ? new Date(fromRaw) : new Date(now)
+      const toDate = toRaw ? new Date(toRaw) : new Date(now)
+      if (!Number.isNaN(fromDate.getTime()) && !Number.isNaN(toDate.getTime())) {
+        from = fromDate
+        to = toDate
+      } else {
+        from.setMonth(now.getMonth() - 1)
+      }
+    } else {
+      from.setMonth(now.getMonth() - 1)
+    }
+
+    if (from > to) {
+      const tmp = from
+      from = to
+      to = tmp
+    }
+
+    return { from, to, period }
+  }
+
+  const getAnalyticsForCards = async (cardIds: string[], from: Date, to: Date) => {
+    if (cardIds.length === 0) {
+      return {
+        totals: {
+          views: 0,
+          unique_visitors: 0,
+          returning_visitors: 0,
+          saves: 0,
+          save_rate_percent: 0,
+          clicks: 0,
+          shares: 0,
+          leads: 0
+        },
+        timeseries: [],
+        share_breakdown: [],
+        geo: [],
+        sources: []
+      }
+    }
+
+    const [totalsResult, visitorsResult, seriesResult, shareResult, geoResult, sourcesResult, leadsResult] = await Promise.all([
+      db.query(
+        `SELECT
+           COALESCE(COUNT(*) FILTER (WHERE event_type = 'view'), 0)::int AS views,
+           COALESCE(COUNT(*) FILTER (WHERE event_type = 'click'), 0)::int AS clicks,
+           COALESCE(COUNT(*) FILTER (WHERE event_type = 'save_vcard'), 0)::int AS saves,
+           COALESCE(COUNT(*) FILTER (WHERE event_type = 'share'), 0)::int AS shares
+         FROM events
+         WHERE card_id = ANY($1::uuid[])
+           AND created_at >= $2
+           AND created_at <= $3`,
+        [cardIds, from, to]
+      ),
+      db.query(
+        `WITH visitor_views AS (
+           SELECT COALESCE(NULLIF(metadata->>'visitor_key', ''), 'event-' || id::text) AS visitor_key,
+                  COUNT(*)::int AS views_count
+           FROM events
+           WHERE card_id = ANY($1::uuid[])
+             AND event_type = 'view'
+             AND created_at >= $2
+             AND created_at <= $3
+           GROUP BY 1
+         )
+         SELECT
+           COALESCE(COUNT(*), 0)::int AS unique_visitors,
+           COALESCE(COUNT(*) FILTER (WHERE views_count > 1), 0)::int AS returning_visitors
+         FROM visitor_views`,
+        [cardIds, from, to]
+      ),
+      db.query(
+        `SELECT
+           DATE_TRUNC('day', created_at) AS day,
+           COALESCE(COUNT(*) FILTER (WHERE event_type = 'view'), 0)::int AS views,
+           COALESCE(COUNT(*) FILTER (WHERE event_type = 'save_vcard'), 0)::int AS saves,
+           COALESCE(COUNT(DISTINCT COALESCE(NULLIF(metadata->>'visitor_key', ''), 'event-' || id::text)) FILTER (WHERE event_type = 'view'), 0)::int AS unique_visitors
+         FROM events
+         WHERE card_id = ANY($1::uuid[])
+           AND created_at >= $2
+           AND created_at <= $3
+         GROUP BY 1
+         ORDER BY 1`,
+        [cardIds, from, to]
+      ),
+      db.query(
+        `SELECT
+           COALESCE(NULLIF(metadata->>'share_method', ''), 'unknown') AS share_method,
+           COALESCE(NULLIF(metadata->>'platform', ''), 'unknown') AS platform,
+           COUNT(*)::int AS count
+         FROM events
+         WHERE card_id = ANY($1::uuid[])
+           AND event_type = 'share'
+           AND created_at >= $2
+           AND created_at <= $3
+         GROUP BY 1, 2
+         ORDER BY count DESC`,
+        [cardIds, from, to]
+      ),
+      db.query(
+        `SELECT
+           COALESCE(NULLIF(country, ''), 'Unknown') AS country,
+           COALESCE(NULLIF(metadata->>'region', ''), 'Unknown') AS region,
+           COALESCE(NULLIF(metadata->>'city', ''), 'Unknown') AS city,
+           COUNT(*)::int AS views
+         FROM events
+         WHERE card_id = ANY($1::uuid[])
+           AND event_type = 'view'
+           AND created_at >= $2
+           AND created_at <= $3
+         GROUP BY 1, 2, 3
+         ORDER BY views DESC`,
+        [cardIds, from, to]
+      ),
+      db.query(
+        `SELECT
+           COALESCE(NULLIF(referrer, ''), 'direct') AS referrer,
+           COUNT(*)::int AS views
+         FROM events
+         WHERE card_id = ANY($1::uuid[])
+           AND event_type = 'view'
+           AND created_at >= $2
+           AND created_at <= $3
+         GROUP BY 1
+         ORDER BY views DESC`,
+        [cardIds, from, to]
+      ),
+      db.query(
+        `SELECT COALESCE(COUNT(*), 0)::int AS leads
+         FROM leads
+         WHERE card_id = ANY($1::uuid[])
+           AND created_at >= $2
+           AND created_at <= $3`,
+        [cardIds, from, to]
+      )
+    ])
+
+    const totals = totalsResult.rows[0] || { views: 0, clicks: 0, saves: 0, shares: 0 }
+    const visitors = visitorsResult.rows[0] || { unique_visitors: 0, returning_visitors: 0 }
+    const leads = leadsResult.rows[0] || { leads: 0 }
+    const uniqueVisitors = Number(visitors.unique_visitors) || 0
+    const saveRatePercent = uniqueVisitors > 0
+      ? Math.round(((Number(totals.saves) || 0) / uniqueVisitors) * 10000) / 100
+      : 0
+
+    return {
+      totals: {
+        views: Number(totals.views) || 0,
+        unique_visitors: uniqueVisitors,
+        returning_visitors: Number(visitors.returning_visitors) || 0,
+        saves: Number(totals.saves) || 0,
+        save_rate_percent: saveRatePercent,
+        clicks: Number(totals.clicks) || 0,
+        shares: Number(totals.shares) || 0,
+        leads: Number(leads.leads) || 0
+      },
+      timeseries: seriesResult.rows.map((row) => ({
+        day: row.day,
+        views: Number(row.views) || 0,
+        saves: Number(row.saves) || 0,
+        unique_visitors: Number(row.unique_visitors) || 0
+      })),
+      share_breakdown: shareResult.rows.map((row) => ({
+        share_method: row.share_method,
+        platform: row.platform,
+        count: Number(row.count) || 0
+      })),
+      geo: geoResult.rows.map((row) => ({
+        country: row.country,
+        region: row.region,
+        city: row.city,
+        views: Number(row.views) || 0
+      })),
+      sources: sourcesResult.rows.map((row) => ({
+        referrer: row.referrer,
+        views: Number(row.views) || 0
+      }))
+    }
+  }
+
   // Upload media (Cloudinary only)
   fastify.post('/media/upload', async (request, reply) => {
     try {
@@ -508,52 +703,85 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   // Получить аналитику
   fastify.get('/analytics', async (request, reply) => {
     const user = request.user as any
+    const query = (request.query || {}) as { period?: string; from?: string; to?: string; card_id?: string }
 
     try {
-      // Получаем все визитки пользователя
-      const cardsResult = await db.query(
-        `SELECT id FROM cards WHERE user_id = $1`,
-        [user.id]
-      )
+      const cardId = normalizeString(query.card_id)
+      let cardIds: string[] = []
 
-      const cardIds = cardsResult.rows.map(row => row.id)
-
-      if (cardIds.length === 0) {
-        return {
-          views: 0,
-          clicks: 0,
-          saves: 0,
-          leads: 0
+      if (cardId) {
+        const ownerCheck = await db.query(
+          `SELECT id FROM cards WHERE id = $1 AND user_id = $2`,
+          [cardId, user.id]
+        )
+        if (ownerCheck.rows.length === 0) {
+          return reply.code(404).send({ error: 'Card not found' })
         }
+        cardIds = [cardId]
+      } else {
+        const cardsResult = await db.query(`SELECT id FROM cards WHERE user_id = $1`, [user.id])
+        cardIds = cardsResult.rows.map((row) => row.id)
       }
 
-      // Подсчитываем события
-      const eventsResult = await db.query(
-        `SELECT event_type, COUNT(*) as count
-         FROM events
-         WHERE card_id = ANY($1::uuid[])
-         GROUP BY event_type`,
-        [cardIds]
-      )
+      const { from, to, period } = getTimeRange(query)
+      const analytics = await getAnalyticsForCards(cardIds, from, to)
 
-      const analytics = {
-        views: 0,
-        clicks: 0,
-        saves: 0,
-        leads: 0
+      return {
+        period,
+        from,
+        to,
+        card_id: cardId || null,
+        ...analytics
       }
-
-      for (const row of eventsResult.rows) {
-        if (row.event_type === 'view') analytics.views = parseInt(row.count)
-        if (row.event_type === 'click') analytics.clicks = parseInt(row.count)
-        if (row.event_type === 'save_vcard') analytics.saves = parseInt(row.count)
-        if (row.event_type === 'lead_submit') analytics.leads = parseInt(row.count)
-      }
-
-      return analytics
     } catch (error) {
       fastify.log.error(error)
       return reply.code(500).send({ error: 'Internal server error' })
+    }
+  })
+
+  // Экспорт аналитики в CSV
+  fastify.get('/analytics/export', async (request, reply) => {
+    const user = request.user as any
+    const query = (request.query || {}) as { period?: string; from?: string; to?: string; card_id?: string }
+
+    try {
+      const cardId = normalizeString(query.card_id)
+      let cardIds: string[] = []
+
+      if (cardId) {
+        const ownerCheck = await db.query(
+          `SELECT id FROM cards WHERE id = $1 AND user_id = $2`,
+          [cardId, user.id]
+        )
+        if (ownerCheck.rows.length === 0) {
+          return reply.code(404).send({ error: 'Card not found' })
+        }
+        cardIds = [cardId]
+      } else {
+        const cardsResult = await db.query(`SELECT id FROM cards WHERE user_id = $1`, [user.id])
+        cardIds = cardsResult.rows.map((row) => row.id)
+      }
+
+      const { from, to } = getTimeRange(query)
+      const analytics = await getAnalyticsForCards(cardIds, from, to)
+
+      const header = 'date,views,unique_visitors,saves\n'
+      const rows = analytics.timeseries
+        .map((row) => {
+          const day = new Date(row.day).toISOString().slice(0, 10)
+          return `${day},${row.views},${row.unique_visitors},${row.saves}`
+        })
+        .join('\n')
+
+      const csv = `${header}${rows}`
+
+      return reply
+        .header('Content-Type', 'text/csv; charset=utf-8')
+        .header('Content-Disposition', 'attachment; filename="analytics.csv"')
+        .send(csv)
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.code(500).send({ error: 'Failed to export analytics' })
     }
   })
 
@@ -589,15 +817,23 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         return { success: true, deleted: 0 }
       }
 
-      const deletedResult = await db.query(
-        `DELETE FROM events
-         WHERE card_id = ANY($1::uuid[])`,
-        [targetCardIds]
-      )
+      const [deletedEventsResult, deletedLeadsResult] = await Promise.all([
+        db.query(
+          `DELETE FROM events
+           WHERE card_id = ANY($1::uuid[])`,
+          [targetCardIds]
+        ),
+        db.query(
+          `DELETE FROM leads
+           WHERE card_id = ANY($1::uuid[])`,
+          [targetCardIds]
+        )
+      ])
 
       return {
         success: true,
-        deleted: deletedResult.rowCount || 0
+        deleted_events: deletedEventsResult.rowCount || 0,
+        deleted_leads: deletedLeadsResult.rowCount || 0
       }
     } catch (error) {
       fastify.log.error(error)
@@ -609,6 +845,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   fastify.get('/card/:id/analytics', async (request, reply) => {
     const user = request.user as any
     const { id } = request.params as { id: string }
+    const query = (request.query || {}) as { period?: string; from?: string; to?: string }
 
     try {
       // Проверяем владение
@@ -621,30 +858,16 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         return reply.code(404).send({ error: 'Card not found' })
       }
 
-      // Подсчитываем события
-      const eventsResult = await db.query(
-        `SELECT event_type, COUNT(*) as count
-         FROM events
-         WHERE card_id = $1
-         GROUP BY event_type`,
-        [id]
-      )
+      const { from, to, period } = getTimeRange(query)
+      const analytics = await getAnalyticsForCards([id], from, to)
 
-      const analytics = {
-        views: 0,
-        clicks: 0,
-        saves: 0,
-        leads: 0
+      return {
+        period,
+        from,
+        to,
+        card_id: id,
+        ...analytics
       }
-
-      for (const row of eventsResult.rows) {
-        if (row.event_type === 'view') analytics.views = parseInt(row.count)
-        if (row.event_type === 'click') analytics.clicks = parseInt(row.count)
-        if (row.event_type === 'save_vcard') analytics.saves = parseInt(row.count)
-        if (row.event_type === 'lead_submit') analytics.leads = parseInt(row.count)
-      }
-
-      return analytics
     } catch (error) {
       fastify.log.error(error)
       return reply.code(500).send({ error: 'Internal server error' })

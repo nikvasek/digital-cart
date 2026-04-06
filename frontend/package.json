@@ -12,17 +12,21 @@
   },
   "dependencies": {
     "axios": "^1.6.7",
+    "d3-scale": "^4.0.2",
     "i18next": "^23.10.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-easy-crop": "^5.5.7",
     "react-i18next": "^14.0.5",
     "react-router-dom": "^6.22.0",
+    "react-simple-maps": "^3.0.0",
     "zustand": "^4.5.0"
   },
   "devDependencies": {
+    "@types/d3-scale": "^4.0.9",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
+    "@types/react-simple-maps": "^3.0.6",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
     "@typescript-eslint/parser": "^7.0.2",
     "@vitejs/plugin-react": "^4.2.1",
