@@ -84,7 +84,7 @@ const PLATFORMS: Array<{
 const getPlatform = (id: string) =>
     PLATFORMS.find((p) => p.id === id) ?? { id, label: id, color: '#555', icon: '', placeholder: '', category: 'social' as const }
 
-const WORLD_GEO_URL = 'https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json'
+const WORLD_GEO_URL = 'https://cdn.jsdelivr.net/gh/datasets/geo-countries@master/data/countries.geojson'
 
 interface AnalyticsTotals {
     views: number
@@ -1535,6 +1535,7 @@ export default function Dashboard() {
                                                     || (props.ISO2 as string)
                                                     || (props.iso2 as string)
                                                     || (props['Alpha-2'] as string)
+                                                    || (props['ISO3166-1-Alpha-2'] as string)
                                                     || ''
                                                 ).toUpperCase()
                                                 const views = geoViewsByCountry.get(code) || 0
