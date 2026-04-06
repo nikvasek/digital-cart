@@ -1867,7 +1867,7 @@ code {
 .analytics-total-row strong {
   font-size: 1.05rem;
   color: #111827;
-  font-weight: 700;
+  font-weight: 400;
   white-space: nowrap;
 }
 
@@ -1994,14 +1994,19 @@ code {
     grid-template-columns: 1fr;
   }
 
-  .date-filters {
+  .analytics-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(140px, 42%);
     align-items: stretch;
+    gap: 10px;
   }
 
-  .date-filters select,
-  .date-filters input,
-  .date-filters button {
+  .analytics-filters select,
+  .analytics-filters input,
+  .analytics-filters button {
     width: 100%;
+    min-height: 44px;
+    margin: 0;
   }
 
   .analytics-total-row {

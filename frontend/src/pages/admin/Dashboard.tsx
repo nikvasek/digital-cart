@@ -1508,7 +1508,7 @@ export default function Dashboard() {
                     <section className="glass-card section-stack">
                         <div className="section-head-row">
                             <h3>Аналитика</h3>
-                            <div className="date-filters">
+                            <div className="date-filters analytics-filters">
                                 <select
                                     value={analyticsPeriod}
                                     onChange={(e) => setAnalyticsPeriod(e.target.value as 'day' | 'week' | 'month' | 'custom')}
@@ -1519,6 +1519,9 @@ export default function Dashboard() {
                                     <option value="month">Месяц</option>
                                     <option value="custom">Произвольный</option>
                                 </select>
+                                <button type="button" className="admin-ghost" onClick={() => void fetchAnalytics()}>
+                                    Обновить
+                                </button>
                                 {analyticsPeriod === 'custom' && (
                                     <>
                                         <input
@@ -1545,9 +1548,6 @@ export default function Dashboard() {
                                     <option value={30}>Обновлять: 30с</option>
                                     <option value={60}>Обновлять: 60с</option>
                                 </select>
-                                <button type="button" className="admin-ghost" onClick={() => void fetchAnalytics()}>
-                                    Обновить
-                                </button>
                                 <button type="button" className="admin-ghost" onClick={() => void exportAnalyticsCsv()}>
                                     Экспорт CSV
                                 </button>
@@ -1555,7 +1555,7 @@ export default function Dashboard() {
                         </div>
 
                         <div className="analytics-totals-compact">
-                            <div className="analytics-total-row"><span>Просмотры</span><strong>{analytics?.totals.views ?? 0} всего</strong></div>
+                            <div className="analytics-total-row"><span>Просмотры</span><strong>{analytics?.totals.views ?? 0}</strong></div>
                             <div className="analytics-total-row"><span>Уникальные посетители</span><strong>{analytics?.totals.unique_visitors ?? 0}</strong></div>
                             <div className="analytics-total-row"><span>Повторные визиты</span><strong>{analytics?.totals.returning_visitors ?? 0}</strong></div>
                             <div className="analytics-total-row"><span>Сохранить контакт</span><strong>{analytics?.totals.saves ?? 0} ({analytics?.totals.save_rate_percent ?? 0}%)</strong></div>
