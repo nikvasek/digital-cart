@@ -1506,7 +1506,7 @@ export default function Dashboard() {
 
                 {selectedSection === 'analytics' && (
                     <section className="glass-card section-stack">
-                        <div className="section-head-row">
+                        <div className="section-head-row analytics-head">
                             <h3>Аналитика</h3>
                             <div className="date-filters analytics-filters">
                                 <select
