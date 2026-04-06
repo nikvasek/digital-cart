@@ -1753,7 +1753,7 @@ code {
 
 .media-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 10px;
 }
 
@@ -2042,6 +2042,11 @@ code {
   .analytics-total-row strong {
     font-size: 1.06rem;
     line-height: 1.15;
+  }
+
+  .media-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 }
 
