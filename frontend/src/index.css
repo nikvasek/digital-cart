@@ -1466,6 +1466,18 @@ code {
   align-items: flex-start;
 }
 
+.analytics-head-top {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analytics-reset-btn {
+  margin-top: 0;
+}
+
 .analytics-head .analytics-filters {
   width: 100%;
 }

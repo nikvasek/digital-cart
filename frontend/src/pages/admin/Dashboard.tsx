@@ -238,7 +238,6 @@ interface CardDetails extends CardItem {
 }
 
 type SectionId =
-    | 'dashboard'
     | 'edit-card'
     | 'social-links'
     | 'services'
@@ -247,7 +246,6 @@ type SectionId =
     | 'analytics'
 
 const SECTIONS: Array<{ id: SectionId; label: string }> = [
-    { id: 'dashboard', label: 'Панель' },
     { id: 'edit-card', label: 'Карточка' },
     { id: 'social-links', label: 'Ссылки' },
     { id: 'services', label: 'Услуги' },
@@ -257,7 +255,6 @@ const SECTIONS: Array<{ id: SectionId; label: string }> = [
 ]
 
 const MOBILE_SECTION_LABELS: Record<SectionId, string> = {
-    dashboard: 'Панель управления',
     'edit-card': 'Редактировать карточку',
     'social-links': 'Социальные ссылки',
     services: 'Сервисы',
@@ -265,8 +262,6 @@ const MOBILE_SECTION_LABELS: Record<SectionId, string> = {
     settings: 'Настройки',
     analytics: 'Аналитика'
 }
-
-const sparkline = [12, 18, 16, 24, 30, 27, 35]
 
 const reorder = <T,>(items: T[], from: number, to: number) => {
     const next = [...items]
@@ -551,7 +546,7 @@ export default function Dashboard() {
     const [cards, setCards] = useState<CardItem[]>([])
     const [analytics, setAnalytics] = useState<AnalyticsReport | null>(null)
     const [selectedCardId, setSelectedCardId] = useState<string>('')
-    const [selectedSection, setSelectedSection] = useState<SectionId>('dashboard')
+    const [selectedSection, setSelectedSection] = useState<SectionId>('edit-card')
     const [cardData, setCardData] = useState<CardDetails | null>(null)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
@@ -617,15 +612,6 @@ export default function Dashboard() {
             }
         }
     }, [avatarCropObjectUrl])
-
-    const dashboardStats = useMemo(() => {
-        return [
-            { label: 'Просмотры', value: analytics?.totals.views ?? 0, accent: '#1f2937' },
-            { label: 'Уникальные', value: analytics?.totals.unique_visitors ?? 0, accent: '#374151' },
-            { label: 'Сохранения', value: analytics?.totals.saves ?? 0, accent: '#4b5563' },
-            { label: 'Лиды', value: analytics?.totals.leads ?? 0, accent: '#111827' }
-        ]
-    }, [analytics])
 
     const loadData = async () => {
         try {
@@ -1157,38 +1143,6 @@ export default function Dashboard() {
                     </nav>
                 </div>
 
-                {selectedSection === 'dashboard' && (
-                    <section className="admin-grid">
-                        <div className="glass-card section-head-row admin-dashboard-head">
-                            <h3>Панель</h3>
-                            <button
-                                type="button"
-                                className="admin-ghost danger"
-                                onClick={() => {
-                                    void resetAnalytics()
-                                }}
-                                disabled={resettingAnalytics || !selectedCardId}
-                            >
-                                {resettingAnalytics ? 'Сброс…' : 'Сбросить статистику'}
-                            </button>
-                        </div>
-
-                        <div className="glass-card stat-grid">
-                            {dashboardStats.map((item) => (
-                                <article key={item.label} className="stat-card" style={{ ['--accent' as any]: item.accent }}>
-                                    <p>{item.label}</p>
-                                    <h3>{item.value}</h3>
-                                    <span className="sparkline" aria-hidden="true">
-                                        {sparkline.map((point, index) => (
-                                            <i key={index} style={{ height: `${point}%` }}></i>
-                                        ))}
-                                    </span>
-                                </article>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
                 {selectedSection === 'edit-card' && cardData && (
                     <section className="admin-two-col">
                         <div className="glass-card form-grid">
@@ -1507,7 +1461,19 @@ export default function Dashboard() {
                 {selectedSection === 'analytics' && (
                     <section className="glass-card section-stack">
                         <div className="section-head-row analytics-head">
-                            <h3>Аналитика</h3>
+                            <div className="analytics-head-top">
+                                <h3>Аналитика</h3>
+                                <button
+                                    type="button"
+                                    className="admin-ghost danger analytics-reset-btn"
+                                    onClick={() => {
+                                        void resetAnalytics()
+                                    }}
+                                    disabled={resettingAnalytics || !selectedCardId}
+                                >
+                                    {resettingAnalytics ? 'Сброс…' : 'Сброс'}
+                                </button>
+                            </div>
                             <div className="date-filters analytics-filters">
                                 <select
                                     value={analyticsPeriod}
