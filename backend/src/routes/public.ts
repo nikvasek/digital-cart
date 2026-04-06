@@ -2,6 +2,14 @@ import { FastifyInstance } from 'fastify'
 import { db } from '../db/index.js'
 import { generateVCard } from '../utils/vcard.js'
 import { createHash } from 'node:crypto'
+import geoip from 'geoip-lite'
+
+type GeoResult = {
+  country: string
+  region: string
+  city: string
+  source: 'header' | 'geoip' | 'unknown'
+}
 
 const getClientIp = (request: any) => {
   const xff = (request.headers['x-forwarded-for'] || '').toString()
@@ -13,6 +21,48 @@ const getClientIp = (request: any) => {
   return request.ip || request.socket?.remoteAddress || ''
 }
 
+const normalizeIp = (ipRaw: string) => {
+  const ip = (ipRaw || '').trim()
+  if (!ip) return ''
+  if (ip === '::1') return ''
+  if (ip.startsWith('::ffff:')) return ip.slice(7)
+  return ip
+}
+
+const isPrivateIp = (ip: string) => {
+  if (!ip) return true
+
+  // IPv4 private/link-local/loopback ranges.
+  if (/^(10\.|127\.|192\.168\.|169\.254\.)/.test(ip)) return true
+  if (/^172\.(1[6-9]|2\d|3[0-1])\./.test(ip)) return true
+
+  // IPv6 local ranges.
+  if (ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80:')) {
+    return true
+  }
+
+  return false
+}
+
+const getGeoFromIp = (ip: string) => {
+  const normalizedIp = normalizeIp(ip)
+  if (!normalizedIp || isPrivateIp(normalizedIp)) {
+    return { country: '', region: '', city: '', source: 'unknown' as const }
+  }
+
+  const lookup = geoip.lookup(normalizedIp)
+  if (!lookup) {
+    return { country: '', region: '', city: '', source: 'unknown' as const }
+  }
+
+  return {
+    country: (lookup.country || '').toString().trim().toUpperCase(),
+    region: (lookup.region || '').toString().trim(),
+    city: (lookup.city || '').toString().trim(),
+    source: 'geoip' as const
+  }
+}
+
 const toDeviceLabel = (userAgent: string) => {
   const ua = userAgent.toLowerCase()
   if (/ipad|tablet/.test(ua)) return 'tablet'
@@ -20,7 +70,7 @@ const toDeviceLabel = (userAgent: string) => {
   return 'desktop'
 }
 
-const getGeoFromHeaders = (request: any) => {
+const getGeoFromHeaders = (request: any): GeoResult => {
   const country =
     (request.headers['cf-ipcountry'] ||
       request.headers['x-vercel-ip-country'] ||
@@ -44,7 +94,11 @@ const getGeoFromHeaders = (request: any) => {
       .toString()
       .trim()
 
-  return { country, region, city }
+  if (country || region || city) {
+    return { country, region, city, source: 'header' }
+  }
+
+  return getGeoFromIp(getClientIp(request))
 }
 
 const buildVisitorKey = (request: any, metadata: any) => {
@@ -165,6 +219,7 @@ export default async function publicRoutes(fastify: FastifyInstance) {
             visitor_key: visitorKey,
             region: geo.region || null,
             city: geo.city || null,
+            geo_source: geo.source,
             user_agent: ua || null
           }
         ]
@@ -227,6 +282,7 @@ export default async function publicRoutes(fastify: FastifyInstance) {
             visitor_key: visitorKey,
             region: geo.region || null,
             city: geo.city || null,
+            geo_source: geo.source,
             user_agent: ua || null
           }
         ]
@@ -275,6 +331,7 @@ export default async function publicRoutes(fastify: FastifyInstance) {
         visitor_key: visitorKey,
         region: geo.region || null,
         city: geo.city || null,
+        geo_source: geo.source,
         user_agent: ua || null
       }
 

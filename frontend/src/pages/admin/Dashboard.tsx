@@ -84,7 +84,7 @@ const PLATFORMS: Array<{
 const getPlatform = (id: string) =>
     PLATFORMS.find((p) => p.id === id) ?? { id, label: id, color: '#555', icon: '', placeholder: '', category: 'social' as const }
 
-const WORLD_GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+const WORLD_GEO_URL = 'https://raw.githubusercontent.com/deldersveld/topojson/master/world-countries.json'
 
 interface AnalyticsTotals {
     views: number
@@ -1528,7 +1528,15 @@ export default function Dashboard() {
                                     <Geographies geography={WORLD_GEO_URL}>
                                         {({ geographies }: { geographies: any[] }) =>
                                             geographies.map((geo: any) => {
-                                                const code = ((geo.properties as any).ISO_A2 || (geo.properties as any).iso_a2 || '').toUpperCase()
+                                                const props = (geo.properties || {}) as Record<string, unknown>
+                                                const code = (
+                                                    (props.ISO_A2 as string)
+                                                    || (props.iso_a2 as string)
+                                                    || (props.ISO2 as string)
+                                                    || (props.iso2 as string)
+                                                    || (props['Alpha-2'] as string)
+                                                    || ''
+                                                ).toUpperCase()
                                                 const views = geoViewsByCountry.get(code) || 0
                                                 return (
                                                     <Geography

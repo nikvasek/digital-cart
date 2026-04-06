@@ -24,6 +24,7 @@
     "cloudinary": "^2.9.0",
     "dotenv": "^16.4.5",
     "fastify": "^4.26.1",
+    "geoip-lite": "^2.0.1",
     "pg": "^8.11.3",
     "qrcode": "^1.5.3",
     "sharp": "^0.34.5",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",
+    "@types/geoip-lite": "^1.4.4",
     "@types/node": "^20.11.20",
     "@types/pg": "^8.11.2",
     "@types/qrcode": "^1.5.5",

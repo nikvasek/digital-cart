@@ -85,7 +85,7 @@ export async function generateVCard(card: CardData): Promise<string> {
 // Экранирование специальных символов в vCard
 function escapeVCardValue(value: string): string {
   if (!value) return ''
-  
+
   return value
     .replace(/\\/g, '\\\\')  // Обратный слеш
     .replace(/,/g, '\\,')    // Запятая
@@ -97,17 +97,17 @@ function escapeVCardValue(value: string): string {
 function normalizePhone(phone: string): string {
   // Убираем все нечисловые символы кроме +
   const cleaned = phone.replace(/[^\d+]/g, '')
-  
+
   // Если уже начинается с +, возвращаем как есть
   if (cleaned.startsWith('+')) {
     return cleaned
   }
-  
+
   // Если начинается с 8 или 7 (для России/СНГ), добавляем +
   if (cleaned.startsWith('8') || cleaned.startsWith('7')) {
     return '+7' + cleaned.slice(1)
   }
-  
+
   // Иначе просто добавляем + в начало
   return '+' + cleaned
 }
