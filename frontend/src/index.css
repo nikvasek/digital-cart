@@ -1842,6 +1842,35 @@ code {
   gap: 10px;
 }
 
+.analytics-totals-compact {
+  margin-top: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.analytics-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  padding: 10px 14px;
+}
+
+.analytics-total-row span {
+  font-size: 1.02rem;
+  color: #111827;
+}
+
+.analytics-total-row strong {
+  font-size: 1.05rem;
+  color: #111827;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .analytics-grid article {
   border-radius: 12px;
   border: 1px solid #e5e7eb;
@@ -1973,6 +2002,20 @@ code {
   .date-filters input,
   .date-filters button {
     width: 100%;
+  }
+
+  .analytics-total-row {
+    padding: 10px 12px;
+  }
+
+  .analytics-total-row span {
+    font-size: 1.02rem;
+    line-height: 1.15;
+  }
+
+  .analytics-total-row strong {
+    font-size: 1.06rem;
+    line-height: 1.15;
   }
 }
 

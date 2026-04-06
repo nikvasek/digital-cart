@@ -1074,8 +1074,10 @@ export default function Dashboard() {
     }
 
     const logout = () => {
+        const selectedCardSlug =
+            cardData?.slug || cards.find((card) => card.id === selectedCardId)?.slug || cards[0]?.slug || ''
         localStorage.removeItem('token')
-        navigate('/admin/login')
+        navigate(selectedCardSlug ? `/${selectedCardSlug}` : '/')
     }
 
     if (loading) {
@@ -1183,16 +1185,6 @@ export default function Dashboard() {
                                     </span>
                                 </article>
                             ))}
-                        </div>
-
-                        <div className="glass-card activity-feed">
-                            <h3>Последние события</h3>
-                            <ul>
-                                <li><b>Карточка обновлена</b><span>2 мин назад</span></li>
-                                <li><b>Новый лид</b><span>12 мин назад</span></li>
-                                <li><b>Скачан QR</b><span>21 мин назад</span></li>
-                                <li><b>Язык переключён</b><span>1 ч назад</span></li>
-                            </ul>
                         </div>
                     </section>
                 )}
@@ -1562,13 +1554,13 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        <div className="analytics-grid">
-                            <article><h4>Просмотры</h4><p>{analytics?.totals.views ?? 0} всего</p></article>
-                            <article><h4>Уникальные посетители</h4><p>{analytics?.totals.unique_visitors ?? 0}</p></article>
-                            <article><h4>Повторные визиты</h4><p>{analytics?.totals.returning_visitors ?? 0}</p></article>
-                            <article><h4>Сохранить контакт</h4><p>{analytics?.totals.saves ?? 0} ({analytics?.totals.save_rate_percent ?? 0}%)</p></article>
-                            <article><h4>Поделиться</h4><p>{analytics?.totals.shares ?? 0}</p></article>
-                            <article><h4>Лиды</h4><p>{analytics?.totals.leads ?? 0}</p></article>
+                        <div className="analytics-totals-compact">
+                            <div className="analytics-total-row"><span>Просмотры</span><strong>{analytics?.totals.views ?? 0} всего</strong></div>
+                            <div className="analytics-total-row"><span>Уникальные посетители</span><strong>{analytics?.totals.unique_visitors ?? 0}</strong></div>
+                            <div className="analytics-total-row"><span>Повторные визиты</span><strong>{analytics?.totals.returning_visitors ?? 0}</strong></div>
+                            <div className="analytics-total-row"><span>Сохранить контакт</span><strong>{analytics?.totals.saves ?? 0} ({analytics?.totals.save_rate_percent ?? 0}%)</strong></div>
+                            <div className="analytics-total-row"><span>Поделиться</span><strong>{analytics?.totals.shares ?? 0}</strong></div>
+                            <div className="analytics-total-row"><span>Лиды</span><strong>{analytics?.totals.leads ?? 0}</strong></div>
                         </div>
 
                         <div className="analytics-grid" style={{ marginTop: 10 }}>
