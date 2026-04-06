@@ -51,6 +51,21 @@ const heroBgRightSrc = figmaAsset('My First Weavy_Gemini 3 (Nano Banana Pro)_202
 
 const PHONE_TYPES = ['phone', 'mobile', 'office', 'home']
 
+const CONTACT_ICON_FIGMA: Record<string, string> = {
+  phone: figmaAsset('call_1062678 1@3x.png'),
+  mobile: figmaAsset('call_1062678 1@3x.png'),
+  office: figmaAsset('call_1062678 1@3x.png'),
+  home: figmaAsset('call_1062678 1@3x.png'),
+  whatsapp: figmaAsset('whatsapp_739247 1@3x.png'),
+  telegram: figmaAsset('telegram 1@3x.png'),
+  instagram: figmaAsset('instagram_739244 1@3x.png'),
+  viber: figmaAsset('viber_2190481 1@3x.png'),
+  email: figmaAsset('email_347722 1@3x.png'),
+  tiktok: figmaAsset('tik-tok 1@3x.png'),
+  gallery: figmaAsset('image 13@3x.png'),
+  location: figmaAsset('placeholder_1180413 1@3x.png')
+}
+
 const CONTACT_LABELS: Record<string, string> = {
   phone: 'Mobile',
   mobile: 'Mobile',
@@ -604,13 +619,13 @@ export default function PublicCard() {
         openByType(link.type, link.url)
       }
 
-      const iconMeta = SOCIAL_ICON_FILE[link.type]
+      const iconSrc = CONTACT_ICON_FIGMA[link.type]
       return {
         id: link.type,
         keyId: `${link.type}-${link._idx}`,
         label,
-        iconSrc: undefined,
-        iconMask: iconMeta?.file || `/icons/${link.type}.svg`,
+        iconSrc,
+        iconMask: iconSrc ? undefined : `/icons/${link.type}.svg`,
         onClick
       }
     }
