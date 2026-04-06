@@ -1811,6 +1811,24 @@ code {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.analytics-map-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.analytics-map-toolbar span {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.analytics-world-map {
+  width: 100%;
 }
 
 .analytics-grid {
@@ -1930,6 +1948,16 @@ code {
 
   .analytics-grid {
     grid-template-columns: 1fr;
+  }
+
+  .date-filters {
+    align-items: stretch;
+  }
+
+  .date-filters select,
+  .date-filters input,
+  .date-filters button {
+    width: 100%;
   }
 }
 

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import Cropper, { type Area } from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
-import { ComposableMap, Geographies, Geography } from 'react-simple-maps'
+import { ComposableMap, Geographies, Geography, ZoomableGroup } from 'react-simple-maps'
 import { scaleQuantize } from 'd3-scale'
 
 // ── Platform definitions ──────────────────────────────────
@@ -85,6 +85,65 @@ const getPlatform = (id: string) =>
     PLATFORMS.find((p) => p.id === id) ?? { id, label: id, color: '#555', icon: '', placeholder: '', category: 'social' as const }
 
 const WORLD_GEO_URL = 'https://cdn.jsdelivr.net/gh/datasets/geo-countries@master/data/countries.geojson'
+
+const COUNTRY_NAME_TO_ISO2: Record<string, string> = {
+    'dhekelia sovereign base area': 'CY',
+    somaliland: 'SO',
+    france: 'FR',
+    norway: 'NO',
+    kosovo: 'XK',
+    'us naval base guantanamo bay': 'CU',
+    'brazilian island': 'BR',
+    'northern cyprus': 'CY',
+    'cyprus no mans area': 'CY',
+    'siachen glacier': 'IN',
+    'baykonur cosmodrome': 'KZ',
+    'southern patagonian ice field': 'AR',
+    'bir tawil': 'EG',
+    taiwan: 'TW',
+    'indian ocean territories': 'AU',
+    'coral sea islands': 'AU',
+    'spratly islands': 'PH',
+    'clipperton island': 'FR',
+    'ashmore and cartier islands': 'AU',
+    'bajo nuevo bank petrel is': 'CO',
+    'serranilla bank': 'CO',
+    'scarborough reef': 'PH',
+    'akrotiri sovereign base area': 'CY'
+}
+
+const normalizeCountryNameKey = (value: string) =>
+    (value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim()
+
+const readIso2FromGeoProperties = (props: Record<string, unknown>) => {
+    const raw = (
+        (props.ISO_A2 as string)
+        || (props.iso_a2 as string)
+        || (props.ISO2 as string)
+        || (props.iso2 as string)
+        || (props['Alpha-2'] as string)
+        || (props['ISO3166-1-Alpha-2'] as string)
+        || ''
+    ).toUpperCase()
+
+    if (/^[A-Z]{2}$/.test(raw)) return raw
+    const hyphenMatch = raw.match(/^[A-Z]{2}-([A-Z]{2})$/)
+    if (hyphenMatch?.[1]) return hyphenMatch[1]
+
+    const name = ((props.name as string) || '').trim()
+    const byName = COUNTRY_NAME_TO_ISO2[normalizeCountryNameKey(name)]
+    return byName || ''
+}
+
+const getDefaultMapZoom = () => {
+    if (typeof window === 'undefined') return 1.15
+    return window.innerWidth <= 720 ? 1.45 : 1.15
+}
 
 interface AnalyticsTotals {
     views: number
@@ -510,6 +569,7 @@ export default function Dashboard() {
     const [analyticsTo, setAnalyticsTo] = useState('')
     const [analyticsAutoRefreshSec, setAnalyticsAutoRefreshSec] = useState<number>(30)
     const [selectedGeoCountry, setSelectedGeoCountry] = useState<string>('')
+    const [geoMapZoom, setGeoMapZoom] = useState<number>(getDefaultMapZoom)
     const [avatarEditorOpen, setAvatarEditorOpen] = useState(false)
     const [avatarCropSource, setAvatarCropSource] = useState('')
     const [avatarCropObjectUrl, setAvatarCropObjectUrl] = useState<string | null>(null)
@@ -964,6 +1024,19 @@ export default function Dashboard() {
         geoCountryRows.forEach((item) => map.set(item.country.toUpperCase(), item.views))
         return map
     }, [geoCountryRows])
+
+    const zoomInGeoMap = () => {
+        setGeoMapZoom((prev) => Math.min(4, Number((prev + 0.3).toFixed(2))))
+    }
+
+    const zoomOutGeoMap = () => {
+        setGeoMapZoom((prev) => Math.max(1, Number((prev - 0.3).toFixed(2))))
+    }
+
+    const resetGeoMap = () => {
+        setGeoMapZoom(getDefaultMapZoom())
+        setSelectedGeoCountry('')
+    }
 
     const isGalleryVisible = !!cardData?.links.some((link) => isGalleryLink(link) && link.is_visible !== false)
 
@@ -1524,38 +1597,42 @@ export default function Dashboard() {
                         <div className="analytics-grid" style={{ marginTop: 10 }}>
                             <article style={{ gridColumn: 'span 2' }}>
                                 <h4>Карта просмотров</h4>
-                                <ComposableMap projectionConfig={{ scale: 130 }}>
-                                    <Geographies geography={WORLD_GEO_URL}>
-                                        {({ geographies }: { geographies: any[] }) =>
-                                            geographies.map((geo: any) => {
-                                                const props = (geo.properties || {}) as Record<string, unknown>
-                                                const code = (
-                                                    (props.ISO_A2 as string)
-                                                    || (props.iso_a2 as string)
-                                                    || (props.ISO2 as string)
-                                                    || (props.iso2 as string)
-                                                    || (props['Alpha-2'] as string)
-                                                    || (props['ISO3166-1-Alpha-2'] as string)
-                                                    || ''
-                                                ).toUpperCase()
-                                                const views = geoViewsByCountry.get(code) || 0
-                                                return (
-                                                    <Geography
-                                                        key={geo.rsmKey}
-                                                        geography={geo}
-                                                        onClick={() => {
-                                                            if (code) setSelectedGeoCountry(code)
-                                                        }}
-                                                        style={{
-                                                            default: { fill: views > 0 ? geoColorScale(views) : '#f3f4f6', stroke: '#d1d5db', outline: 'none' },
-                                                            hover: { fill: '#93c5fd', stroke: '#9ca3af', outline: 'none' },
-                                                            pressed: { fill: '#60a5fa', stroke: '#6b7280', outline: 'none' }
-                                                        }}
-                                                    />
-                                                )
-                                            })
-                                        }
-                                    </Geographies>
+                                <div className="analytics-map-toolbar">
+                                    <button type="button" className="admin-ghost" onClick={zoomOutGeoMap}>-</button>
+                                    <span>Zoom: {geoMapZoom.toFixed(2)}x</span>
+                                    <button type="button" className="admin-ghost" onClick={zoomInGeoMap}>+</button>
+                                    <button type="button" className="admin-ghost" onClick={resetGeoMap}>Сброс</button>
+                                </div>
+                                <ComposableMap
+                                    className="analytics-world-map"
+                                    projectionConfig={{ scale: 130 }}
+                                    style={{ width: '100%', height: 'auto' }}
+                                >
+                                    <ZoomableGroup zoom={geoMapZoom}>
+                                        <Geographies geography={WORLD_GEO_URL}>
+                                            {({ geographies }: { geographies: any[] }) =>
+                                                geographies.map((geo: any) => {
+                                                    const props = (geo.properties || {}) as Record<string, unknown>
+                                                    const code = readIso2FromGeoProperties(props)
+                                                    const views = geoViewsByCountry.get(code) || 0
+                                                    return (
+                                                        <Geography
+                                                            key={geo.rsmKey}
+                                                            geography={geo}
+                                                            onClick={() => {
+                                                                if (code) setSelectedGeoCountry(code)
+                                                            }}
+                                                            style={{
+                                                                default: { fill: views > 0 ? geoColorScale(views) : '#f3f4f6', stroke: '#d1d5db', outline: 'none' },
+                                                                hover: { fill: '#93c5fd', stroke: '#9ca3af', outline: 'none' },
+                                                                pressed: { fill: '#60a5fa', stroke: '#6b7280', outline: 'none' }
+                                                            }}
+                                                        />
+                                                    )
+                                                })
+                                            }
+                                        </Geographies>
+                                    </ZoomableGroup>
                                 </ComposableMap>
                             </article>
 
