@@ -175,7 +175,9 @@ export default async function publicRoutes(fastify: FastifyInstance) {
 
     try {
       const cardResult = await db.query(
-        `SELECT * FROM cards WHERE slug = $1 AND is_active = true`,
+        `SELECT id, slug, full_name, title, company_name, phone, email,
+          address, website, portfolio_url, bio, avatar_url, logo_url
+         FROM cards WHERE slug = $1 AND is_active = true`,
         [slug]
       )
 
@@ -246,6 +248,20 @@ export default async function publicRoutes(fastify: FastifyInstance) {
       consent_marketing: boolean
     }
 
+    const trimmedName = (typeof name === 'string' ? name : '').trim()
+    const trimmedPhone = (typeof phone === 'string' ? phone : '').trim()
+    const trimmedEmail = (typeof email === 'string' ? email : '').trim()
+
+    if (!trimmedName || trimmedName.length > 255) {
+      return reply.code(400).send({ error: 'Name is required (max 255 chars)' })
+    }
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      return reply.code(400).send({ error: 'Invalid email format' })
+    }
+    if (trimmedPhone && !/^[\d\s+()\-]{5,30}$/.test(trimmedPhone)) {
+      return reply.code(400).send({ error: 'Invalid phone format' })
+    }
+
     try {
       const cardResult = await db.query(
         `SELECT id, user_id FROM cards WHERE slug = $1`,
@@ -262,7 +278,7 @@ export default async function publicRoutes(fastify: FastifyInstance) {
       await db.query(
         `INSERT INTO leads (card_id, name, phone, email, consent_marketing, source)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [card.id, name, phone, email, consent_marketing, 'web']
+        [card.id, trimmedName, trimmedPhone || null, trimmedEmail || null, !!consent_marketing, 'web']
       )
 
       // Логируем событие
@@ -311,8 +327,8 @@ export default async function publicRoutes(fastify: FastifyInstance) {
       return reply.code(400).send({ error: 'Invalid event_type' })
     }
 
-    if (!card_id) {
-      return reply.code(400).send({ error: 'card_id is required' })
+    if (!card_id || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(card_id)) {
+      return reply.code(400).send({ error: 'card_id must be a valid UUID' })
     }
 
     try {

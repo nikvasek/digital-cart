@@ -1,6 +1,7 @@
 import { Suspense, lazy } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import PublicCard from './pages/PublicCard'
+import NotFound from './pages/NotFound'
 
 // Admin routes are lazy-loaded — they add ~150 KB that public visitors never need
 const AdminLogin = lazy(() => import('./pages/admin/Login'))
@@ -12,7 +13,7 @@ function App() {
     <Router>
       <Suspense fallback={null}>
         <Routes>
-          <Route path="/" element={<Navigate to="/paulline-ferreira" replace />} />
+          <Route path="/" element={<Navigate to="/admin/login" replace />} />
 
           {/* Публичная визитка */}
           <Route path="/:slug" element={<PublicCard />} />
@@ -22,7 +23,7 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/card/:id" element={<AdminEditor />} />
 
-          <Route path="*" element={<Navigate to="/paulline-ferreira" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
     </Router>

@@ -252,6 +252,16 @@ fastify.decorate('authenticate', async function (request: any, reply: any) {
   }
 })
 
+// Security headers
+fastify.addHook('onSend', async (_request, reply) => {
+  reply.header('X-Content-Type-Options', 'nosniff')
+  reply.header('X-Frame-Options', 'DENY')
+  reply.header('Referrer-Policy', 'strict-origin-when-cross-origin')
+  if (config.nodeEnv === 'production') {
+    reply.header('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
+  }
+})
+
 // Маршруты
 await fastify.register(publicRoutes, { prefix: '/api/public' })
 await fastify.register(authRoutes, { prefix: '/api/auth' })

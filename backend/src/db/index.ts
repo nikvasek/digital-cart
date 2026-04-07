@@ -5,7 +5,9 @@ const { Pool } = pg
 
 export const db = new Pool({
   connectionString: config.databaseUrl,
-  ssl: config.nodeEnv === 'production' ? { rejectUnauthorized: false } : undefined
+  ssl: config.nodeEnv === 'production'
+    ? { rejectUnauthorized: !process.env.DATABASE_SSL_ALLOW_SELFSIGNED }
+    : undefined
 })
 
 // Хелперы для работы с БД

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 
 const PIN_LENGTH = 4
@@ -7,6 +8,7 @@ const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9']
 
 export default function Login() {
   const navigate = useNavigate()
+  const { t, i18n } = useTranslation()
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -26,7 +28,7 @@ export default function Login() {
       localStorage.setItem('token', response.data.token)
       navigate('/admin/dashboard')
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid PIN')
+      setError(err.response?.data?.error || t('login.errorInvalidPin'))
       setShake(true)
       setPin('')
       window.setTimeout(() => setShake(false), 360)
@@ -58,10 +60,18 @@ export default function Login() {
     setError('')
   }
 
+  const toggleLang = () => {
+    void i18n.changeLanguage(i18n.language === 'ru' ? 'en' : 'ru')
+  }
+
   return (
     <div className="admin-pin-page">
       <div className="admin-pin-card">
-        <h1 className="admin-pin-title">PIN</h1>
+        <button type="button" className="admin-pin-lang" onClick={toggleLang} aria-label="Switch language">
+          {i18n.language === 'ru' ? 'EN' : 'RU'}
+        </button>
+
+        <h1 className="admin-pin-title">{t('login.title')}</h1>
 
         <div className={`admin-pin-display ${shake ? 'pin-shake' : ''}`} aria-live="polite">
           {Array.from({ length: PIN_LENGTH }).map((_, index) => (
@@ -85,7 +95,7 @@ export default function Login() {
               onClick={() => pushDigit(digit)}
               disabled={loading}
               className="pin-key"
-              aria-label={`Digit ${digit}`}
+              aria-label={t('login.digitLabel', { digit })}
             >
               {digit}
             </button>
@@ -96,7 +106,7 @@ export default function Login() {
             onClick={clearPin}
             disabled={loading}
             className="pin-key pin-key--blank"
-            aria-label="Clear PIN"
+            aria-label={t('login.clearPin')}
           />
 
           <button
@@ -104,7 +114,7 @@ export default function Login() {
             onClick={() => pushDigit('0')}
             disabled={loading}
             className="pin-key"
-            aria-label="Digit 0"
+            aria-label={t('login.digitLabel', { digit: '0' })}
           >
             0
           </button>
@@ -114,14 +124,14 @@ export default function Login() {
             onClick={deleteDigit}
             disabled={loading}
             className="pin-key pin-key--delete"
-            aria-label="Delete"
+            aria-label={t('login.deleteDigit')}
           >
             ⌫
           </button>
         </div>
 
         <div className="admin-pin-hint">
-          {loading ? 'Проверка PIN...' : 'Введите PIN'}
+          {loading ? t('login.checking') : t('login.enterPin')}
         </div>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useState, type ChangeEvent } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import Cropper, { type Area } from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
@@ -125,6 +126,7 @@ const getCroppedAvatarBlob = async (src: string, crop: Area) => {
 export default function Editor() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [card, setCard] = useState<CardData | null>(null)
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -166,31 +168,31 @@ export default function Editor() {
 
     const validationErrors: string[] = []
 
-    if (card.is_active && !normalizeString(card.full_name)) validationErrors.push('Full Name is required')
-    if (card.is_active && !normalizeString(card.title)) validationErrors.push('Title is required')
-    if (card.is_active && !normalizeString(card.company_name)) validationErrors.push('Company is required')
-    if (card.is_active && !normalizeString(card.phone)) validationErrors.push('Phone is required')
+    if (card.is_active && !normalizeString(card.full_name)) validationErrors.push(t('admin.errors.fullNameRequired'))
+    if (card.is_active && !normalizeString(card.title)) validationErrors.push(t('admin.errors.titleRequired'))
+    if (card.is_active && !normalizeString(card.company_name)) validationErrors.push(t('admin.errors.companyRequired'))
+    if (card.is_active && !normalizeString(card.phone)) validationErrors.push(t('admin.errors.phoneRequired'))
 
     if (card.is_active && !normalizeString(card.email)) {
-      validationErrors.push('Email is required')
+      validationErrors.push(t('admin.errors.emailRequired'))
     } else if (normalizeString(card.email) && !isValidEmail(normalizeString(card.email))) {
-      validationErrors.push('Email format is invalid')
+      validationErrors.push(t('admin.errors.emailInvalid'))
     }
 
     if (card.is_active && !normalizeString(card.website)) {
-      validationErrors.push('Website is required')
+      validationErrors.push(t('admin.errors.websiteRequired'))
     } else if (normalizeString(card.website) && !isValidUrl(normalizeString(card.website))) {
-      validationErrors.push('Website format is invalid')
+      validationErrors.push(t('admin.errors.websiteInvalid'))
     }
 
     if (normalizeString(card.portfolio_url) && !isValidUrl(normalizeString(card.portfolio_url))) {
-      validationErrors.push('Portfolio URL format is invalid')
+      validationErrors.push(t('admin.errors.portfolioUrlInvalid'))
     }
 
     if (card.is_active && !normalizeString(card.avatar_url)) {
-      validationErrors.push('Avatar URL is required')
+      validationErrors.push(t('admin.errors.avatarUrlRequired'))
     } else if (normalizeString(card.avatar_url) && !isValidUrl(normalizeString(card.avatar_url))) {
-      validationErrors.push('Avatar URL format is invalid')
+      validationErrors.push(t('admin.errors.avatarUrlInvalid'))
     }
 
     const activeLinks = card.links.filter(
@@ -198,7 +200,7 @@ export default function Editor() {
     )
 
     if (card.is_active && activeLinks.length < 2) {
-      validationErrors.push('For active card add at least 2 visible social links')
+      validationErrors.push(t('admin.errors.minLinks'))
     }
 
     const visibleServices = card.services.filter(
@@ -206,7 +208,7 @@ export default function Editor() {
     )
 
     if (card.is_active && visibleServices.length < 1) {
-      validationErrors.push('For active card add at least 1 visible service with title and description')
+      validationErrors.push(t('admin.errors.minServices'))
     }
 
     const galleryImages = card.media.filter(
@@ -214,7 +216,7 @@ export default function Editor() {
     )
 
     if (card.is_active && galleryImages.length < 1) {
-      validationErrors.push('For active card add at least 1 gallery image')
+      validationErrors.push(t('admin.errors.minGallery'))
     }
 
     if (validationErrors.length > 0) {
@@ -229,13 +231,13 @@ export default function Editor() {
         headers: { Authorization: `Bearer ${token}` }
       })
 
-      alert('Card updated successfully!')
+      alert(t('admin.success.cardSaved'))
     } catch (error: any) {
       const details = error?.response?.data?.details
       if (Array.isArray(details) && details.length > 0) {
-        alert(`Failed to save card:\n- ${details.join('\n- ')}`)
+        alert(`${t('admin.errors.cardSaveFailed')}:\n- ${details.join('\n- ')}`)
       } else {
-        alert('Failed to save card')
+        alert(t('admin.errors.cardSaveFailed'))
       }
     } finally {
       setSaving(false)
@@ -258,7 +260,7 @@ export default function Editor() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (error) {
-      alert('Failed to download QR code')
+      alert(t('admin.errors.qrDownloadFailed'))
     }
   }
 
@@ -335,7 +337,7 @@ export default function Editor() {
 
   const openAvatarEditor = (sourceUrl: string, objectUrl?: string) => {
     if (!sourceUrl) {
-      alert('Set Avatar URL or upload image first')
+      alert(t('admin.errors.selectAvatarFirst'))
       return
     }
 
@@ -355,7 +357,7 @@ export default function Editor() {
     const file = e.target.files?.[0]
     if (!file) return
     if (!file.type.startsWith('image/')) {
-      alert('Only image files are supported')
+      alert(t('admin.errors.onlyImagesSupported'))
       return
     }
 
@@ -365,7 +367,7 @@ export default function Editor() {
 
   const applyAvatarCrop = async () => {
     if (!card || !avatarCropSource || !avatarCroppedAreaPixels) {
-      alert('Select crop area first')
+      alert(t('admin.errors.selectCropArea'))
       return
     }
 
@@ -398,7 +400,7 @@ export default function Editor() {
       resetAvatarEditor()
     } catch (error) {
       console.error('Failed to crop and upload avatar:', error)
-      alert('Failed to save cropped avatar')
+      alert(t('admin.errors.cropApplyFailed', { message: '' }))
       setAvatarCropUploading(false)
     }
   }
@@ -423,7 +425,7 @@ export default function Editor() {
             onClick={() => navigate('/admin/dashboard')}
             className="text-gray-600 hover:text-gray-900"
           >
-            ← Back
+            ← {t('admin.editor.back')}
           </button>
           <div className="flex gap-3">
             <button
@@ -437,7 +439,7 @@ export default function Editor() {
               disabled={saving}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              {saving ? 'Saving...' : 'Save'}
+              {saving ? t('admin.saving') : t('admin.saveChanges')}
             </button>
           </div>
         </div>
@@ -445,18 +447,18 @@ export default function Editor() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-xl shadow p-6 space-y-6">
-          <h2 className="text-2xl font-bold">Edit Card</h2>
+          <h2 className="text-2xl font-bold">{t('admin.sectionsLong.editCard')}</h2>
 
           {/* Контакты и базовые данные */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Full Name
+                {t('admin.form.fullName')}
               </label>
               <input
                 type="text"
                 value={card.full_name}
-                aria-label="Full Name"
+                aria-label={t('admin.form.fullName')}
                 onChange={(e) => setCard({ ...card, full_name: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -464,12 +466,12 @@ export default function Editor() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Title
+                {t('admin.form.position')}
               </label>
               <input
                 type="text"
                 value={card.title}
-                aria-label="Title"
+                aria-label={t('admin.form.position')}
                 onChange={(e) => setCard({ ...card, title: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -477,12 +479,12 @@ export default function Editor() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company
+                {t('admin.form.company')}
               </label>
               <input
                 type="text"
                 value={card.company_name}
-                aria-label="Company"
+                aria-label={t('admin.form.company')}
                 onChange={(e) => setCard({ ...card, company_name: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -490,12 +492,12 @@ export default function Editor() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Slug
+                {t('admin.form.slug')}
               </label>
               <input
                 type="text"
                 value={card.slug}
-                aria-label="Slug"
+                aria-label={t('admin.form.slug')}
                 onChange={(e) => setCard({ ...card, slug: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -503,7 +505,7 @@ export default function Editor() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone
+                {t('admin.form.phone')}
               </label>
               <input
                 type="tel"
@@ -516,7 +518,7 @@ export default function Editor() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
+                {t('admin.form.email')}
               </label>
               <input
                 type="email"
@@ -529,7 +531,7 @@ export default function Editor() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address
+                {t('admin.form.address')}
               </label>
               <input
                 type="text"
@@ -542,7 +544,7 @@ export default function Editor() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Website
+                {t('admin.form.website')}
               </label>
               <input
                 type="url"
@@ -555,7 +557,7 @@ export default function Editor() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Portfolio URL
+                {t('admin.form.portfolioUrl')}
               </label>
               <input
                 type="url"
@@ -568,11 +570,11 @@ export default function Editor() {
 
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Bio
+                {t('admin.form.bio')}
               </label>
               <textarea
                 value={card.bio}
-                aria-label="Bio"
+                aria-label={t('admin.form.bio')}
                 onChange={(e) => setCard({ ...card, bio: e.target.value })}
                 rows={4}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -581,7 +583,7 @@ export default function Editor() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Avatar URL
+                {t('admin.form.avatarUrl')}
               </label>
               <input
                 type="url"
@@ -592,7 +594,7 @@ export default function Editor() {
               />
               <div className="mt-3 flex flex-wrap gap-2">
                 <label className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200 cursor-pointer">
-                  Upload + crop avatar
+                  {t('admin.form.uploadCropAvatar')}
                   <input
                     key={avatarFileInputKey}
                     type="file"
@@ -606,7 +608,7 @@ export default function Editor() {
                   onClick={() => openAvatarEditor(card.avatar_url)}
                   className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
                 >
-                  Edit current avatar
+                  {t('admin.form.editAvatar')}
                 </button>
               </div>
               {normalizeString(card.avatar_url) && (
@@ -620,17 +622,17 @@ export default function Editor() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Language
+                {t('admin.form.language')}
               </label>
               <select
                 value={card.language_default}
-                title="Language"
-                aria-label="Language"
+                title={t('admin.form.language')}
+                aria-label={t('admin.form.language')}
                 onChange={(e) => setCard({ ...card, language_default: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="en">English</option>
-                <option value="ru">Russian</option>
+                <option value="en">{t('admin.settings.english')}</option>
+                <option value="ru">{t('admin.settings.russian')}</option>
               </select>
             </div>
 
@@ -641,7 +643,7 @@ export default function Editor() {
                   checked={card.is_active}
                   onChange={(e) => setCard({ ...card, is_active: e.target.checked })}
                 />
-                <span className="text-sm font-medium text-gray-700">Active</span>
+                <span className="text-sm font-medium text-gray-700">{t('admin.form.isActive')}</span>
               </label>
             </div>
           </div>
@@ -649,17 +651,17 @@ export default function Editor() {
           {/* Соцсети */}
           <div className="pt-6 border-t space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Social links</h3>
+              <h3 className="text-lg font-semibold">{t('admin.links.title')}</h3>
               <button
                 onClick={addLink}
                 className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
               >
-                + Add link
+                {t('admin.links.addLink')}
               </button>
             </div>
 
             <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-600 space-y-1">
-              <p className="font-semibold text-gray-700">Examples:</p>
+              <p className="font-semibold text-gray-700">{t('admin.links.examples')}</p>
               <p>instagram: https://instagram.com/paulline</p>
               <p>telegram: https://t.me/paulline</p>
               <p>whatsapp: https://wa.me/375292327382</p>
@@ -673,7 +675,7 @@ export default function Editor() {
             </div>
 
             {card.links.length === 0 && (
-              <p className="text-sm text-gray-500">No social links yet</p>
+              <p className="text-sm text-gray-500">{t('admin.links.noLinks')}</p>
             )}
 
             {card.links.map((link, index) => (
@@ -725,23 +727,23 @@ export default function Editor() {
           {/* Услуги */}
           <div className="pt-6 border-t space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Services</h3>
+              <h3 className="text-lg font-semibold">{t('admin.services.title')}</h3>
               <button
                 onClick={addService}
                 className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
               >
-                + Add service
+                {t('admin.services.add')}
               </button>
             </div>
 
             {card.services.length === 0 && (
-              <p className="text-sm text-gray-500">No services yet</p>
+              <p className="text-sm text-gray-500">{t('admin.services.noServices')}</p>
             )}
 
             {card.services.map((service, index) => (
               <div key={index} className="space-y-3 p-4 border rounded-lg">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-600">Service #{index + 1}</p>
+                  <p className="text-sm font-medium text-gray-600">{t('admin.services.serviceNum', { num: index + 1 })}</p>
                   <button
                     onClick={() => removeService(index)}
                     className="px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded"
@@ -754,7 +756,7 @@ export default function Editor() {
                   type="text"
                   value={service.title}
                   onChange={(e) => updateService(index, { title: e.target.value })}
-                  placeholder="Service title"
+                  placeholder={t('admin.services.serviceTitle')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 />
 
@@ -762,7 +764,7 @@ export default function Editor() {
                   value={service.description}
                   onChange={(e) => updateService(index, { description: e.target.value })}
                   rows={2}
-                  placeholder="Description"
+                  placeholder={t('admin.services.description')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 />
 
@@ -774,7 +776,7 @@ export default function Editor() {
                     title="Service visibility"
                     onChange={(e) => updateService(index, { is_visible: e.target.checked })}
                   />
-                  Visible
+                  {t('admin.services.visible')}
                 </label>
               </div>
             ))}
@@ -783,17 +785,17 @@ export default function Editor() {
           {/* Галерея */}
           <div className="pt-6 border-t space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Gallery</h3>
+              <h3 className="text-lg font-semibold">{t('admin.gallery.title')}</h3>
               <button
                 onClick={addMedia}
                 className="px-3 py-1.5 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
               >
-                + Add image
+                {t('admin.gallery.addImage')}
               </button>
             </div>
 
             {card.media.length === 0 && (
-              <p className="text-sm text-gray-500">No gallery images yet</p>
+              <p className="text-sm text-gray-500">{t('admin.gallery.noImages')}</p>
             )}
 
             {card.media.map((item, index) => (
@@ -833,7 +835,7 @@ export default function Editor() {
 
           {/* Предпросмотр */}
           <div className="pt-6 border-t">
-            <h3 className="font-semibold mb-2">Public URL:</h3>
+            <h3 className="font-semibold mb-2">{t('admin.publicUrl')}</h3>
             <a
               href={`/${card.slug}`}
               target="_blank"
@@ -850,8 +852,8 @@ export default function Editor() {
       {avatarEditorOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-xl rounded-xl bg-white p-4 shadow-2xl">
-            <h3 className="text-lg font-semibold">Avatar editor</h3>
-            <p className="mt-1 text-sm text-gray-600">Drag photo and set zoom. Square area will be used for icon and avatar.</p>
+            <h3 className="text-lg font-semibold">{t('admin.avatarEditor.title')}</h3>
+            <p className="mt-1 text-sm text-gray-600">{t('admin.avatarEditor.description')}</p>
 
             <div className="relative mt-4 h-[360px] w-full overflow-hidden rounded-lg bg-black">
               <Cropper
@@ -869,16 +871,18 @@ export default function Editor() {
             </div>
 
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700">Zoom</label>
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.01}
-                value={avatarZoom}
-                onChange={(e) => setAvatarZoom(Number(e.target.value))}
-                className="mt-2 w-full"
-              />
+              <label className="block text-sm font-medium text-gray-700">
+                {t('admin.avatarEditor.zoom')}
+                <input
+                  type="range"
+                  min={1}
+                  max={3}
+                  step={0.01}
+                  value={avatarZoom}
+                  onChange={(e) => setAvatarZoom(Number(e.target.value))}
+                  className="mt-2 w-full"
+                />
+              </label>
             </div>
 
             <div className="mt-4 flex justify-end gap-2">
@@ -888,7 +892,7 @@ export default function Editor() {
                 className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
                 disabled={avatarCropUploading}
               >
-                Cancel
+                {t('admin.avatarEditor.cancel')}
               </button>
               <button
                 type="button"
@@ -896,7 +900,7 @@ export default function Editor() {
                 className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
                 disabled={avatarCropUploading}
               >
-                {avatarCropUploading ? 'Saving...' : 'Apply crop'}
+                {avatarCropUploading ? t('admin.avatarEditor.saving') : t('admin.avatarEditor.apply')}
               </button>
             </div>
           </div>

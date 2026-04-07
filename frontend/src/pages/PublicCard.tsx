@@ -4,6 +4,7 @@ import type { CSSProperties } from 'react'
 import { useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import axios from 'axios'
+import QRCode from 'qrcode'
 
 interface CardData {
   id: string
@@ -129,10 +130,14 @@ const resolveMediaUrl = (value?: string) => {
   return raw
 }
 
+const SAFE_URL_SCHEMES = /^(https?|tel|mailto|sms|viber|tg|whatsapp|geo):/i
+
 const toExternalUrl = (url: string) => {
   if (!url) return url
   if (url.startsWith('/')) return resolveMediaUrl(url)
-  return /^[a-z][a-z\d+.-]*:/i.test(url) ? url : `https://${url}`
+  if (SAFE_URL_SCHEMES.test(url)) return url
+  if (/^[a-z][a-z\d+.-]*:/i.test(url)) return '' // block unsafe schemes like javascript:
+  return `https://${url}`
 }
 
 const formatPhoneDisplay = (value: string) => {
@@ -263,6 +268,17 @@ const createSquareIconDataUrl = async (src: string, size = 180) => {
   }
 }
 
+function QRCanvas({ url }: { url: string }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+
+  useEffect(() => {
+    if (!canvasRef.current) return
+    void QRCode.toCanvas(canvasRef.current, url, { width: 320, margin: 2 })
+  }, [url])
+
+  return <canvas ref={canvasRef} className="mx-auto" />
+}
+
 export default function PublicCard() {
   const { slug } = useParams<{ slug: string }>()
   const { t, i18n } = useTranslation()
@@ -292,6 +308,27 @@ export default function PublicCard() {
     visitorIdRef.current = getOrCreateVisitorId()
   }, [])
 
+  // Close modals on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (showQR) { setShowQR(false); return }
+      if (locationModal) { setLocationModal(null); return }
+      if (galleryActiveIndex !== null) { closeGalleryViewer(); return }
+      if (showGalleryMode) { setShowGalleryMode(false); return }
+      if (showServicesMode) { setShowServicesMode(false); return }
+      if (showMoreContacts) { setShowMoreContacts(false); return }
+      if (showLeadForm) { setShowLeadForm(false); return }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [showQR, locationModal, galleryActiveIndex, showGalleryMode, showServicesMode, showMoreContacts, showLeadForm])
+
+  // Update html lang attribute on language change
+  useEffect(() => {
+    document.documentElement.lang = i18n.language || 'en'
+  }, [i18n.language])
+
   useEffect(() => {
     if (!card) return
 
@@ -311,6 +348,16 @@ export default function PublicCard() {
       return meta
     }
 
+    const ensureOgMeta = (property: string) => {
+      let meta = document.querySelector<HTMLMetaElement>(`meta[property="${property}"]`)
+      if (!meta) {
+        meta = document.createElement('meta')
+        meta.setAttribute('property', property)
+        document.head.appendChild(meta)
+      }
+      return meta
+    }
+
     const ensureLink = (rel: string) => {
       let link = document.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`)
       if (!link) {
@@ -323,6 +370,19 @@ export default function PublicCard() {
 
     ensureMeta('apple-mobile-web-app-title').setAttribute('content', appName)
     ensureMeta('application-name').setAttribute('content', appName)
+
+    // Open Graph meta tags for rich link previews
+    const ogDescription = [card.title, card.company_name].filter(Boolean).join(' — ')
+    ensureOgMeta('og:title').setAttribute('content', card.full_name || appName)
+    ensureOgMeta('og:description').setAttribute('content', ogDescription || 'Digital Business Card')
+    ensureOgMeta('og:url').setAttribute('content', window.location.href)
+    ensureOgMeta('og:type').setAttribute('content', 'profile')
+    if (sourceIconUrl) {
+      ensureOgMeta('og:image').setAttribute('content', sourceIconUrl)
+    }
+    ensureMeta('twitter:card').setAttribute('content', 'summary')
+    ensureMeta('twitter:title').setAttribute('content', card.full_name || appName)
+    ensureMeta('twitter:description').setAttribute('content', ogDescription || 'Digital Business Card')
 
     const applyHomeScreenMeta = async () => {
       const appleIconUrl = await createSquareIconDataUrl(sourceIconUrl, 180)
@@ -376,7 +436,7 @@ export default function PublicCard() {
   const trackEvent = (event_type: string, metadata?: Record<string, unknown>) => {
     const baseMetadata = {
       visitor_id: visitorIdRef.current || getOrCreateVisitorId(),
-      platform: navigator.platform || 'unknown'
+      platform: (navigator as any).userAgentData?.platform || navigator.platform || 'unknown'
     }
 
     axios
@@ -507,7 +567,7 @@ export default function PublicCard() {
 
     trackEvent('share', {
       share_method: ('share' in navigator) ? 'web_share' : 'clipboard',
-      platform: navigator.platform || 'unknown'
+      platform: (navigator as any).userAgentData?.platform || navigator.platform || 'unknown'
     })
   }
 
@@ -763,7 +823,7 @@ export default function PublicCard() {
         <div className="home-card-frame relative w-full overflow-hidden bg-[#111]">
 
           {/* Spinner — fades out when card is ready */}
-          <div className={`dbc-spinner-overlay${loading ? ' dbc-spinner-overlay--show' : ''}`} aria-hidden={loading ? 'false' : 'true'}>
+          <div className={`dbc-spinner-overlay${loading ? ' dbc-spinner-overlay--show' : ''}`}>
             <span className="dbc-spinner" />
           </div>
 
@@ -873,7 +933,7 @@ export default function PublicCard() {
                 </div>
               </div>
 
-              <div className={`dbc-social-mode${showMoreContacts ? ' is-active' : ''}`} aria-hidden={showMoreContacts ? 'false' : 'true'}>
+              <div className={`dbc-social-mode${showMoreContacts ? ' is-active' : ''}`}>
                 <button
                   type="button"
                   className="dbc-social-back"
@@ -905,7 +965,7 @@ export default function PublicCard() {
                 </div>
               </div>
 
-              <div className={`dbc-gallery-mode${showGalleryMode ? ' is-active' : ''}`} aria-hidden={showGalleryMode ? 'false' : 'true'}>
+              <div className={`dbc-gallery-mode${showGalleryMode ? ' is-active' : ''}`}>
                 <button
                   type="button"
                   className="dbc-social-back"
@@ -981,7 +1041,7 @@ export default function PublicCard() {
                 )}
               </div>
 
-              <div className={`dbc-services-mode${showServicesMode ? ' is-active' : ''}`} aria-hidden={showServicesMode ? 'false' : 'true'}>
+              <div className={`dbc-services-mode${showServicesMode ? ' is-active' : ''}`}>
                 <button
                   type="button"
                   className="dbc-social-back"
@@ -1052,16 +1112,12 @@ export default function PublicCard() {
       {showQR && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setShowQR(false)}>
           <div className="w-full max-w-sm rounded-2xl bg-white p-4" onClick={(e) => e.stopPropagation()}>
-            <img
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=320x320&data=${encodeURIComponent(window.location.href)}`}
-              alt="QR Code"
-              className="mx-auto"
-            />
+            <QRCanvas url={window.location.href} />
             <button
               className="mt-4 w-full rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
               onClick={() => setShowQR(false)}
             >
-              Close
+              {t('close')}
             </button>
           </div>
         </div>
@@ -1088,7 +1144,7 @@ export default function PublicCard() {
                 className="flex-1 rounded-full bg-black px-4 py-2 text-sm font-semibold text-white"
                 onClick={() => setLocationModal(null)}
               >
-                Закрыть
+                {t('close')}
               </button>
               <button
                 type="button"
@@ -1097,7 +1153,7 @@ export default function PublicCard() {
                   window.location.href = locationModal.mapsUrl
                 }}
               >
-                Открыть в картах
+                {t('openInMaps')}
               </button>
             </div>
           </div>

@@ -32,9 +32,252 @@
     "gallery": "Gallery",
     "location": "Location"
   },
-  "views": "Views",
-  "clicks": "Clicks",
-  "saves": "Saves",
-  "leads": "Leads",
-  "close": "Close"
+  "close": "Close",
+  "openInMaps": "Open in Maps",
+  "location": "Location",
+
+  "notFound": {
+    "title": "Page not found",
+    "goHome": "Go Home"
+  },
+
+  "login": {
+    "title": "PIN",
+    "errorInvalidPin": "Invalid PIN",
+    "digitLabel": "Digit {{digit}}",
+    "clearPin": "Clear PIN",
+    "deleteDigit": "Delete",
+    "checking": "Checking PIN...",
+    "enterPin": "Enter PIN"
+  },
+
+  "admin": {
+    "sections": {
+      "editCard": "Card",
+      "socialLinks": "Links",
+      "services": "Services",
+      "gallery": "Gallery",
+      "settings": "Settings",
+      "analytics": "Analytics"
+    },
+    "sectionsLong": {
+      "editCard": "Edit Card",
+      "socialLinks": "Social Links",
+      "services": "Services",
+      "gallery": "Gallery",
+      "settings": "Settings",
+      "analytics": "Analytics"
+    },
+    "logout": "Log out",
+    "selectCard": "Select card",
+    "active": "Active",
+    "draft": "Draft",
+    "saving": "Saving…",
+    "saveChanges": "Save Changes",
+    "sectionNav": "Section navigation",
+
+    "form": {
+      "fullName": "Full Name",
+      "position": "Title",
+      "company": "Company",
+      "slug": "Slug",
+      "bio": "Bio",
+      "phone": "Phone",
+      "email": "Email",
+      "address": "Address",
+      "website": "Website",
+      "portfolioUrl": "Portfolio URL",
+      "avatarUrl": "Avatar URL",
+      "language": "Language",
+      "isActive": "Active",
+      "uploadAvatar": "Upload avatar",
+      "editAvatar": "Edit current avatar",
+      "deleteAvatar": "Delete avatar",
+      "processing": "Processing…",
+      "uploadCropAvatar": "Upload + crop avatar"
+    },
+
+    "preview": {
+      "title": "Preview",
+      "name": "Name",
+      "position": "Title",
+      "description": "Description will appear here"
+    },
+
+    "links": {
+      "title": "Contacts & Links",
+      "addLink": "+ Add link",
+      "searchPlatform": "Search platform",
+      "platformNotFound": "Platform not found",
+      "noLinks": "No social links yet",
+      "hide": "Hide",
+      "show": "Show",
+      "delete": "Remove",
+      "remove": "Remove",
+      "examples": "Examples:",
+      "exInstagram": "Instagram — username or full URL",
+      "exTelegram": "Telegram — username",
+      "exWhatsapp": "WhatsApp — phone number or wa.me link",
+      "exViber": "Viber — phone number",
+      "exTiktok": "TikTok — @username",
+      "exFacebook": "Facebook — username or page URL",
+      "exLinkedin": "LinkedIn — in/username",
+      "exYoutube": "YouTube — channel name or URL",
+      "exEmail": "Email — info@example.com",
+      "exPhone": "Phone — +XX XXXXX XXXXX"
+    },
+
+    "services": {
+      "title": "Services",
+      "add": "+ Add service",
+      "addService": "+ Add service",
+      "noServices": "No services yet",
+      "serviceNum": "Service #{{num}}",
+      "serviceTitle": "Service title",
+      "description": "Description",
+      "visible": "Visible"
+    },
+
+    "gallery": {
+      "title": "Gallery",
+      "upload": "Upload photo",
+      "addImage": "+ Add image",
+      "noImages": "No gallery images yet",
+      "upload": "Upload photo",
+      "uploadPhoto": "Upload photo",
+      "uploading": "Uploading…",
+      "uploadAria": "Upload photos to gallery",
+      "showInContacts": "Show Gallery in main contacts section",
+      "on": "On",
+      "off": "Off",
+      "deletePhoto": "Delete photo",
+      "image": "image",
+      "video": "video"
+    },
+
+    "settings": {
+      "title": "Settings",
+      "currentPin": "Current PIN",
+      "newPin": "New PIN",
+      "confirmPin": "Confirm PIN",
+      "pinPlaceholder": "••••",
+      "changePin": "Change PIN",
+      "saving": "Saving…",
+      "language": "Interface language",
+      "english": "English",
+      "russian": "Russian",
+      "theme": "Theme",
+      "lightTheme": "Light",
+      "darkTheme": "Dark",
+      "light": "Light",
+      "dark": "Dark",
+      "domainUrl": "Domain URL"
+    },
+
+    "analytics": {
+      "title": "Analytics",
+      "views": "Views",
+      "uniqueVisitors": "Unique Visitors",
+      "returningVisitors": "Returning Visitors",
+      "saveContact": "Save Contact",
+      "shares": "Shares",
+      "leads": "Leads",
+      "savesTimeseries": "Save contact trend by day",
+      "viewsLabel": "Views: ",
+      "savesLabel": "Saves: ",
+      "uniqueLabel": "Unique: ",
+      "noDataForPeriod": "No data for selected period",
+      "shareByPlatform": "Shares by platform",
+      "noShareEvents": "No share events",
+      "viewMap": "Views Map",
+      "viewsMap": "Views Map",
+      "zoom": "Zoom: ",
+      "geoDetails": "Geo Details",
+      "backToCountries": "Back to countries",
+      "noGeoData": "No geo data",
+      "updatingAnalytics": "Updating analytics…",
+      "updating": "Updating analytics…",
+      "savesDynamics": "Save contact trend by day",
+      "noData": "No data for selected period",
+      "dateFrom": "Start date",
+      "dateTo": "End date",
+      "refreshEvery": "Refresh: {{sec}}s",
+      "reset": "Reset",
+      "resetting": "Resetting…",
+      "period": "Period",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "custom": "Custom",
+      "refresh": "Refresh",
+      "fromDate": "From",
+      "toDate": "To",
+      "autoRefresh": "Auto-refresh",
+      "noAutoRefresh": "Off",
+      "autoRefresh15s": "Every 15s",
+      "autoRefresh30s": "Every 30s",
+      "autoRefresh60s": "Every 60s",
+      "exportCsv": "Export CSV",
+      "country": "Country",
+      "region": "Region",
+      "city": "City"
+    },
+
+    "avatarEditor": {
+      "title": "Avatar Editor",
+      "description": "Drag photo and set zoom. Square area will be used.",
+      "zoom": "Zoom",
+      "cancel": "Cancel",
+      "apply": "Apply crop",
+      "saving": "Saving…"
+    },
+
+    "errors": {
+      "analyticsLoadFailed": "Failed to load analytics",
+      "analyticsExportFailed": "Failed to export analytics",
+      "uploadFailed": "Failed to upload image: {{message}}",
+      "selectAvatarFirst": "Select avatar photo first",
+      "onlyImagesSupported": "Only images are supported",
+      "selectCropArea": "Select crop area",
+      "cropApplyFailed": "Failed to apply crop: {{message}}",
+      "avatarDeleteFailed": "Failed to delete avatar: {{message}}",
+      "imageDeleteFailed": "Failed to delete image: {{message}}",
+      "analyticsResetFailed": "Failed to reset analytics: {{message}}",
+      "qrDownloadFailed": "Failed to download QR code",
+      "pinInvalidFormat": "PIN must be 4 digits",
+      "pinMismatch": "New PIN and confirmation do not match",
+      "pinUnchanged": "New PIN must differ from current",
+      "pinChangeFailed": "Failed to change PIN",
+      "cardSaveFailed": "Failed to save card",
+      "cardLoadFailed": "Failed to load card",
+      "fullNameRequired": "Full Name is required",
+      "titleRequired": "Title is required",
+      "companyRequired": "Company is required",
+      "phoneRequired": "Phone is required",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Email format is invalid",
+      "websiteRequired": "Website is required",
+      "websiteInvalid": "Website format is invalid",
+      "portfolioUrlInvalid": "Portfolio URL format is invalid",
+      "avatarUrlRequired": "Avatar URL is required",
+      "avatarUrlInvalid": "Avatar URL format is invalid",
+      "minLinks": "At least 2 visible social links required",
+      "minServices": "At least 1 visible service required",
+      "minGallery": "At least 1 gallery image required"
+    },
+
+    "success": {
+      "cardSaved": "Card saved",
+      "pinChanged": "PIN changed successfully"
+    },
+
+    "confirm": {
+      "resetAnalytics": "Reset analytics for the selected card? This cannot be undone."
+    },
+
+    "publicUrl": "Public URL:",
+    "editor": {
+      "back": "Back"
+    }
+  }
 }

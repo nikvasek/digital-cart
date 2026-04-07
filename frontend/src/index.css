@@ -361,15 +361,15 @@ code {
   width: 50%;
   height: 100%;
   background: transparent;
-  backdrop-filter: blur(3px) saturate(100%);
   -webkit-backdrop-filter: blur(3px) saturate(100%);
+  backdrop-filter: blur(3px) saturate(100%);
   /* isolate so backdrop-filter clips to this element */
   isolation: isolate;
 }
 
 .dbc-bg-left.dbc-bg-left--plain {
-  backdrop-filter: none;
   -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .dbc-avatar-shell {
@@ -677,8 +677,8 @@ code {
   border-radius: 999px;
   border: 0;
   background: rgba(255, 255, 255, 0.22);
-  backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1244,8 +1244,8 @@ code {
   border-radius: 20px;
   border: 1px solid var(--admin-border);
   background: var(--admin-surface);
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   box-shadow: 0 8px 24px rgba(16, 24, 40, 0.08);
 }
 
@@ -1253,8 +1253,8 @@ code {
   border-radius: 20px;
   border: 1px solid var(--admin-border);
   background: var(--admin-surface-strong);
-  backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
   padding: 18px;
   display: flex;
   flex-direction: column;
@@ -1388,7 +1388,6 @@ code {
   margin: 0;
   scroll-behavior: smooth;
   scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
 }
 
 .admin-mobile-nav::-webkit-scrollbar {
@@ -1809,6 +1808,7 @@ code {
   color: #9ca3af;
   font-size: 13px;
   cursor: grab;
+  -webkit-user-select: none;
   user-select: none;
   flex-shrink: 0;
   line-height: 1;

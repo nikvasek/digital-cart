@@ -32,9 +32,252 @@
     "gallery": "Галерея",
     "location": "Локация"
   },
-  "views": "Просмотры",
-  "clicks": "Клики",
-  "saves": "Сохранения",
-  "leads": "Лиды",
-  "close": "Закрыть"
+  "close": "Закрыть",
+  "openInMaps": "Открыть в картах",
+  "location": "Локация",
+
+  "notFound": {
+    "title": "Страница не найдена",
+    "goHome": "На главную"
+  },
+
+  "login": {
+    "title": "PIN",
+    "errorInvalidPin": "Неверный PIN",
+    "digitLabel": "Цифра {{digit}}",
+    "clearPin": "Очистить PIN",
+    "deleteDigit": "Удалить",
+    "checking": "Проверка PIN...",
+    "enterPin": "Введите PIN"
+  },
+
+  "admin": {
+    "sections": {
+      "editCard": "Карточка",
+      "socialLinks": "Ссылки",
+      "services": "Услуги",
+      "gallery": "Галерея",
+      "settings": "Настройки",
+      "analytics": "Аналитика"
+    },
+    "sectionsLong": {
+      "editCard": "Редактировать карточку",
+      "socialLinks": "Социальные ссылки",
+      "services": "Услуги",
+      "gallery": "Галерея",
+      "settings": "Настройки",
+      "analytics": "Аналитика"
+    },
+    "logout": "Выйти",
+    "selectCard": "Выбор карточки",
+    "active": "Активна",
+    "draft": "Черновик",
+    "saving": "Сохранение…",
+    "saveChanges": "Сохранить изменения",
+    "sectionNav": "Навигация по разделам",
+
+    "form": {
+      "fullName": "Полное имя",
+      "position": "Должность",
+      "company": "Компания",
+      "slug": "Slug",
+      "bio": "Слоган",
+      "phone": "Телефон",
+      "email": "Email",
+      "address": "Адрес",
+      "website": "Сайт",
+      "portfolioUrl": "Портфолио URL",
+      "avatarUrl": "URL аватара",
+      "language": "Язык",
+      "isActive": "Активна",
+      "uploadAvatar": "Загрузить аватар",
+      "editAvatar": "Редактировать аватар",
+      "deleteAvatar": "Удалить аватар",
+      "processing": "Обработка…",
+      "uploadCropAvatar": "Загрузить + обрезать"
+    },
+
+    "preview": {
+      "title": "Предпросмотр",
+      "name": "Имя",
+      "position": "Должность",
+      "description": "Описание будет здесь"
+    },
+
+    "links": {
+      "title": "Контакты и ссылки",
+      "addLink": "+ Добавить",
+      "searchPlatform": "Поиск платформы",
+      "platformNotFound": "Платформа не найдена",
+      "noLinks": "Ссылок пока нет",
+      "hide": "Скрыть",
+      "show": "Показать",
+      "delete": "Удалить",
+      "remove": "Удалить",
+      "examples": "Примеры:",
+      "exInstagram": "Instagram — имя или полный URL",
+      "exTelegram": "Telegram — имя пользователя",
+      "exWhatsapp": "WhatsApp — номер телефона или wa.me ссылка",
+      "exViber": "Viber — номер телефона",
+      "exTiktok": "TikTok — @имя",
+      "exFacebook": "Facebook — имя или URL страницы",
+      "exLinkedin": "LinkedIn — in/username",
+      "exYoutube": "YouTube — название канала или URL",
+      "exEmail": "Email — info@example.com",
+      "exPhone": "Телефон — +XX XXXXX XXXXX"
+    },
+
+    "services": {
+      "title": "Услуги",
+      "add": "Добавить услугу",
+      "addService": "+ Добавить услугу",
+      "noServices": "Услуг пока нет",
+      "serviceNum": "Услуга #{{num}}",
+      "serviceTitle": "Название услуги",
+      "description": "Описание",
+      "visible": "Видима"
+    },
+
+    "gallery": {
+      "title": "Галерея",
+      "upload": "Загрузить фото",
+      "addImage": "+ Добавить фото",
+      "noImages": "Фотографий пока нет",
+      "upload": "Загрузить фото",
+      "uploadPhoto": "Загрузить фото",
+      "uploading": "Загрузка…",
+      "uploadAria": "Загрузить фото в галерею",
+      "showInContacts": "Показывать Gallery в основной секции контактов",
+      "on": "Вкл",
+      "off": "Выкл",
+      "deletePhoto": "Удалить фото",
+      "image": "фото",
+      "video": "видео"
+    },
+
+    "settings": {
+      "title": "Настройки",
+      "currentPin": "Текущий PIN",
+      "newPin": "Новый PIN",
+      "confirmPin": "Подтверждение PIN",
+      "pinPlaceholder": "••••",
+      "changePin": "Сменить PIN",
+      "saving": "Сохранение…",
+      "language": "Язык интерфейса",
+      "english": "Английский",
+      "russian": "Русский",
+      "theme": "Тема",
+      "lightTheme": "Светлая",
+      "darkTheme": "Тёмная",
+      "light": "Светлая",
+      "dark": "Тёмная",
+      "domainUrl": "URL домена"
+    },
+
+    "analytics": {
+      "title": "Аналитика",
+      "views": "Просмотры",
+      "uniqueVisitors": "Уникальные посетители",
+      "returningVisitors": "Повторные визиты",
+      "saveContact": "Сохранить контакт",
+      "shares": "Поделиться",
+      "leads": "Лиды",
+      "savesTimeseries": "Динамика Save contact по дням",
+      "viewsLabel": "Просмотры: ",
+      "savesLabel": "Сохранения: ",
+      "uniqueLabel": "Уникальные: ",
+      "noDataForPeriod": "Нет данных за выбранный период",
+      "shareByPlatform": "Поделиться по платформам",
+      "noShareEvents": "Нет событий share",
+      "viewMap": "Карта просмотров",
+      "viewsMap": "Карта просмотров",
+      "zoom": "Масштаб: ",
+      "geoDetails": "Гео детализация",
+      "backToCountries": "Назад к странам",
+      "noGeoData": "Нет геоданных",
+      "updatingAnalytics": "Обновление аналитики…",
+      "updating": "Обновление аналитики…",
+      "savesDynamics": "Динамика Save contact по дням",
+      "noData": "Нет данных за выбранный период",
+      "dateFrom": "Дата начала",
+      "dateTo": "Дата окончания",
+      "refreshEvery": "Обновлять: {{sec}}с",
+      "reset": "Сброс",
+      "resetting": "Сброс…",
+      "period": "Период",
+      "day": "День",
+      "week": "Неделя",
+      "month": "Месяц",
+      "custom": "Произвольный",
+      "refresh": "Обновить",
+      "fromDate": "Дата начала",
+      "toDate": "Дата окончания",
+      "autoRefresh": "Автообновление",
+      "noAutoRefresh": "Без автообновления",
+      "autoRefresh15s": "Обновлять: 15с",
+      "autoRefresh30s": "Обновлять: 30с",
+      "autoRefresh60s": "Обновлять: 60с",
+      "exportCsv": "Экспорт CSV",
+      "country": "Страна",
+      "region": "Регион",
+      "city": "Город"
+    },
+
+    "avatarEditor": {
+      "title": "Редактор аватара",
+      "description": "Перетаскивайте фото и меняйте масштаб. Будет сохранен квадрат.",
+      "zoom": "Масштаб",
+      "cancel": "Отмена",
+      "apply": "Применить",
+      "saving": "Сохранение…"
+    },
+
+    "errors": {
+      "analyticsLoadFailed": "Не удалось загрузить аналитику",
+      "analyticsExportFailed": "Не удалось выгрузить аналитику",
+      "uploadFailed": "Не удалось загрузить изображение: {{message}}",
+      "selectAvatarFirst": "Сначала выберите фото аватара",
+      "onlyImagesSupported": "Поддерживаются только изображения",
+      "selectCropArea": "Выберите область кадрирования",
+      "cropApplyFailed": "Не удалось применить кроп: {{message}}",
+      "avatarDeleteFailed": "Не удалось удалить аватар: {{message}}",
+      "imageDeleteFailed": "Не удалось удалить изображение: {{message}}",
+      "analyticsResetFailed": "Не удалось сбросить статистику: {{message}}",
+      "qrDownloadFailed": "Не удалось скачать QR код",
+      "pinInvalidFormat": "PIN должен состоять из 4 цифр",
+      "pinMismatch": "Новый PIN и подтверждение не совпадают",
+      "pinUnchanged": "Новый PIN должен отличаться от текущего",
+      "pinChangeFailed": "Не удалось обновить PIN",
+      "cardSaveFailed": "Не удалось сохранить карточку",
+      "cardLoadFailed": "Не удалось загрузить карточку",
+      "fullNameRequired": "Полное имя обязательно",
+      "titleRequired": "Должность обязательна",
+      "companyRequired": "Компания обязательна",
+      "phoneRequired": "Телефон обязателен",
+      "emailRequired": "Email обязателен",
+      "emailInvalid": "Неверный формат email",
+      "websiteRequired": "Сайт обязателен",
+      "websiteInvalid": "Неверный формат сайта",
+      "portfolioUrlInvalid": "Неверный формат URL портфолио",
+      "avatarUrlRequired": "URL аватара обязателен",
+      "avatarUrlInvalid": "Неверный формат URL аватара",
+      "minLinks": "Минимум 2 видимые ссылки",
+      "minServices": "Минимум 1 видимая услуга",
+      "minGallery": "Минимум 1 фото в галерее"
+    },
+
+    "success": {
+      "cardSaved": "Карточка сохранена",
+      "pinChanged": "PIN успешно обновлён"
+    },
+
+    "confirm": {
+      "resetAnalytics": "Сбросить статистику для выбранной карточки? Это действие необратимо."
+    },
+
+    "publicUrl": "Ссылка:",
+    "editor": {
+      "back": "Назад"
+    }
+  }
 }

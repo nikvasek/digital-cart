@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import axios from 'axios'
 import Cropper, { type Area } from 'react-easy-crop'
 import 'react-easy-crop/react-easy-crop.css'
@@ -245,22 +246,15 @@ type SectionId =
     | 'settings'
     | 'analytics'
 
-const SECTIONS: Array<{ id: SectionId; label: string }> = [
-    { id: 'edit-card', label: 'Карточка' },
-    { id: 'social-links', label: 'Ссылки' },
-    { id: 'services', label: 'Услуги' },
-    { id: 'gallery', label: 'Галерея' },
-    { id: 'settings', label: 'Настройки' },
-    { id: 'analytics', label: 'Аналитика' }
-]
+const SECTION_IDS: SectionId[] = ['edit-card', 'social-links', 'services', 'gallery', 'settings', 'analytics']
 
-const MOBILE_SECTION_LABELS: Record<SectionId, string> = {
-    'edit-card': 'Редактировать карточку',
-    'social-links': 'Социальные ссылки',
-    services: 'Сервисы',
-    gallery: 'Галерея',
-    settings: 'Настройки',
-    analytics: 'Аналитика'
+const SECTION_KEYS: Record<SectionId, string> = {
+    'edit-card': 'editCard',
+    'social-links': 'socialLinks',
+    services: 'services',
+    gallery: 'gallery',
+    settings: 'settings',
+    analytics: 'analytics'
 }
 
 const reorder = <T,>(items: T[], from: number, to: number) => {
@@ -540,6 +534,7 @@ const defaultCardDetails = (card: CardItem): CardDetails => ({
 
 export default function Dashboard() {
     const navigate = useNavigate()
+    const { t, i18n } = useTranslation()
     const mobileNavRefs = useRef<Partial<Record<SectionId, HTMLButtonElement | null>>>({})
     const mediaInputRef = useRef<HTMLInputElement | null>(null)
     const avatarInputRef = useRef<HTMLInputElement | null>(null)
@@ -827,7 +822,7 @@ export default function Dashboard() {
             }
         } catch (error: any) {
             const message = error?.response?.data?.error || 'Upload failed'
-            alert(`Не удалось загрузить изображение: ${message}`)
+            alert(t('admin.errors.uploadFailed', { message }))
         } finally {
             if (mediaInputRef.current) mediaInputRef.current.value = ''
             setUploadingMedia(false)
@@ -849,7 +844,7 @@ export default function Dashboard() {
 
     const openAvatarEditor = (src: string, objectUrl?: string) => {
         if (!src) {
-            alert('Сначала выберите фото аватара')
+            alert(t('admin.errors.selectAvatarFirst'))
             return
         }
 
@@ -869,7 +864,7 @@ export default function Dashboard() {
         const file = e.target.files?.[0]
         if (!file) return
         if (!file.type.startsWith('image/')) {
-            alert('Поддерживаются только изображения')
+            alert(t('admin.errors.onlyImagesSupported'))
             return
         }
 
@@ -879,7 +874,7 @@ export default function Dashboard() {
 
     const applyAvatarCrop = async () => {
         if (!cardData || !avatarCropSource || !avatarCroppedAreaPixels) {
-            alert('Выберите область кадрирования')
+            alert(t('admin.errors.selectCropArea'))
             return
         }
 
@@ -903,7 +898,7 @@ export default function Dashboard() {
             resetAvatarEditor()
         } catch (error: any) {
             const message = error?.response?.data?.error || error?.message || 'Crop/upload failed'
-            alert(`Не удалось применить кроп: ${message}`)
+            alert(t('admin.errors.cropApplyFailed', { message }))
         } finally {
             setUploadingAvatar(false)
         }
@@ -916,7 +911,7 @@ export default function Dashboard() {
             await deleteUploadedMedia(cardData.avatar_url)
         } catch (error: any) {
             const message = error?.response?.data?.error || 'Delete failed'
-            alert(`Не удалось удалить аватар: ${message}`)
+            alert(t('admin.errors.avatarDeleteFailed', { message }))
             return
         }
 
@@ -932,7 +927,7 @@ export default function Dashboard() {
             await deleteUploadedMedia(item.file_url)
         } catch (error: any) {
             const message = error?.response?.data?.error || 'Delete failed'
-            alert(`Не удалось удалить изображение: ${message}`)
+            alert(t('admin.errors.imageDeleteFailed', { message }))
             return
         }
 
@@ -946,7 +941,7 @@ export default function Dashboard() {
             return
         }
 
-        const confirmed = window.confirm('Сбросить статистику для выбранной карточки? Это действие необратимо.')
+        const confirmed = window.confirm(t('admin.confirm.resetAnalytics'))
         if (!confirmed) return
 
         try {
@@ -959,7 +954,7 @@ export default function Dashboard() {
             await fetchAnalytics()
         } catch (error: any) {
             const message = error?.response?.data?.error || 'Reset failed'
-            alert(`Не удалось сбросить статистику: ${message}`)
+            alert(t('admin.errors.analyticsResetFailed', { message }))
         } finally {
             setResettingAnalytics(false)
         }
@@ -1076,15 +1071,15 @@ export default function Dashboard() {
         const confirmPin = pinConfirm.trim()
 
         if (!/^\d{4}$/.test(currentPin) || !/^\d{4}$/.test(nextPin)) {
-            setPinFeedback('PIN должен состоять из 4 цифр')
+            setPinFeedback(t('admin.errors.pinInvalidFormat'))
             return
         }
         if (nextPin !== confirmPin) {
-            setPinFeedback('Новый PIN и подтверждение не совпадают')
+            setPinFeedback(t('admin.errors.pinMismatch'))
             return
         }
         if (currentPin === nextPin) {
-            setPinFeedback('Новый PIN должен отличаться от текущего')
+            setPinFeedback(t('admin.errors.pinUnchanged'))
             return
         }
 
@@ -1105,9 +1100,9 @@ export default function Dashboard() {
             setPinCurrent('')
             setPinNext('')
             setPinConfirm('')
-            setPinFeedback('PIN успешно обновлён')
+            setPinFeedback(t('admin.success.pinChanged'))
         } catch (error: any) {
-            const message = error?.response?.data?.error || 'Не удалось обновить PIN'
+            const message = error?.response?.data?.error || t('admin.errors.pinChangeFailed')
             setPinFeedback(message)
         } finally {
             setPinSaving(false)
@@ -1126,29 +1121,29 @@ export default function Dashboard() {
         <div className={`admin-shell ${themeMode === 'dark' ? 'admin-shell-dark' : ''}`}>
             <aside className="admin-sidebar">
                 <div className="admin-sidebar-head">
-                    <p>Панель управления</p>
+                    <p>{t('admin.sectionsLong.editCard')}</p>
                 </div>
 
                 <nav className="admin-nav">
-                    {SECTIONS.map((section) => (
+                    {SECTION_IDS.map((id) => (
                         <button
-                            key={section.id}
+                            key={id}
                             type="button"
-                            onClick={() => setSelectedSection(section.id)}
-                            className={`admin-nav-item ${selectedSection === section.id ? 'is-active' : ''}`}
+                            onClick={() => setSelectedSection(id)}
+                            className={`admin-nav-item ${selectedSection === id ? 'is-active' : ''}`}
                         >
-                            {section.label}
+                            {t(`admin.sections.${SECTION_KEYS[id]}`)}
                         </button>
                     ))}
                 </nav>
 
-                <button type="button" className="admin-ghost danger" onClick={logout}>Выйти</button>
+                <button type="button" className="admin-ghost danger" onClick={logout}>{t('admin.logout')}</button>
             </aside>
 
             <main className="admin-main">
                 <section className="admin-top-controls glass-card">
                     <div className="admin-card-picker">
-                        <label htmlFor="card-picker">Выбор карточки</label>
+                        <label htmlFor="card-picker">{t('admin.selectCard')}</label>
                         <select
                             id="card-picker"
                             value={selectedCardId}
@@ -1156,36 +1151,36 @@ export default function Dashboard() {
                         >
                             {cards.map((card) => (
                                 <option key={card.id} value={card.id}>
-                                    {card.full_name} ({card.is_active ? 'Активна' : 'Черновик'})
+                                    {card.full_name} ({card.is_active ? t('admin.active') : t('admin.draft')})
                                 </option>
                             ))}
                         </select>
                     </div>
 
                     <button type="button" className="admin-primary admin-save-top" onClick={saveCard} disabled={saving || !cardData}>
-                        {saving ? 'Сохранение...' : 'Сохранить изменения'}
+                        {saving ? t('admin.saving') : t('admin.saveChanges')}
                     </button>
 
                     <button type="button" className="admin-ghost danger admin-mobile-logout" onClick={logout}>
-                        Выйти
+                        {t('admin.logout')}
                     </button>
                 </section>
 
-                <div className="admin-mobile-nav-wrap" aria-label="Навигация по разделам">
+                <div className="admin-mobile-nav-wrap" aria-label={t('admin.sectionNav')}>
                     <nav className="admin-mobile-nav" role="tablist" aria-orientation="horizontal">
-                        {SECTIONS.map((section) => (
+                        {SECTION_IDS.map((id) => (
                             <button
-                                key={section.id}
+                                key={id}
                                 ref={(node) => {
-                                    mobileNavRefs.current[section.id] = node
+                                    mobileNavRefs.current[id] = node
                                 }}
                                 type="button"
                                 role="tab"
-                                aria-selected={selectedSection === section.id ? 'true' : 'false'}
-                                onClick={() => setSelectedSection(section.id)}
-                                className={`admin-mobile-nav-item ${selectedSection === section.id ? 'is-active' : ''}`}
+                                aria-selected={selectedSection === id}
+                                onClick={() => setSelectedSection(id)}
+                                className={`admin-mobile-nav-item ${selectedSection === id ? 'is-active' : ''}`}
                             >
-                                {MOBILE_SECTION_LABELS[section.id]}
+                                {t(`admin.sectionsLong.${SECTION_KEYS[id]}`)}
                             </button>
                         ))}
                     </nav>
@@ -1194,19 +1189,19 @@ export default function Dashboard() {
                 {selectedSection === 'edit-card' && cardData && (
                     <section className="admin-two-col">
                         <div className="glass-card form-grid">
-                            <h3>Редактировать карточку</h3>
-                            <label>Имя<input value={cardData.full_name || ''} onChange={(e) => updateCard({ full_name: e.target.value })} /></label>
-                            <label>Должность<input value={cardData.title || ''} onChange={(e) => updateCard({ title: e.target.value })} /></label>
-                            <label>Компания<input value={cardData.company_name || ''} onChange={(e) => updateCard({ company_name: e.target.value })} /></label>
-                            <label>Слоган<textarea rows={3} value={cardData.bio || ''} onChange={(e) => updateCard({ bio: e.target.value })}></textarea></label>
+                            <h3>{t('admin.sectionsLong.editCard')}</h3>
+                            <label>{t('admin.form.fullName')}<input value={cardData.full_name || ''} onChange={(e) => updateCard({ full_name: e.target.value })} /></label>
+                            <label>{t('admin.form.position')}<input value={cardData.title || ''} onChange={(e) => updateCard({ title: e.target.value })} /></label>
+                            <label>{t('admin.form.company')}<input value={cardData.company_name || ''} onChange={(e) => updateCard({ company_name: e.target.value })} /></label>
+                            <label>{t('admin.form.bio')}<textarea rows={3} value={cardData.bio || ''} onChange={(e) => updateCard({ bio: e.target.value })}></textarea></label>
                             <div className="avatar-actions">
                                 <input
                                     ref={avatarInputRef}
                                     type="file"
                                     accept="image/*"
                                     style={{ display: 'none' }}
-                                    aria-label="Загрузить аватар"
-                                    title="Загрузить аватар"
+                                    aria-label={t('admin.form.uploadAvatar')}
+                                    title={t('admin.form.uploadAvatar')}
                                     onChange={handleAvatarFilePick}
                                 />
                                 <button
@@ -1215,7 +1210,7 @@ export default function Dashboard() {
                                     disabled={uploadingAvatar}
                                     onClick={() => avatarInputRef.current?.click()}
                                 >
-                                    {uploadingAvatar ? 'Обработка…' : 'Загрузить аватар'}
+                                    {uploadingAvatar ? t('admin.form.processing') : t('admin.form.uploadAvatar')}
                                 </button>
                                 <button
                                     type="button"
@@ -1223,7 +1218,7 @@ export default function Dashboard() {
                                     disabled={uploadingAvatar || !cardData.avatar_url}
                                     onClick={() => openAvatarEditor(resolveMediaUrl(cardData.avatar_url))}
                                 >
-                                    Редактировать аватар
+                                    {t('admin.form.editAvatar')}
                                 </button>
                                 <button
                                     type="button"
@@ -1233,18 +1228,18 @@ export default function Dashboard() {
                                         void removeAvatarFile()
                                     }}
                                 >
-                                    Удалить аватар
+                                    {t('admin.form.deleteAvatar')}
                                 </button>
                             </div>
                         </div>
 
                         <div className="glass-card live-preview">
-                            <h3>Предпросмотр</h3>
+                            <h3>{t('admin.preview.title')}</h3>
                             <div className="preview-card">
                                 <img src={resolveMediaUrl(cardData.avatar_url || cardData.logo_url) || '/figma/home-from-pdf.webp'} alt="avatar" loading="lazy" />
-                                <h4>{cardData.full_name || 'Имя'}</h4>
-                                <p>{cardData.title || 'Должность'}</p>
-                                <small>{cardData.bio || 'Описание будет здесь'}</small>
+                                <h4>{cardData.full_name || t('admin.preview.name')}</h4>
+                                <p>{cardData.title || t('admin.preview.position')}</p>
+                                <small>{cardData.bio || t('admin.preview.description')}</small>
                             </div>
                         </div>
                     </section>
@@ -1253,7 +1248,7 @@ export default function Dashboard() {
                 {selectedSection === 'social-links' && cardData && (
                     <section className="glass-card section-stack">
                         <div className="section-head-row">
-                            <h3>Контакты и ссылки</h3>
+                            <h3>{t('admin.sectionsLong.socialLinks')}</h3>
                         </div>
 
                         {/* ── Active link rows ── */}
@@ -1308,7 +1303,7 @@ export default function Dashboard() {
                                     <button
                                         type="button"
                                         className={`link-row-vis${link.is_visible ? ' is-on' : ''}`}
-                                        title={link.is_visible ? 'Скрыть' : 'Показать'}
+                                        title={link.is_visible ? t('admin.links.hide') : t('admin.links.show')}
                                         onClick={() => {
                                             const next = [...cardData.links]
                                             next[index] = { ...next[index], is_visible: !link.is_visible }
@@ -1321,7 +1316,7 @@ export default function Dashboard() {
                                     <button
                                         type="button"
                                         className="link-row-remove"
-                                        title="Удалить"
+                                        title={t('admin.links.remove')}
                                         onClick={() => updateCard({ links: cardData.links.filter((_, i) => i !== index) })}
                                     >
                                         ✕
@@ -1335,7 +1330,7 @@ export default function Dashboard() {
                             <input
                                 className="link-picker-search"
                                 type="text"
-                                placeholder="Поиск платформы"
+                                placeholder={t('admin.links.searchPlatform')}
                                 value={filterPicker}
                                 onChange={(e) => setFilterPicker(e.target.value)}
                             />
@@ -1345,7 +1340,7 @@ export default function Dashboard() {
                                     p.label.toLowerCase().includes(q)
                                 )
                                 if (!filtered.length) return (
-                                    <p className="link-picker-empty">Платформа не найдена</p>
+                                    <p className="link-picker-empty">{t('admin.links.platformNotFound')}</p>
                                 )
                                 return (
                                     <div className="link-picker-grid">
@@ -1381,19 +1376,19 @@ export default function Dashboard() {
                 {selectedSection === 'services' && cardData && (
                     <section className="glass-card section-stack">
                         <div className="section-head-row">
-                            <h3>Услуги</h3>
+                            <h3>{t('admin.sectionsLong.services')}</h3>
                             <button
                                 type="button"
                                 className="admin-ghost"
                                 onClick={() => updateCard({ services: [...cardData.services, { title: '', description: '', is_visible: true }] })}
                             >
-                                Добавить услугу
+                                {t('admin.services.add')}
                             </button>
                         </div>
                         {cardData.services.map((service, index) => (
                             <div key={index} className="service-item">
                                 <input
-                                    placeholder="Название"
+                                    placeholder={t('admin.services.title')}
                                     value={service.title}
                                     onChange={(e) => {
                                         const next = [...cardData.services]
@@ -1403,7 +1398,7 @@ export default function Dashboard() {
                                 />
                                 <textarea
                                     rows={2}
-                                    placeholder="Описание"
+                                    placeholder={t('admin.services.description')}
                                     value={service.description}
                                     onChange={(e) => {
                                         const next = [...cardData.services]
@@ -1419,7 +1414,7 @@ export default function Dashboard() {
                 {selectedSection === 'gallery' && cardData && (
                     <section className="glass-card section-stack">
                         <div className="section-head-row">
-                            <h3>Галерея</h3>
+                            <h3>{t('admin.sectionsLong.gallery')}</h3>
                             <div className="view-toggle">
                                 <input
                                     ref={mediaInputRef}
@@ -1427,8 +1422,8 @@ export default function Dashboard() {
                                     accept="image/*"
                                     multiple
                                     style={{ display: 'none' }}
-                                    aria-label="Загрузить фото в галерею"
-                                    title="Загрузить фото в галерею"
+                                    aria-label={t('admin.gallery.upload')}
+                                    title={t('admin.gallery.upload')}
                                     onChange={(e) => {
                                         void uploadGalleryFiles(e.target.files)
                                     }}
@@ -1439,7 +1434,7 @@ export default function Dashboard() {
                                     disabled={uploadingMedia}
                                     onClick={() => mediaInputRef.current?.click()}
                                 >
-                                    {uploadingMedia ? 'Загрузка…' : 'Загрузить фото'}
+                                    {uploadingMedia ? t('admin.gallery.uploading') : t('admin.gallery.upload')}
                                 </button>
                             </div>
                         </div>
@@ -1449,15 +1444,15 @@ export default function Dashboard() {
                                 type="button"
                                 className={`gallery-switch ${isGalleryVisible ? 'is-on' : ''}`}
                                 role="switch"
-                                aria-checked={isGalleryVisible ? 'true' : 'false'}
-                                aria-label="Показывать Gallery в основной секции контактов"
+                                aria-checked={isGalleryVisible}
+                                aria-label={t('admin.gallery.showInContacts')}
                                 onClick={() => toggleGalleryVisibility(!isGalleryVisible)}
                             >
                                 <span className="gallery-switch-thumb" />
                             </button>
-                            <span>Показывать Gallery в основной секции контактов</span>
+                            <span>{t('admin.gallery.showInContacts')}</span>
                             <small className={`gallery-switch-state ${isGalleryVisible ? 'is-on' : ''}`}>
-                                {isGalleryVisible ? 'Вкл' : 'Выкл'}
+                                {isGalleryVisible ? t('admin.gallery.on') : t('admin.gallery.off')}
                             </small>
                         </div>
 
@@ -1475,7 +1470,7 @@ export default function Dashboard() {
                                     <button
                                         type="button"
                                         className="media-delete-x"
-                                        aria-label="Удалить фото"
+                                        aria-label={t('admin.gallery.deletePhoto')}
                                         onClick={() => {
                                             void removeGalleryFile(index)
                                         }}
@@ -1496,8 +1491,8 @@ export default function Dashboard() {
 
                 {selectedSection === 'settings' && (
                     <section className="glass-card section-stack form-grid">
-                        <h3>Настройки</h3>
-                        <label>Текущий PIN
+                        <h3>{t('admin.sectionsLong.settings')}</h3>
+                        <label>{t('admin.settings.currentPin')}
                             <input
                                 type="password"
                                 inputMode="numeric"
@@ -1508,7 +1503,7 @@ export default function Dashboard() {
                                 placeholder="••••"
                             />
                         </label>
-                        <label>Новый PIN
+                        <label>{t('admin.settings.newPin')}
                             <input
                                 type="password"
                                 inputMode="numeric"
@@ -1519,7 +1514,7 @@ export default function Dashboard() {
                                 placeholder="••••"
                             />
                         </label>
-                        <label>Подтверждение PIN
+                        <label>{t('admin.settings.confirmPin')}
                             <input
                                 type="password"
                                 inputMode="numeric"
@@ -1538,22 +1533,22 @@ export default function Dashboard() {
                             }}
                             disabled={pinSaving}
                         >
-                            {pinSaving ? 'Сохранение…' : 'Сменить PIN'}
+                            {pinSaving ? t('admin.settings.saving') : t('admin.settings.changePin')}
                         </button>
                         {pinFeedback && <p className="settings-pin-feedback">{pinFeedback}</p>}
-                        <label>Язык интерфейса
-                            <select defaultValue="en">
-                                <option value="en">Английский</option>
-                                <option value="ru">Русский</option>
+                        <label>{t('admin.settings.language')}
+                            <select value={i18n.language} onChange={(e) => i18n.changeLanguage(e.target.value)}>
+                                <option value="en">{t('admin.settings.english')}</option>
+                                <option value="ru">{t('admin.settings.russian')}</option>
                             </select>
                         </label>
-                        <label>Тема
+                        <label>{t('admin.settings.theme')}
                             <select value={themeMode} onChange={(e) => setThemeMode(e.target.value as 'light' | 'dark')}>
-                                <option value="light">Светлая</option>
-                                <option value="dark">Тёмная</option>
+                                <option value="light">{t('admin.settings.lightTheme')}</option>
+                                <option value="dark">{t('admin.settings.darkTheme')}</option>
                             </select>
                         </label>
-                        <label>URL домена<input value={window.location.origin} readOnly /></label>
+                        <label>{t('admin.settings.domainUrl')}<input value={window.location.origin} readOnly /></label>
                     </section>
                 )}
 
@@ -1561,7 +1556,7 @@ export default function Dashboard() {
                     <section className="glass-card section-stack">
                         <div className="section-head-row analytics-head">
                             <div className="analytics-head-top">
-                                <h3>Аналитика</h3>
+                                <h3>{t('admin.sectionsLong.analytics')}</h3>
                                 <button
                                     type="button"
                                     className="admin-ghost danger analytics-reset-btn"
@@ -1570,22 +1565,22 @@ export default function Dashboard() {
                                     }}
                                     disabled={resettingAnalytics || !selectedCardId}
                                 >
-                                    {resettingAnalytics ? 'Сброс…' : 'Сброс'}
+                                    {resettingAnalytics ? t('admin.analytics.resetting') : t('admin.analytics.reset')}
                                 </button>
                             </div>
                             <div className="date-filters analytics-filters">
                                 <select
                                     value={analyticsPeriod}
                                     onChange={(e) => setAnalyticsPeriod(e.target.value as 'day' | 'week' | 'month' | 'custom')}
-                                    title="Период"
+                                    title={t('admin.analytics.period')}
                                 >
-                                    <option value="day">День</option>
-                                    <option value="week">Неделя</option>
-                                    <option value="month">Месяц</option>
-                                    <option value="custom">Произвольный</option>
+                                    <option value="day">{t('admin.analytics.day')}</option>
+                                    <option value="week">{t('admin.analytics.week')}</option>
+                                    <option value="month">{t('admin.analytics.month')}</option>
+                                    <option value="custom">{t('admin.analytics.custom')}</option>
                                 </select>
                                 <button type="button" className="admin-ghost" onClick={() => void fetchAnalytics()}>
-                                    Обновить
+                                    {t('admin.analytics.refresh')}
                                 </button>
                                 {analyticsPeriod === 'custom' && (
                                     <>
@@ -1593,44 +1588,44 @@ export default function Dashboard() {
                                             type="date"
                                             value={analyticsFrom}
                                             onChange={(e) => setAnalyticsFrom(e.target.value)}
-                                            title="Дата начала"
+                                            title={t('admin.analytics.dateFrom')}
                                         />
                                         <input
                                             type="date"
                                             value={analyticsTo}
                                             onChange={(e) => setAnalyticsTo(e.target.value)}
-                                            title="Дата окончания"
+                                            title={t('admin.analytics.dateTo')}
                                         />
                                     </>
                                 )}
                                 <select
                                     value={analyticsAutoRefreshSec}
                                     onChange={(e) => setAnalyticsAutoRefreshSec(Number(e.target.value))}
-                                    title="Автообновление"
+                                    title={t('admin.analytics.autoRefresh')}
                                 >
-                                    <option value={0}>Без автообновления</option>
-                                    <option value={15}>Обновлять: 15с</option>
-                                    <option value={30}>Обновлять: 30с</option>
-                                    <option value={60}>Обновлять: 60с</option>
+                                    <option value={0}>{t('admin.analytics.noAutoRefresh')}</option>
+                                    <option value={15}>{t('admin.analytics.refreshEvery', { sec: 15 })}</option>
+                                    <option value={30}>{t('admin.analytics.refreshEvery', { sec: 30 })}</option>
+                                    <option value={60}>{t('admin.analytics.refreshEvery', { sec: 60 })}</option>
                                 </select>
                                 <button type="button" className="admin-ghost" onClick={() => void exportAnalyticsCsv()}>
-                                    Экспорт CSV
+                                    {t('admin.analytics.exportCsv')}
                                 </button>
                             </div>
                         </div>
 
                         <div className="analytics-totals-compact">
-                            <div className="analytics-total-row"><span>Просмотры</span><strong>{analytics?.totals.views ?? 0}</strong></div>
-                            <div className="analytics-total-row"><span>Уникальные посетители</span><strong>{analytics?.totals.unique_visitors ?? 0}</strong></div>
-                            <div className="analytics-total-row"><span>Повторные визиты</span><strong>{analytics?.totals.returning_visitors ?? 0}</strong></div>
-                            <div className="analytics-total-row"><span>Сохранить контакт</span><strong>{analytics?.totals.saves ?? 0} ({analytics?.totals.save_rate_percent ?? 0}%)</strong></div>
-                            <div className="analytics-total-row"><span>Поделиться</span><strong>{analytics?.totals.shares ?? 0}</strong></div>
-                            <div className="analytics-total-row"><span>Лиды</span><strong>{analytics?.totals.leads ?? 0}</strong></div>
+                            <div className="analytics-total-row"><span>{t('admin.analytics.views')}</span><strong>{analytics?.totals.views ?? 0}</strong></div>
+                            <div className="analytics-total-row"><span>{t('admin.analytics.uniqueVisitors')}</span><strong>{analytics?.totals.unique_visitors ?? 0}</strong></div>
+                            <div className="analytics-total-row"><span>{t('admin.analytics.returningVisitors')}</span><strong>{analytics?.totals.returning_visitors ?? 0}</strong></div>
+                            <div className="analytics-total-row"><span>{t('admin.analytics.saveContact')}</span><strong>{analytics?.totals.saves ?? 0} ({analytics?.totals.save_rate_percent ?? 0}%)</strong></div>
+                            <div className="analytics-total-row"><span>{t('admin.analytics.share')}</span><strong>{analytics?.totals.shares ?? 0}</strong></div>
+                            <div className="analytics-total-row"><span>{t('admin.analytics.leads')}</span><strong>{analytics?.totals.leads ?? 0}</strong></div>
                         </div>
 
                         <div className="analytics-grid" style={{ marginTop: 10 }}>
                             <article style={{ gridColumn: 'span 2' }}>
-                                <h4>Динамика Save contact по дням</h4>
+                                <h4>{t('admin.analytics.savesDynamics')}</h4>
                                 <div className="analytics-series-table">
                                     {(analytics?.timeseries || []).map((point) => (
                                         <div key={point.day} className="analytics-series-row">
@@ -1640,12 +1635,12 @@ export default function Dashboard() {
                                             <span>Unique: {point.unique_visitors}</span>
                                         </div>
                                     ))}
-                                    {(analytics?.timeseries || []).length === 0 && <p>Нет данных за выбранный период</p>}
+                                    {(analytics?.timeseries || []).length === 0 && <p>{t('admin.analytics.noData')}</p>}
                                 </div>
                             </article>
 
                             <article>
-                                <h4>Поделиться по платформам</h4>
+                                <h4>{t('admin.analytics.shareByPlatform')}</h4>
                                 <div className="analytics-series-table">
                                     {(analytics?.share_breakdown || []).map((row, idx) => (
                                         <div key={`${row.share_method}-${row.platform}-${idx}`} className="analytics-series-row">
@@ -1654,19 +1649,19 @@ export default function Dashboard() {
                                             <span>{row.count}</span>
                                         </div>
                                     ))}
-                                    {(analytics?.share_breakdown || []).length === 0 && <p>Нет событий share</p>}
+                                    {(analytics?.share_breakdown || []).length === 0 && <p>{t('admin.analytics.noShareEvents')}</p>}
                                 </div>
                             </article>
                         </div>
 
                         <div className="analytics-grid" style={{ marginTop: 10 }}>
                             <article style={{ gridColumn: 'span 2' }}>
-                                <h4>Карта просмотров</h4>
+                                <h4>{t('admin.analytics.viewsMap')}</h4>
                                 <div className="analytics-map-toolbar">
                                     <button type="button" className="admin-ghost" onClick={zoomOutGeoMap}>-</button>
                                     <span>Zoom: {geoMapZoom.toFixed(2)}x</span>
                                     <button type="button" className="admin-ghost" onClick={zoomInGeoMap}>+</button>
-                                    <button type="button" className="admin-ghost" onClick={resetGeoMap}>Сброс</button>
+                                    <button type="button" className="admin-ghost" onClick={resetGeoMap}>{t('admin.analytics.reset')}</button>
                                 </div>
                                 <ComposableMap
                                     className="analytics-world-map"
@@ -1702,7 +1697,7 @@ export default function Dashboard() {
                             </article>
 
                             <article>
-                                <h4>Гео детализация</h4>
+                                <h4>{t('admin.analytics.geoDetails')}</h4>
                                 <div className="analytics-series-table">
                                     {!selectedGeoCountry && geoCountryRows.slice(0, 10).map((row) => (
                                         <div key={row.country} className="analytics-series-row">
@@ -1721,7 +1716,7 @@ export default function Dashboard() {
                                         <>
                                             <div className="analytics-series-row">
                                                 <button type="button" className="admin-ghost" onClick={() => setSelectedGeoCountry('')}>
-                                                    ← Назад к странам
+                                                    ← {t('admin.analytics.backToCountries')}
                                                 </button>
                                             </div>
                                             {geoSelectedRegions.map((row) => (
@@ -1739,20 +1734,20 @@ export default function Dashboard() {
                                         </>
                                     )}
 
-                                    {geoCountryRows.length === 0 && <p>Нет геоданных</p>}
+                                    {geoCountryRows.length === 0 && <p>{t('admin.analytics.noGeoData')}</p>}
                                 </div>
                             </article>
                         </div>
 
-                        {analyticsLoading && <p>Обновление аналитики…</p>}
+                        {analyticsLoading && <p>{t('admin.analytics.updating')}</p>}
                     </section>
                 )}
 
                 {avatarEditorOpen && (
                     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4">
                         <div className="w-full max-w-[24rem] rounded-xl bg-white p-4 shadow-2xl md:max-w-[24rem]">
-                            <h3 className="text-lg font-semibold">Редактор аватара</h3>
-                            <p className="mt-1 text-sm text-gray-600">Перетаскивайте фото и меняйте масштаб. Будет сохранен квадрат.</p>
+                            <h3 className="text-lg font-semibold">{t('admin.avatarEditor.title')}</h3>
+                            <p className="mt-1 text-sm text-gray-600">{t('admin.avatarEditor.description')}</p>
 
                             <div className="relative mt-4 w-full aspect-square overflow-hidden rounded-lg bg-black">
                                 <Cropper
@@ -1770,15 +1765,15 @@ export default function Dashboard() {
                             </div>
 
                             <div className="mt-4">
-                                <label className="block text-sm font-medium text-gray-700">Масштаб</label>
+                                <label className="block text-sm font-medium text-gray-700">{t('admin.avatarEditor.zoom')}</label>
                                 <input
                                     type="range"
                                     min={1}
                                     max={3}
                                     step={0.01}
                                     value={avatarZoom}
-                                    aria-label="Масштаб аватара"
-                                    title="Масштаб аватара"
+                                    aria-label={t('admin.avatarEditor.zoom')}
+                                    title={t('admin.avatarEditor.zoom')}
                                     onChange={(e) => setAvatarZoom(Number(e.target.value))}
                                     className="mt-2 w-full"
                                 />
@@ -1791,7 +1786,7 @@ export default function Dashboard() {
                                     onClick={resetAvatarEditor}
                                     disabled={uploadingAvatar}
                                 >
-                                    Отмена
+                                    {t('admin.avatarEditor.cancel')}
                                 </button>
                                 <button
                                     type="button"
@@ -1801,7 +1796,7 @@ export default function Dashboard() {
                                     }}
                                     disabled={uploadingAvatar}
                                 >
-                                    {uploadingAvatar ? 'Сохранение…' : 'Применить'}
+                                    {uploadingAvatar ? t('admin.avatarEditor.saving') : t('admin.avatarEditor.apply')}
                                 </button>
                             </div>
                         </div>
