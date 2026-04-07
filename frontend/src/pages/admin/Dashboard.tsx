@@ -552,9 +552,13 @@ export default function Dashboard() {
     const [saving, setSaving] = useState(false)
     const [dragIndex, setDragIndex] = useState<number | null>(null)
     const [filterPicker, setFilterPicker] = useState('')
-    const [galleryView, setGalleryView] = useState<'grid' | 'list'>('grid')
     const [previewUrl, setPreviewUrl] = useState<string>('')
     const [themeMode, setThemeMode] = useState<'light' | 'dark'>('light')
+    const [pinCurrent, setPinCurrent] = useState('')
+    const [pinNext, setPinNext] = useState('')
+    const [pinConfirm, setPinConfirm] = useState('')
+    const [pinSaving, setPinSaving] = useState(false)
+    const [pinFeedback, setPinFeedback] = useState('')
     const [uploadingMedia, setUploadingMedia] = useState(false)
     const [uploadingAvatar, setUploadingAvatar] = useState(false)
     const [resettingAnalytics, setResettingAnalytics] = useState(false)
@@ -1066,6 +1070,50 @@ export default function Dashboard() {
         navigate(selectedCardSlug ? `/${selectedCardSlug}` : '/')
     }
 
+    const changeAdminPin = async () => {
+        const currentPin = pinCurrent.trim()
+        const nextPin = pinNext.trim()
+        const confirmPin = pinConfirm.trim()
+
+        if (!/^\d{4}$/.test(currentPin) || !/^\d{4}$/.test(nextPin)) {
+            setPinFeedback('PIN должен состоять из 4 цифр')
+            return
+        }
+        if (nextPin !== confirmPin) {
+            setPinFeedback('Новый PIN и подтверждение не совпадают')
+            return
+        }
+        if (currentPin === nextPin) {
+            setPinFeedback('Новый PIN должен отличаться от текущего')
+            return
+        }
+
+        const token = localStorage.getItem('token')
+        if (!token) {
+            navigate('/admin/login')
+            return
+        }
+
+        try {
+            setPinSaving(true)
+            setPinFeedback('')
+            await axios.post(
+                '/api/auth/pin-change',
+                { currentPin, newPin: nextPin },
+                { headers: { Authorization: `Bearer ${token}` } }
+            )
+            setPinCurrent('')
+            setPinNext('')
+            setPinConfirm('')
+            setPinFeedback('PIN успешно обновлён')
+        } catch (error: any) {
+            const message = error?.response?.data?.error || 'Не удалось обновить PIN'
+            setPinFeedback(message)
+        } finally {
+            setPinSaving(false)
+        }
+    }
+
     if (loading) {
         return (
             <div className="admin-shell flex items-center justify-center">
@@ -1389,21 +1437,23 @@ export default function Dashboard() {
                                 >
                                     {uploadingMedia ? 'Загрузка…' : 'Загрузить фото'}
                                 </button>
-                                <button type="button" className={galleryView === 'grid' ? 'is-active' : ''} onClick={() => setGalleryView('grid')}>Сетка</button>
-                                <button type="button" className={galleryView === 'list' ? 'is-active' : ''} onClick={() => setGalleryView('list')}>Список</button>
                             </div>
                         </div>
 
-                        <label className="gallery-toggle">
-                            <input
-                                type="checkbox"
-                                checked={isGalleryVisible}
-                                onChange={(e) => toggleGalleryVisibility(e.target.checked)}
-                            />
+                        <div className="gallery-switch-row">
+                            <button
+                                type="button"
+                                className={`gallery-switch ${isGalleryVisible ? 'is-on' : ''}`}
+                                role="switch"
+                                aria-checked={isGalleryVisible}
+                                onClick={() => toggleGalleryVisibility(!isGalleryVisible)}
+                            >
+                                <span className="gallery-switch-thumb" />
+                            </button>
                             <span>Показывать Gallery в основной секции контактов</span>
-                        </label>
+                        </div>
 
-                        <div className={galleryView === 'grid' ? 'media-grid' : 'media-list'}>
+                        <div className="media-grid">
                             {cardData.media.map((item, index) => (
                                 <article
                                     key={`${item.file_url}-${index}`}
@@ -1439,9 +1489,50 @@ export default function Dashboard() {
                 {selectedSection === 'settings' && (
                     <section className="glass-card section-stack form-grid">
                         <h3>Настройки</h3>
-                        <label>Email профиля<input defaultValue="admin@example.com" /></label>
-                        <label>Новый пароль<input type="password" placeholder="••••••••" /></label>
-                        <label>Email уведомлений<input defaultValue="on" /></label>
+                        <label>Текущий PIN
+                            <input
+                                type="password"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                maxLength={4}
+                                value={pinCurrent}
+                                onChange={(e) => setPinCurrent(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                placeholder="••••"
+                            />
+                        </label>
+                        <label>Новый PIN
+                            <input
+                                type="password"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                maxLength={4}
+                                value={pinNext}
+                                onChange={(e) => setPinNext(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                placeholder="••••"
+                            />
+                        </label>
+                        <label>Подтверждение PIN
+                            <input
+                                type="password"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                maxLength={4}
+                                value={pinConfirm}
+                                onChange={(e) => setPinConfirm(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                                placeholder="••••"
+                            />
+                        </label>
+                        <button
+                            type="button"
+                            className="admin-primary"
+                            onClick={() => {
+                                void changeAdminPin()
+                            }}
+                            disabled={pinSaving}
+                        >
+                            {pinSaving ? 'Сохранение…' : 'Сменить PIN'}
+                        </button>
+                        {pinFeedback && <p className="settings-pin-feedback">{pinFeedback}</p>}
                         <label>Язык интерфейса
                             <select defaultValue="en">
                                 <option value="en">Английский</option>

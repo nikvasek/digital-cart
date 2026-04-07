@@ -3,6 +3,42 @@ import { db } from '../db/index.js'
 import bcrypt from 'bcrypt'
 import { config } from '../config/index.js'
 
+const ensureAppSettingsTable = async () => {
+  await db.query(
+    `CREATE TABLE IF NOT EXISTS app_settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW()
+    )`
+  )
+}
+
+const readStoredPinHash = async () => {
+  await ensureAppSettingsTable()
+  const result = await db.query(
+    `SELECT value FROM app_settings WHERE key = 'admin_pin_hash' LIMIT 1`
+  )
+  return result.rows[0]?.value as string | undefined
+}
+
+const writeStoredPinHash = async (hash: string) => {
+  await ensureAppSettingsTable()
+  await db.query(
+    `INSERT INTO app_settings (key, value, updated_at)
+     VALUES ('admin_pin_hash', $1, NOW())
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()`,
+    [hash]
+  )
+}
+
+const verifyAdminPin = async (pin: string) => {
+  const storedHash = await readStoredPinHash()
+  if (storedHash) {
+    return bcrypt.compare(pin, storedHash)
+  }
+  return pin === config.adminPin
+}
+
 export default async function authRoutes(fastify: FastifyInstance) {
   const authGuard = (fastify as any).authenticate
 
@@ -10,11 +46,22 @@ export default async function authRoutes(fastify: FastifyInstance) {
     const { pin } = request.body as { pin: string }
     const normalizedPin = typeof pin === 'string' ? pin.trim() : ''
 
-    if (normalizedPin !== config.adminPin) {
+    if (!/^\d{4}$/.test(normalizedPin)) {
+      return reply.code(400).send({ error: 'PIN must contain 4 digits' })
+    }
+
+    const isPinValid = await verifyAdminPin(normalizedPin)
+    if (!isPinValid) {
       return reply.code(401).send({ error: 'Invalid PIN' })
     }
 
     try {
+      const storedHash = await readStoredPinHash()
+      if (!storedHash) {
+        const migratedHash = await bcrypt.hash(normalizedPin, 10)
+        await writeStoredPinHash(migratedHash)
+      }
+
       let userResult = await db.query(
         `SELECT id, email, role FROM users WHERE email = $1 LIMIT 1`,
         [config.adminEmail]
@@ -53,42 +100,34 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
   // Логин
   fastify.post('/login', async (request, reply) => {
-    const { email, password } = request.body as {
-      email: string
-      password: string
+    return reply.code(410).send({ error: 'Email/password login is disabled. Use PIN login.' })
+  })
+
+  fastify.post('/pin-change', {
+    onRequest: [authGuard]
+  }, async (request, reply) => {
+    const { currentPin, newPin } = request.body as { currentPin?: string; newPin?: string }
+    const normalizedCurrent = (currentPin || '').trim()
+    const normalizedNext = (newPin || '').trim()
+
+    if (!/^\d{4}$/.test(normalizedCurrent) || !/^\d{4}$/.test(normalizedNext)) {
+      return reply.code(400).send({ error: 'PIN must contain 4 digits' })
+    }
+
+    if (normalizedCurrent === normalizedNext) {
+      return reply.code(400).send({ error: 'New PIN must be different from current PIN' })
     }
 
     try {
-      const result = await db.query(
-        `SELECT id, email, password_hash, role FROM users WHERE email = $1`,
-        [email]
-      )
-
-      if (result.rows.length === 0) {
-        return reply.code(401).send({ error: 'Invalid credentials' })
+      const isCurrentValid = await verifyAdminPin(normalizedCurrent)
+      if (!isCurrentValid) {
+        return reply.code(401).send({ error: 'Current PIN is invalid' })
       }
 
-      const user = result.rows[0]
-      const isValid = await bcrypt.compare(password, user.password_hash)
+      const nextHash = await bcrypt.hash(normalizedNext, 10)
+      await writeStoredPinHash(nextHash)
 
-      if (!isValid) {
-        return reply.code(401).send({ error: 'Invalid credentials' })
-      }
-
-      const token = fastify.jwt.sign({
-        id: user.id,
-        email: user.email,
-        role: user.role
-      }, { expiresIn: '7d' })
-
-      return {
-        token,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role
-        }
-      }
+      return { success: true }
     } catch (error) {
       fastify.log.error(error)
       return reply.code(500).send({ error: 'Internal server error' })
