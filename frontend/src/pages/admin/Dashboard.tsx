@@ -1451,6 +1451,9 @@ export default function Dashboard() {
                                 <span className="gallery-switch-thumb" />
                             </button>
                             <span>Показывать Gallery в основной секции контактов</span>
+                            <small className={`gallery-switch-state ${isGalleryVisible ? 'is-on' : ''}`}>
+                                {isGalleryVisible ? 'Вкл' : 'Выкл'}
+                            </small>
                         </div>
 
                         <div className="media-grid">

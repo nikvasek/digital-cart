@@ -1150,6 +1150,74 @@ code {
   color: #f87171;
 }
 
+.admin-shell-dark .date-filters select,
+.admin-shell-dark .analytics-filters select,
+.admin-shell-dark .analytics-filters input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #e5e7eb;
+}
+
+.admin-shell-dark .analytics-grid article,
+.admin-shell-dark .analytics-total-row,
+.admin-shell-dark .analytics-series-row,
+.admin-shell-dark .card-summary,
+.admin-shell-dark .media-item,
+.admin-shell-dark .service-item,
+.admin-shell-dark .preview-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.admin-shell-dark .analytics-grid p,
+.admin-shell-dark .analytics-series-row small,
+.admin-shell-dark .analytics-map-toolbar span,
+.admin-shell-dark .link-row-label,
+.admin-shell-dark .link-empty,
+.admin-shell-dark .card-summary p,
+.admin-shell-dark .card-summary code {
+  color: #94a3b8;
+}
+
+.admin-shell-dark .link-row,
+.admin-shell-dark .analytics-series-row {
+  border-color: #334155;
+}
+
+.admin-shell-dark .link-row-body input {
+  color: #e5e7eb;
+  border-bottom-color: #475569;
+}
+
+.admin-shell-dark .link-row-body input::placeholder {
+  color: #64748b;
+}
+
+.admin-shell-dark .link-row-body input:focus {
+  border-bottom-color: #93c5fd;
+}
+
+.admin-shell-dark .admin-mobile-nav-wrap::before {
+  background: linear-gradient(90deg, rgba(17, 24, 39, 1) 20%, rgba(17, 24, 39, 0));
+}
+
+.admin-shell-dark .admin-mobile-nav-wrap::after {
+  background: linear-gradient(270deg, rgba(17, 24, 39, 1) 20%, rgba(17, 24, 39, 0));
+}
+
+.admin-shell-dark .admin-mobile-nav-item {
+  background: #111827;
+  border-color: #374151;
+  color: #cbd5e1;
+}
+
+.admin-shell-dark .admin-mobile-nav-item.is-active {
+  background: #0f172a;
+  border-color: #64748b;
+  color: #f8fafc;
+  box-shadow: inset 0 -2px 0 #93c5fd;
+}
+
 .glass-card {
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.8);
@@ -1864,7 +1932,7 @@ code {
   height: 28px;
   border-radius: 999px;
   border: 1px solid #cbd5e1;
-  background: #e5e7eb;
+  background: #94a3b8;
   padding: 2px;
   position: relative;
   transition: background-color 0.2s ease, border-color 0.2s ease;
@@ -1895,8 +1963,25 @@ code {
 }
 
 .admin-shell-dark .gallery-switch {
-  background: #374151;
-  border-color: #4b5563;
+  background: #475569;
+  border-color: #64748b;
+}
+
+.gallery-switch-state {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.gallery-switch-state.is-on {
+  color: #16a34a;
+}
+
+.admin-shell-dark .gallery-switch-state {
+  color: #94a3b8;
+}
+
+.admin-shell-dark .gallery-switch-state.is-on {
+  color: #4ade80;
 }
 
 .media-list {
