@@ -502,7 +502,7 @@ export default function PublicCard() {
       }
     } else {
       await navigator.clipboard.writeText(url)
-      alert('Link copied to clipboard')
+      alert(t('linkCopied'))
     }
 
     trackEvent('share', {
@@ -513,7 +513,7 @@ export default function PublicCard() {
 
   const addToHomeHint = async () => {
     await navigator.clipboard.writeText(window.location.href)
-    alert('iPhone: Share -> Add to Home Screen. Android: menu -> Install app/Add to Home screen. Link copied.')
+    alert(t('addToHomeHint'))
   }
 
   const submitLead = async (e: FormEvent<HTMLFormElement>) => {
@@ -533,7 +533,7 @@ export default function PublicCard() {
       setShowLeadForm(false)
       form.reset()
     } catch {
-      alert('Error submitting form')
+      alert(t('submitError'))
     }
   }
 
@@ -601,12 +601,14 @@ export default function PublicCard() {
     const consumed = new Set<number>()
 
     const rowFromLink = (link: { type: string; url: string; _idx: number }): ContactRow => {
-      let label = CONTACT_LABELS[link.type] || link.type.charAt(0).toUpperCase() + link.type.slice(1)
+      let label = t(`contactLabels.${link.type}`, {
+        defaultValue: CONTACT_LABELS[link.type] || link.type.charAt(0).toUpperCase() + link.type.slice(1)
+      })
 
       if (PHONE_TYPES.includes(link.type)) {
         label = formatPhoneDisplay(link.url.replace(/^tel:/i, '').trim())
       } else if (link.type === 'email') {
-        label = link.url.replace(/^mailto:/i, '').trim() || 'Email'
+        label = link.url.replace(/^mailto:/i, '').trim() || t('contactLabels.email')
       } else if (link.type === 'location') {
         label = toCompactAddress(parseAddressField(link.url).label)
       }
@@ -750,7 +752,7 @@ export default function PublicCard() {
   if (!loading && !card) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0f0f0f]">
-        <p className="text-xl text-gray-300">{loadError ? 'Failed to load card' : 'Card not found'}</p>
+        <p className="text-xl text-gray-300">{loadError ? t('cardLoadError') : t('cardNotFound')}</p>
       </div>
     )
   }
@@ -761,7 +763,7 @@ export default function PublicCard() {
         <div className="home-card-frame relative w-full overflow-hidden bg-[#111]">
 
           {/* Spinner — fades out when card is ready */}
-          <div className={`dbc-spinner-overlay${loading ? ' dbc-spinner-overlay--show' : ''}`} aria-hidden={!loading}>
+          <div className={`dbc-spinner-overlay${loading ? ' dbc-spinner-overlay--show' : ''}`} aria-hidden={loading ? 'false' : 'true'}>
             <span className="dbc-spinner" />
           </div>
 
@@ -825,7 +827,7 @@ export default function PublicCard() {
                       }}
                       aria-label="More contact"
                     >
-                      More contact...
+                      {t('moreContact')}
                     </button>
                   )}
                 </div>
@@ -835,7 +837,7 @@ export default function PublicCard() {
                 <div className="dbc-actions" aria-label="Actions">
                   <button type="button" className="dbc-action-btn" onClick={handleSaveContact} aria-label="Save contact">
                     <img src={figmaAsset('Rectangle 69@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                    <span className="dbc-action-text">Save contact</span>
+                    <span className="dbc-action-text">{t('saveContact')}</span>
                   </button>
                   {servicesList.length > 0 && (
                     <button
@@ -849,29 +851,29 @@ export default function PublicCard() {
                       aria-label="Services"
                     >
                       <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                      <span className="dbc-action-text">Services</span>
+                      <span className="dbc-action-text">{t('services')}</span>
                     </button>
                   )}
                   <button type="button" className="dbc-action-btn" onClick={() => setShowQR(true)} aria-label="Show QR">
                     <img src={figmaAsset('Rectangle 70@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                    <span className="dbc-action-text">Show QR</span>
+                    <span className="dbc-action-text">{t('showQR')}</span>
                   </button>
                   <button type="button" className="dbc-action-btn dbc-action-btn--gold" onClick={() => setShowLeadForm((prev) => !prev)} aria-label="Book now">
                     <img src={figmaAsset('Rectangle 66@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                    <span className="dbc-action-text dbc-action-text--gold">BOOK NOW</span>
+                    <span className="dbc-action-text dbc-action-text--gold">{t('bookNow')}</span>
                   </button>
                   <button type="button" className="dbc-action-btn" onClick={() => void addToHomeHint()} aria-label="Add to Home">
                     <img src={figmaAsset('Rectangle 72@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                    <span className="dbc-action-text">Add to Home</span>
+                    <span className="dbc-action-text">{t('addToHome')}</span>
                   </button>
                   <button type="button" className="dbc-action-btn" onClick={() => void handleShare()} aria-label="Share">
                     <img src={figmaAsset('Rectangle 73@3x.png')} alt="" aria-hidden="true" className="dbc-action-bg" loading="lazy" decoding="async" />
-                    <span className="dbc-action-text">SHARE</span>
+                    <span className="dbc-action-text">{t('share')}</span>
                   </button>
                 </div>
               </div>
 
-              <div className={`dbc-social-mode${showMoreContacts ? ' is-active' : ''}`} aria-hidden={!showMoreContacts}>
+              <div className={`dbc-social-mode${showMoreContacts ? ' is-active' : ''}`} aria-hidden={showMoreContacts ? 'false' : 'true'}>
                 <button
                   type="button"
                   className="dbc-social-back"
@@ -903,7 +905,7 @@ export default function PublicCard() {
                 </div>
               </div>
 
-              <div className={`dbc-gallery-mode${showGalleryMode ? ' is-active' : ''}`} aria-hidden={!showGalleryMode}>
+              <div className={`dbc-gallery-mode${showGalleryMode ? ' is-active' : ''}`} aria-hidden={showGalleryMode ? 'false' : 'true'}>
                 <button
                   type="button"
                   className="dbc-social-back"
@@ -928,8 +930,8 @@ export default function PublicCard() {
                         <img
                           src={galleryBlobUrls[src] || src}
                           alt={`Gallery ${idx + 1}`}
-                          loading="eager"
-                          decoding="sync"
+                          loading="lazy"
+                          decoding="async"
                         />
                       </span>
                     </button>
@@ -979,7 +981,7 @@ export default function PublicCard() {
                 )}
               </div>
 
-              <div className={`dbc-services-mode${showServicesMode ? ' is-active' : ''}`} aria-hidden={!showServicesMode}>
+              <div className={`dbc-services-mode${showServicesMode ? ' is-active' : ''}`} aria-hidden={showServicesMode ? 'false' : 'true'}>
                 <button
                   type="button"
                   className="dbc-social-back"

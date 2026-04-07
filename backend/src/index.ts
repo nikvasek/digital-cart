@@ -19,6 +19,15 @@ const fastify = Fastify({
   logger: true
 })
 
+const productionAllowedOrigins = (process.env.FRONTEND_URL || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+
+if (config.nodeEnv === 'production' && productionAllowedOrigins.length === 0) {
+  throw new Error('FRONTEND_URL environment variable is required in production')
+}
+
 const ensureCoreSchema = async () => {
   await db.query(`CREATE EXTENSION IF NOT EXISTS pgcrypto`)
 
@@ -219,7 +228,7 @@ await fastify.register(compress, {
 
 await fastify.register(cors, {
   origin: config.nodeEnv === 'production'
-    ? (process.env.FRONTEND_URL || true)
+    ? productionAllowedOrigins
     : true
 })
 

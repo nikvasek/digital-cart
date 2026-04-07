@@ -8,13 +8,16 @@ if (!process.env.DATABASE_URL) {
 if (!process.env.JWT_SECRET) {
   throw new Error('JWT_SECRET environment variable is required')
 }
+if (!process.env.ADMIN_PIN) {
+  throw new Error('ADMIN_PIN environment variable is required')
+}
 
 export const config = {
   port: parseInt(process.env.PORT || '3000'),
   nodeEnv: process.env.NODE_ENV || 'development',
   databaseUrl: process.env.DATABASE_URL,
   jwtSecret: process.env.JWT_SECRET,
-  adminPin: process.env.ADMIN_PIN || '1111',
+  adminPin: process.env.ADMIN_PIN,
   adminEmail: process.env.ADMIN_EMAIL || 'admin@example.com',
   storageType: process.env.STORAGE_TYPE || 'local',
   storagePath: process.env.STORAGE_PATH || './uploads',

@@ -456,6 +456,7 @@ export default function Editor() {
               <input
                 type="text"
                 value={card.full_name}
+                aria-label="Full Name"
                 onChange={(e) => setCard({ ...card, full_name: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -468,6 +469,7 @@ export default function Editor() {
               <input
                 type="text"
                 value={card.title}
+                aria-label="Title"
                 onChange={(e) => setCard({ ...card, title: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -480,6 +482,7 @@ export default function Editor() {
               <input
                 type="text"
                 value={card.company_name}
+                aria-label="Company"
                 onChange={(e) => setCard({ ...card, company_name: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -492,6 +495,7 @@ export default function Editor() {
               <input
                 type="text"
                 value={card.slug}
+                aria-label="Slug"
                 onChange={(e) => setCard({ ...card, slug: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
@@ -568,6 +572,7 @@ export default function Editor() {
               </label>
               <textarea
                 value={card.bio}
+                aria-label="Bio"
                 onChange={(e) => setCard({ ...card, bio: e.target.value })}
                 rows={4}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -619,6 +624,8 @@ export default function Editor() {
               </label>
               <select
                 value={card.language_default}
+                title="Language"
+                aria-label="Language"
                 onChange={(e) => setCard({ ...card, language_default: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
@@ -674,6 +681,8 @@ export default function Editor() {
                 <div className="md:col-span-3">
                   <select
                     value={link.type}
+                    title="Social link type"
+                    aria-label="Social link type"
                     onChange={(e) => updateLink(index, { type: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   >
@@ -686,6 +695,7 @@ export default function Editor() {
                   <input
                     type="text"
                     value={link.url}
+                    aria-label="Social link URL"
                     onChange={(e) => updateLink(index, { url: e.target.value })}
                     placeholder="https://..."
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
@@ -695,6 +705,8 @@ export default function Editor() {
                   <input
                     type="checkbox"
                     checked={link.is_visible}
+                    aria-label="Link visibility"
+                    title="Link visibility"
                     onChange={(e) => updateLink(index, { is_visible: e.target.checked })}
                   />
                 </div>
@@ -758,6 +770,8 @@ export default function Editor() {
                   <input
                     type="checkbox"
                     checked={service.is_visible}
+                    aria-label="Service visibility"
+                    title="Service visibility"
                     onChange={(e) => updateService(index, { is_visible: e.target.checked })}
                   />
                   Visible
@@ -796,6 +810,8 @@ export default function Editor() {
                 <div className="md:col-span-1">
                   <select
                     value={item.type}
+                    title="Media type"
+                    aria-label="Media type"
                     onChange={(e) => updateMedia(index, { type: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                   >

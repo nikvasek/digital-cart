@@ -3,6 +3,81 @@ import { db } from '../db/index.js'
 import bcrypt from 'bcrypt'
 import { config } from '../config/index.js'
 
+const PIN_WINDOW_MS = 10 * 60 * 1000
+const PIN_MAX_ATTEMPTS = 6
+const PIN_BLOCK_MS = 15 * 60 * 1000
+
+type PinAttemptState = {
+  attempts: number
+  windowStartedAt: number
+  blockedUntil: number
+}
+
+const pinAttemptsByIp = new Map<string, PinAttemptState>()
+
+const getClientIp = (request: any) => {
+  const xff = (request.headers['x-forwarded-for'] || '').toString()
+  if (xff) {
+    const first = xff.split(',')[0]?.trim()
+    if (first) return first
+  }
+  return request.ip || request.socket?.remoteAddress || 'unknown'
+}
+
+const getPinAttemptState = (ip: string) => {
+  const now = Date.now()
+  const current = pinAttemptsByIp.get(ip)
+  if (!current) {
+    const created: PinAttemptState = {
+      attempts: 0,
+      windowStartedAt: now,
+      blockedUntil: 0
+    }
+    pinAttemptsByIp.set(ip, created)
+    return created
+  }
+
+  if (current.windowStartedAt + PIN_WINDOW_MS < now) {
+    current.attempts = 0
+    current.windowStartedAt = now
+  }
+
+  return current
+}
+
+const getPinRateLimitStatus = (ip: string) => {
+  const now = Date.now()
+  const state = getPinAttemptState(ip)
+  if (state.blockedUntil > now) {
+    return {
+      blocked: true,
+      retryAfterSec: Math.ceil((state.blockedUntil - now) / 1000)
+    }
+  }
+
+  if (state.blockedUntil && state.blockedUntil <= now) {
+    state.blockedUntil = 0
+    state.attempts = 0
+    state.windowStartedAt = now
+  }
+
+  return { blocked: false, retryAfterSec: 0 }
+}
+
+const registerPinFailure = (ip: string) => {
+  const now = Date.now()
+  const state = getPinAttemptState(ip)
+  state.attempts += 1
+
+  if (state.attempts >= PIN_MAX_ATTEMPTS) {
+    state.blockedUntil = now + PIN_BLOCK_MS
+  }
+}
+
+const clearPinFailures = (ip: string) => {
+  pinAttemptsByIp.delete(ip)
+}
+
 const ensureAppSettingsTable = async () => {
   await db.query(
     `CREATE TABLE IF NOT EXISTS app_settings (
@@ -45,6 +120,15 @@ export default async function authRoutes(fastify: FastifyInstance) {
   fastify.post('/pin-login', async (request, reply) => {
     const { pin } = request.body as { pin: string }
     const normalizedPin = typeof pin === 'string' ? pin.trim() : ''
+    const clientIp = getClientIp(request)
+
+    const rateLimit = getPinRateLimitStatus(clientIp)
+    if (rateLimit.blocked) {
+      return reply
+        .header('Retry-After', String(rateLimit.retryAfterSec))
+        .code(429)
+        .send({ error: 'Too many attempts. Try again later.' })
+    }
 
     if (!/^\d{4}$/.test(normalizedPin)) {
       return reply.code(400).send({ error: 'PIN must contain 4 digits' })
@@ -52,8 +136,11 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
     const isPinValid = await verifyAdminPin(normalizedPin)
     if (!isPinValid) {
+      registerPinFailure(clientIp)
       return reply.code(401).send({ error: 'Invalid PIN' })
     }
+
+    clearPinFailures(clientIp)
 
     try {
       const storedHash = await readStoredPinHash()
@@ -136,6 +223,10 @@ export default async function authRoutes(fastify: FastifyInstance) {
 
   // Регистрация (опционально, можно добавить позже)
   fastify.post('/register', async (request, reply) => {
+    if (config.nodeEnv === 'production') {
+      return reply.code(403).send({ error: 'Registration is disabled in production' })
+    }
+
     const { email, password, full_name } = request.body as {
       email: string
       password: string

@@ -1181,7 +1181,7 @@ export default function Dashboard() {
                                 }}
                                 type="button"
                                 role="tab"
-                                aria-selected={selectedSection === section.id}
+                                aria-selected={selectedSection === section.id ? 'true' : 'false'}
                                 onClick={() => setSelectedSection(section.id)}
                                 className={`admin-mobile-nav-item ${selectedSection === section.id ? 'is-active' : ''}`}
                             >
@@ -1205,6 +1205,8 @@ export default function Dashboard() {
                                     type="file"
                                     accept="image/*"
                                     style={{ display: 'none' }}
+                                    aria-label="Загрузить аватар"
+                                    title="Загрузить аватар"
                                     onChange={handleAvatarFilePick}
                                 />
                                 <button
@@ -1425,6 +1427,8 @@ export default function Dashboard() {
                                     accept="image/*"
                                     multiple
                                     style={{ display: 'none' }}
+                                    aria-label="Загрузить фото в галерею"
+                                    title="Загрузить фото в галерею"
                                     onChange={(e) => {
                                         void uploadGalleryFiles(e.target.files)
                                     }}
@@ -1445,7 +1449,8 @@ export default function Dashboard() {
                                 type="button"
                                 className={`gallery-switch ${isGalleryVisible ? 'is-on' : ''}`}
                                 role="switch"
-                                aria-checked={isGalleryVisible}
+                                aria-checked={isGalleryVisible ? 'true' : 'false'}
+                                aria-label="Показывать Gallery в основной секции контактов"
                                 onClick={() => toggleGalleryVisibility(!isGalleryVisible)}
                             >
                                 <span className="gallery-switch-thumb" />
@@ -1772,6 +1777,8 @@ export default function Dashboard() {
                                     max={3}
                                     step={0.01}
                                     value={avatarZoom}
+                                    aria-label="Масштаб аватара"
+                                    title="Масштаб аватара"
                                     onChange={(e) => setAvatarZoom(Number(e.target.value))}
                                     className="mt-2 w-full"
                                 />
