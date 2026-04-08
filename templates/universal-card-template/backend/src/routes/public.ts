@@ -112,6 +112,32 @@ const buildVisitorKey = (request: any, metadata: any) => {
 }
 
 export default async function publicRoutes(fastify: FastifyInstance) {
+  // Получить первую активную визитку (для корневого URL без slug)
+  fastify.get('/card', async (request, reply) => {
+    try {
+      const cardResult = await db.query(
+        `SELECT id, slug, full_name, title, company_name, phone, email,
+          address, website, portfolio_url, bio, avatar_url, logo_url, language_default, is_active
+         FROM cards WHERE is_active = true ORDER BY id LIMIT 1`
+      )
+      if (cardResult.rows.length === 0) {
+        return reply.code(404).send({ error: 'Card not found' })
+      }
+      const card = cardResult.rows[0]
+      const [linksResult, mediaResult, servicesResult] = await Promise.all([
+        db.query(`SELECT type, url, is_visible FROM card_links WHERE card_id = $1 AND is_visible = true ORDER BY sort_order`, [card.id]),
+        db.query(`SELECT file_url, type FROM card_media WHERE card_id = $1 ORDER BY sort_order`, [card.id]),
+        db.query(`SELECT title, description, is_visible FROM card_services WHERE card_id = $1 AND is_visible = true ORDER BY sort_order`, [card.id])
+      ])
+      return reply
+        .header('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400')
+        .send({ ...card, links: linksResult.rows, media: mediaResult.rows, services: servicesResult.rows })
+    } catch (error) {
+      fastify.log.error(error)
+      return reply.code(500).send({ error: 'Internal server error' })
+    }
+  })
+
   // Получить публичную визитку по slug
   fastify.get('/card/:slug', async (request, reply) => {
     const { slug } = request.params as { slug: string }

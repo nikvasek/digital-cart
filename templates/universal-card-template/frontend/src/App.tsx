@@ -13,7 +13,7 @@ function App() {
     <Router>
       <Suspense fallback={null}>
         <Routes>
-          <Route path="/" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/" element={<PublicCard />} />
 
           {/* Публичная визитка */}
           <Route path="/:slug" element={<PublicCard />} />

@@ -455,7 +455,7 @@ export default function PublicCard() {
     setLoading(true)
     try {
       setLoadError(false)
-      const response = await axios.get(`/api/public/card/${slug}`)
+      const response = await axios.get(slug ? `/api/public/card/${slug}` : `/api/public/card`)
       await preloadCriticalAssets(response.data.avatar_url)
       setCard(response.data)
       await i18n.changeLanguage(response.data.language_default)
