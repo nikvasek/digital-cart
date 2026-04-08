@@ -544,7 +544,8 @@ export default function PublicCard() {
 
   const handleSaveContact = () => {
     const baseUrl = (axios.defaults.baseURL || '').toString().replace(/\/$/, '')
-    window.location.href = `${baseUrl}/api/public/card/${slug}/vcard`
+    const cardSlug = card?.slug || slug
+    window.location.href = `${baseUrl}/api/public/card/${cardSlug}/vcard`
   }
 
   const handleShare = async () => {
@@ -582,7 +583,7 @@ export default function PublicCard() {
     const formData = new FormData(form)
 
     try {
-      await axios.post(`/api/public/card/${slug}/lead`, {
+      await axios.post(`/api/public/card/${card?.slug || slug}/lead`, {
         name: formData.get('name'),
         phone: formData.get('phone'),
         email: formData.get('email'),
